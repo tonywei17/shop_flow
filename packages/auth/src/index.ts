@@ -1,0 +1,2 @@
+export type SessionUser = { id: string; email: string | null; tenantId?: string };
+export const authReady = true;

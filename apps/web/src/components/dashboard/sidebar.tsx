@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems } from "./nav-items";
 import { cn } from "@/lib/utils";
+import type { ComponentType } from "react";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -13,7 +14,7 @@ export function Sidebar() {
       <nav className="flex-1 p-2 space-y-1">
         {navItems.map((item) => {
           const active = pathname === item.href || pathname?.startsWith(item.href + "/");
-          const Icon = item.icon as any;
+          const Icon: ComponentType<{ className?: string }> = item.icon;
           return (
             <Link
               key={item.href}

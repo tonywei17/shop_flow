@@ -5,35 +5,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { createMedusaClient } from "@enterprise/domain-commerce";
 
-type AdminProduct = {
+-type AdminOrder = {
++type AdminOrder = {
   id: string;
-  title: string;
   status?: string | null;
+  email?: string | null;
+  display_id?: number | null;
 };
 
-export default async function CommerceListPage() {
+export default async function OrdersListPage() {
   const medusa = createMedusaClient();
-  let rows: AdminProduct[] = [];
+  let rows: AdminOrder[] = [];
   let errorMsg = "";
   try {
-    const data = await medusa.listProducts({ limit: 20 });
-    const list = (data as { products?: AdminProduct[] } | undefined)?.products;
+    const data = await medusa.listOrders({ limit: 20 });
+    const list = (data as { orders?: AdminOrder[] } | undefined)?.orders;
     rows = Array.isArray(list) ? list : [];
-    if (!rows.length) {
-      errorMsg = "No products found.";
-    }
+    if (!rows.length) errorMsg = "No orders found.";
   } catch {
-    errorMsg = "Configure MEDUSA_BASE_URL and MEDUSA_ADMIN_TOKEN to view products.";
+    errorMsg = "Configure MEDUSA_BASE_URL and MEDUSA_ADMIN_TOKEN to view orders.";
   }
 
   return (
     <div className="flex flex-col min-h-screen">
       <DashboardHeader
-        title="Commerce / Products"
+        title="Commerce / Orders"
         actions={(
           <div className="flex gap-2">
-            <Button asChild><Link href="/commerce/new">New Product</Link></Button>
-            <Button asChild variant="outline"><Link href="/commerce/orders">Orders</Link></Button>
+            <Button asChild variant="outline"><Link href="/commerce">Products</Link></Button>
           </div>
         )}
       />
@@ -44,23 +43,19 @@ export default async function CommerceListPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Title</TableHead>
+                  <TableHead>#</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Customer</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.length > 0 ? (
-                  rows.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-mono text-xs">{p.id}</TableCell>
-                      <TableCell>{p.title}</TableCell>
-                      <TableCell className="capitalize">{p.status ?? "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/commerce/${p.id}`}>View</Link>
-                        </Button>
-                      </TableCell>
+                  rows.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell className="font-mono text-xs">{o.id}</TableCell>
+                      <TableCell>{o.display_id ?? "-"}</TableCell>
+                      <TableCell className="capitalize">{o.status ?? "-"}</TableCell>
+                      <TableCell>{o.email ?? "-"}</TableCell>
                     </TableRow>
                   ))
                 ) : (

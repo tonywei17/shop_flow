@@ -49,3 +49,42 @@
 
 ---
 如需回滚或查看详细改动，请参考 GitHub 仓库 `tonywei17/shop_flow` 的 main 分支历史。
+
+## 2025-10-11（JST）
+
+### 本次变更概览
+- **电商引擎选型与集成（模式 A）**：采用 Medusa 作为商城引擎；本系统侧负责多租户、结算与报表，通过事件对接。
+- **Storefront 独立应用**：新增 `apps/storefront/`，Next.js App Router，直连 Medusa Store API 展示商品列表与详情。
+- **Dashboard 后台对接 Medusa Admin API**：
+  - 商品列表：`apps/web/src/app/(dashboard)/commerce/page.tsx` → `createMedusaClient().listProducts()`。
+  - 订单列表：`apps/web/src/app/(dashboard)/commerce/orders/page.tsx` → `createMedusaClient().listOrders()`。
+- **BFF 适配层**：`packages/domain-commerce/src/medusaClient.ts` 新增 `listProducts()`、`retrieveProduct()`，保留 `listOrders()`；由 `index.ts` 导出。
+- **Webhook 骨架**：新增 `apps/web/src/app/api/webhooks/medusa/route.ts`（后续添加签名校验、事件落库、驱动结算）。
+- **环境变量**：
+  - 根 `.env.example` 新增 `MEDUSA_BASE_URL`、`MEDUSA_ADMIN_TOKEN`、`MEDUSA_WEBHOOK_SECRET`、`NEXT_PUBLIC_MEDUSA_BACKEND_URL`。
+  - `apps/storefront/.env.local` 默认指向 `http://localhost:9000`。
+- **构建/运行修复**：
+  - `package.json` 增加 `"packageManager": "npm@10.0.0"`。
+  - `turbo.json` 将 `pipeline` 更名为 `tasks`（Turborepo v2）。
+  - 使用 Chrome MCP 启动与预览（`http://localhost:3000`，Storefront `http://localhost:3001`）。
+
+### 受影响文件/目录
+- `apps/web/src/app/(dashboard)/commerce/page.tsx`
+- `apps/web/src/app/(dashboard)/commerce/orders/page.tsx`
+- `apps/web/src/app/api/webhooks/medusa/route.ts`
+- `packages/domain-commerce/src/medusaClient.ts`
+- `packages/domain-commerce/src/index.ts`
+- `apps/storefront/`（`next.config.ts`、`tsconfig.json`、`src/app/page.tsx`、`src/app/products/[id]/page.tsx`、`src/app/layout.tsx`、`src/app/globals.css`）
+- `.env.example`、`package.json`、`turbo.json`
+
+### 重要决策
+- **单一事实来源**：订单/支付/退款等电商数据以 Medusa 为准；本系统通过 Webhook 事件生成结算事件与应收/应付。
+- **双端分工**：
+  - Storefront 面向顾客，独立应用直连 Medusa Store API；
+  - Dashboard 后台在本系统内统一，调用 Medusa Admin API 管理商品/订单。
+
+### 待办与下一步
+- **Webhook 完善**：签名校验（`MEDUSA_WEBHOOK_SECRET`）→ 事件落库（`domain_events`）→ 调 `@enterprise/domain-settlement` 产出 `settlement_events/payables/receivables`。
+- **后台新增/编辑**：在 `commerce/new`、`commerce/[id]` 接通创建/编辑商品（`POST /admin/products` 等）。
+- **多租户策略**：确认采用多实例或 BFF 强隔离方案；落地租户-实例映射与密钥管理。
+- **Medusa 开发环境**：提供 Node/Docker 两种一键启动与 seed 脚本，便于联调。

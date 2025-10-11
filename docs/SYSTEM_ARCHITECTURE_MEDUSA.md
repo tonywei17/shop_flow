@@ -63,6 +63,7 @@ flowchart LR
 - **Dashboard 页面**：
   - `apps/web/src/app/(dashboard)/commerce/page.tsx` → `listProducts()` 渲染商品表格。
   - `apps/web/src/app/(dashboard)/commerce/orders/page.tsx` → `listOrders()` 渲染订单表格。
+- `apps/web/src/components/dashboard/header.tsx` / `sidebar.tsx` / `nav-items.ts` → 日文 UI、本地化导航与面包屑映射。
 - **Webhook（骨架）**：`apps/web/src/app/api/webhooks/medusa/route.ts`
   - TODO：签名校验（`MEDUSA_WEBHOOK_SECRET`）、事件类型与载荷解析、落库 `domain_events`、调用结算服务进行映射与入账。
 - **Storefront**：
@@ -71,7 +72,7 @@ flowchart LR
 
 ## 5. 环境变量
 
-- 根 `.env`（服务端使用）：
+- 根 `.env.local` 或部署环境变量（服务端使用）：
 ```dotenv
 # Medusa Admin API（Dashboard 后台使用）
 MEDUSA_BASE_URL=http://localhost:9000
@@ -94,6 +95,7 @@ LANGFLOW_API_KEY=
 - Storefront（公开变量）：`apps/storefront/.env.local`
 ```dotenv
 NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 ```
 
 ## 6. 多租户策略（选型）

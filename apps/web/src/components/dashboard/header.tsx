@@ -12,6 +12,18 @@ import { Sidebar } from "./sidebar";
 export function DashboardHeader({ title, actions }: { title: string; actions?: React.ReactNode }) {
   const pathname = usePathname();
   const segments = React.useMemo(() => (pathname || "/").split("/").filter(Boolean), [pathname]);
+  const labelMap = React.useMemo(() => ({
+    "system-fields": "システム項目管理",
+    permissions: "権限管理",
+    commerce: "オンラインストア管理",
+    internal: "内部商品",
+    orders: "受注一覧",
+    request: "申請書管理",
+    "request-forms": "申請書管理",
+    account: "アカウント設定",
+    new: "新規作成",
+    users: "ユーザー",
+  }), []);
 
   return (
     <div className="sticky top-0 z-30 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -33,21 +45,22 @@ export function DashboardHeader({ title, actions }: { title: string; actions?: R
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/">Home</Link>
+                  <Link href="/">ホーム</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {segments.map((seg, i) => {
                 const href = "/" + segments.slice(0, i + 1).join("/");
                 const isLast = i === segments.length - 1;
+                const label = labelMap[seg as keyof typeof labelMap] ?? seg;
                 return (
                   <React.Fragment key={href}>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
                       {isLast ? (
-                        <BreadcrumbPage className="capitalize">{seg}</BreadcrumbPage>
+                        <BreadcrumbPage className="capitalize">{label}</BreadcrumbPage>
                       ) : (
                         <BreadcrumbLink asChild>
-                          <Link className="capitalize" href={href}>{seg}</Link>
+                          <Link className="capitalize" href={href}>{label}</Link>
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>

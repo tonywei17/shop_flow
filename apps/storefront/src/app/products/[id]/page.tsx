@@ -1,8 +1,11 @@
 const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
 
 async function getProduct(id: string) {
   try {
-    const res = await fetch(`${MEDUSA_URL}/store/products/${id}`, { cache: "no-store" });
+    const headers: Record<string, string> = {};
+    if (PUBLISHABLE_KEY) headers["x-publishable-api-key"] = PUBLISHABLE_KEY;
+    const res = await fetch(`${MEDUSA_URL}/store/products/${id}`, { cache: "no-store", headers });
     if (!res.ok) return null;
     return res.json();
   } catch {

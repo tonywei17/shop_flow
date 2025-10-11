@@ -10,7 +10,7 @@ export function Sidebar() {
   const pathname = usePathname();
   return (
     <aside className="hidden md:flex md:flex-col md:w-60 border-r bg-card/50">
-      <div className="h-14 border-b flex items-center px-4 text-sm font-semibold tracking-tight">Dashboard</div>
+      <div className="h-14 border-b flex items-center px-4 text-sm font-semibold tracking-tight">管理コンソール</div>
       <nav className="flex-1 p-2 space-y-1">
         {navItems.map((item) => {
           const active = pathname === item.href || pathname?.startsWith(item.href + "/");
@@ -30,7 +30,7 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="p-3 text-xs text-muted-foreground">v0.1.0</div>
+      <div className="p-3 text-xs text-muted-foreground">バージョン v0.1.0</div>
     </aside>
   );
 }

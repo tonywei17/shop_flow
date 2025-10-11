@@ -88,3 +88,40 @@
 - **后台新增/编辑**：在 `commerce/new`、`commerce/[id]` 接通创建/编辑商品（`POST /admin/products` 等）。
 - **多租户策略**：确认采用多实例或 BFF 强隔离方案；落地租户-实例映射与密钥管理。
 - **Medusa 开发环境**：提供 Node/Docker 两种一键启动与 seed 脚本，便于联调。
+
+## 2025-10-11（JST）晚间补充
+
+### 本次进展
+- **Supabase 表落地**：通过 Supabase MCP 在项目 `exdlxrjiveqlsbirgozt` 创建 `tenants/products/customers/orders/order_items` 表，添加触发器与索引，暂不启用 RLS，授予 anon/authenticated 开发期权限。
+- **应用接入**：新增 `@enterprise/db`（`client.ts`、`products.ts`）及导出；实现 `GET/POST /api/internal/products`；将 `/(dashboard)/commerce/new` 改为 Server Action 调用 `createProduct()` 并跳转 `/(dashboard)/commerce/internal`；新增 `/(dashboard)/commerce/internal` 列表直读 Supabase。
+- **环境变量修复**：将 Supabase 变量放置到 `apps/web/.env.local`（而非根 `.env.local`），解决 `Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY/ANON_KEY` 运行时错误。
+- **Storefront 对接改进**：为 Storefront 的 Store API 请求添加 `x-publishable-api-key` 支持（读取 `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`）。
+- **Medusa 基础设施**：使用 Docker Compose 启动 `postgres:15` 与 `redis:7`（`apps/medusa/docker-compose.yml`）。
+
+### 当前问题
+- **Medusa 后端未就绪**：`apps/medusa/` 尚无完整后端工程（仅 compose），9000 端口一度可达但返回“需要 publishable key”，后续用户反馈“端口上不去”；需补齐 Medusa 服务启动（Node 或 Docker）与种子导入。
+- **Storefront 无数据**：Storefront 源自 Medusa Store API，需 Medusa 有商品且请求头包含 Publishable Key。
+
+### 待办
+- **启动 Medusa 后端**（二选一）：
+  - Node：完成 `npx create-medusa-app apps/medusa`（连接本地 Docker Postgres/Redis），`npm run dev`，`npm run seed`。
+  - Docker：在 compose 中增加 Medusa 服务（配置 `DATABASE_URL`、`REDIS_URL`），容器内迁移与 seed。
+- **生成 Publishable Key**：通过 Admin API 创建 `type=publishable` 的 API Key，并写入 `apps/storefront/.env.local` 的 `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`。
+- **前后台联调**：验证 `http://localhost:9000/store/products`、刷新 `http://localhost:3001` 展示商品。
+
+## 2025-10-12（JST）
+
+### 本次进展
+- **Dashboard 日文化重构**：`apps/web/src/components/dashboard/nav-items.ts`、`sidebar.tsx` 与各模块页面（`system-fields`、`permissions`、`request-forms`、`commerce/*`、`account`）全面替换为日文文案与导航结构；面包屑 `header.tsx` 增加 label 映射。
+- **Storefront 文案更新**：`apps/storefront/src/app/layout.tsx` 调整为日文标题与导航链接。
+- **Medusa 后端联调**：完成 `medusa/` 依赖安装、`npx medusa user` 创建管理员；生成 Secret API Key 并写入根 `.env.local`；重启 `web` 与 `storefront` 开发服务以加载 `MEDUSA_*` 变量。
+- **本地服务编排**：并行启动 dashboard（3000）、storefront（3001）、Medusa（9000）；通过 Chrome MCP 打开页面调试。
+
+### 代码健康度检查
+- **ESLint**：`npm run lint` 全量通过。
+- **运行验证**：Dashboard `http://localhost:3000/commerce`、Storefront `http://localhost:3001/` 可访问；Medusa Admin `http://localhost:9000/app` 正常登录（admin@example.com）。
+
+### 待办与下一步
+- `commerce/new` 与 `request-forms` 的 Server Action 需要接通 Medusa 商品创建与 Langflow API。
+- Webhook `apps/web/src/app/api/webhooks/medusa/route.ts` 补充签名校验与事件落库。
+- Storefront 补全购物车、结算与订单查询，使用 Publishable API Key 验证。

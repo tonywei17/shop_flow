@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard/header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { createMedusaClient } from "@enterprise/domain-commerce";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 type AdminProduct = {
   id: string;
@@ -29,11 +29,11 @@ export default async function CommerceListPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <DashboardHeader
-        title="Commerce / Products"
+        title="オンラインストア管理"
         actions={(
           <div className="flex gap-2">
-            <Button asChild><Link href="/commerce/new">New Product</Link></Button>
-            <Button asChild variant="outline"><Link href="/commerce/orders">Orders</Link></Button>
+            <Button asChild><Link href="/commerce/new">商品を登録</Link></Button>
+            <Button asChild variant="outline"><Link href="/commerce/orders">受注一覧</Link></Button>
           </div>
         )}
       />
@@ -44,9 +44,9 @@ export default async function CommerceListPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>商品名</TableHead>
+                  <TableHead>ステータス</TableHead>
+                  <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -58,7 +58,7 @@ export default async function CommerceListPage() {
                       <TableCell className="capitalize">{p.status ?? "-"}</TableCell>
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="outline">
-                          <Link href={`/commerce/${p.id}`}>View</Link>
+                          <Link href={`/commerce/${p.id}`}>詳細</Link>
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -66,7 +66,7 @@ export default async function CommerceListPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-10">
-                      {errorMsg}
+                      {errorMsg ? errorMsg : "商品が見つかりません。"}
                     </TableCell>
                   </TableRow>
                 )}

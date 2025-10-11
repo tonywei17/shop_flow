@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Users, ShoppingCart, GraduationCap, Wallet, Building2 } from "lucide-react";
+import { ListChecks, ShieldCheck, ShoppingBag, FileText, UserCog } from "lucide-react";
 
 export type NavItem = {
   label: string;
@@ -8,9 +8,9 @@ export type NavItem = {
 };
 
 export const navItems: NavItem[] = [
-  { label: "CRM", href: "/crm", icon: Users },
-  { label: "Commerce", href: "/commerce", icon: ShoppingCart },
-  { label: "LMS", href: "/lms", icon: GraduationCap },
-  { label: "Settlement", href: "/settlement", icon: Wallet },
-  { label: "Org", href: "/org", icon: Building2 },
+  { label: "システム項目管理", href: "/system-fields", icon: ListChecks },
+  { label: "権限管理", href: "/permissions", icon: ShieldCheck },
+  { label: "オンラインストア管理", href: "/commerce", icon: ShoppingBag },
+  { label: "申請書管理", href: "/request-forms", icon: FileText },
+  { label: "アカウント設定", href: "/account", icon: UserCog },
 ];

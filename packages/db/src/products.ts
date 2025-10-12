@@ -52,13 +52,26 @@ export async function getProduct(id: string): Promise<ProductRow | null> {
 
 export async function createProduct(input: ProductInput): Promise<ProductRow> {
   const sb = getSupabaseAdmin();
+
+  const priceCents = input.price_retail_cents ?? 0;
+  const stock = input.stock ?? 0;
+  const currency = input.currency_code ?? "JPY";
+
   const payload = {
-    currency_code: "JPY",
-    stock: 0,
-    active: true,
+    currency_code: currency,
+    stock: Math.max(0, stock),
+    active: input.active ?? true,
     ...input,
+    price_retail_cents: priceCents,
+    external_id: input.external_id ?? null,
+    external_source: input.external_source ?? null,
   };
-  const { data, error } = await sb.from("products").insert(payload).select("*").single();
+
+  const { data, error } = await sb
+    .from("products")
+    .insert(payload)
+    .select("*")
+    .single();
   if (error) throw error;
   return data as ProductRow;
 }

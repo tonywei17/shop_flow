@@ -125,3 +125,19 @@
 - `commerce/new` 与 `request-forms` 的 Server Action 需要接通 Medusa 商品创建与 Langflow API。
 - Webhook `apps/web/src/app/api/webhooks/medusa/route.ts` 补充签名校验与事件落库。
 - Storefront 补全购物车、结算与订单查询，使用 Publishable API Key 验证。
+
+## 2025-10-13（JST）
+
+### 本次变更概览
+- **Medusa 清理**：Dashboard 与 Storefront 全量切换至 Supabase 数据源，`packages/db/src/products.ts` 移除 `createMedusaProduct()`，`apps/web/src/app/(dashboard)/commerce/page.tsx`/`orders/page.tsx`、`apps/storefront/src/app/page.tsx` 与 `products/[id]/page.tsx` 均改为读取 Supabase；`apps/web/src/app/api/webhooks/medusa/route.ts` 改为返回 410 占位响应。
+- **环境变量修复**：确认 `apps/web/.env.local`、`apps/storefront/.env.local` 配置 `SUPABASE_URL`、`SUPABASE_ANON_KEY`，解决 3001 端口缺失 env 报错。
+- **登录页重构**：`apps/web/src/app/page.tsx` 替换为登录界面（Logo、日文文案、账号/密码、记住密码复选框、绿色登录按钮），与提供效果图一致。
+
+### 代码健康度检查
+- **ESLint**：`npm run lint` 全量通过。
+- **Build**：`npm run build` 通过（修复空 `api/webhooks/medusa` 模块后重新构建成功）。
+
+### 待办与下一步
+- 接入实际认证逻辑（Supabase Auth 或内部 API），落地登录流程。
+- Dashboard 受注页接通 Supabase `orders` 数据，补完界面。
+- 清理仓库中未用的 Medusa 目录与依赖。

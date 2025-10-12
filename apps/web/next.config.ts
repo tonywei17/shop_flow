@@ -14,7 +14,6 @@ const nextConfig: NextConfig = {
     "@enterprise/domain-org",
     "@enterprise/domain-crm",
     "@enterprise/domain-lms",
-    "@enterprise/domain-commerce",
   ],
 };
 

@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  await req.text();
-  return NextResponse.json({ ok: true }, { status: 200 });
+export async function POST() {
+  return NextResponse.json({ error: "Medusa integration disabled" }, { status: 410 });
 }

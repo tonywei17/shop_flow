@@ -3,6 +3,31 @@ export type MedusaClientOptions = {
   adminToken?: string;
 };
 
+export type CreateMedusaProductVariantPrice = {
+  amount: number;
+  currency_code: string;
+};
+
+export type CreateMedusaProductVariant = {
+  title: string;
+  sku?: string | null;
+  manage_inventory?: boolean;
+  inventory_quantity?: number;
+  options?: { value: string }[];
+  prices: CreateMedusaProductVariantPrice[];
+};
+
+export type CreateMedusaProductPayload = {
+  title: string;
+  subtitle?: string | null;
+  description?: string | null;
+  handle?: string | null;
+  status?: "draft" | "proposed" | "published";
+  options?: { title: string }[];
+  metadata?: Record<string, unknown> | null;
+  variants: CreateMedusaProductVariant[];
+};
+
 const DEFAULT_BASE_URL = process.env.MEDUSA_BASE_URL || "http://localhost:9000";
 const DEFAULT_ADMIN_TOKEN = process.env.MEDUSA_ADMIN_TOKEN;
 
@@ -45,6 +70,16 @@ export function createMedusaClient(options: MedusaClientOptions = {}) {
     },
     retrieveProduct(id: string) {
       return request(`/admin/products/${id}`, {}, "admin");
+    },
+    createProduct(payload: CreateMedusaProductPayload) {
+      return request(
+        `/admin/products`,
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+        "admin",
+      );
     },
     retrieveOrder(id: string) {
       return request(`/admin/orders/${id}`, {}, "admin");

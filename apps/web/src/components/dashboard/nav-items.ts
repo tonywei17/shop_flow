@@ -1,5 +1,15 @@
 import type { ComponentType } from "react";
-import { ListChecks, ShieldCheck, ShoppingBag, FileText, UserCog } from "lucide-react";
+import {
+  Building2,
+  CreditCard,
+  Database,
+  Package,
+  ReceiptText,
+  ShieldCheck,
+  ShoppingBag,
+  UserCog,
+  Wallet,
+} from "lucide-react";
 
 export type NavItem = {
   label: string;
@@ -7,10 +17,36 @@ export type NavItem = {
   icon: ComponentType<{ className?: string }>;
 };
 
-export const navItems: NavItem[] = [
-  { label: "システム項目管理", href: "/system-fields", icon: ListChecks },
-  { label: "権限管理", href: "/permissions", icon: ShieldCheck },
-  { label: "オンラインストア管理", href: "/commerce", icon: ShoppingBag },
-  { label: "申請書管理", href: "/request-forms", icon: FileText },
-  { label: "アカウント設定", href: "/account", icon: UserCog },
+export type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+export const navSections: NavSection[] = [
+  {
+    label: "請求書関連",
+    items: [
+      { label: "請求一覧", href: "/billing/invoices", icon: ReceiptText },
+      { label: "CC会費管理", href: "/billing/cc-fees", icon: CreditCard },
+      { label: "その他費用管理", href: "/billing/expenses", icon: Wallet },
+    ],
+  },
+  {
+    label: "オンラインストア管理",
+    items: [
+      { label: "商品管理", href: "/commerce", icon: Package },
+      { label: "注文管理", href: "/commerce/orders", icon: ShoppingBag },
+    ],
+  },
+  {
+    label: "システム管理",
+    items: [
+      { label: "部署管理", href: "/departments", icon: Building2 },
+      { label: "アカウント管理", href: "/account", icon: UserCog },
+      { label: "ロール管理", href: "/roles", icon: ShieldCheck },
+      { label: "マスター管理", href: "/master-data", icon: Database },
+    ],
+  },
 ];
+
+export const navItems: NavItem[] = navSections.flatMap((section) => section.items);

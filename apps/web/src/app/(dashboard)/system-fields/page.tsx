@@ -10,40 +10,35 @@ const fields = [
 
 export default function SystemFieldPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <DashboardHeader
-        title="システム項目管理"
-        actions={null}
-      />
-      <div className="p-4">
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>項目名</TableHead>
-                  <TableHead>説明</TableHead>
+    <div className="space-y-6">
+      <DashboardHeader title="システム項目管理" actions={null} />
+      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+        <CardContent className="p-0">
+          <Table className="[&_th]:py-3 [&_td]:py-3">
+            <TableHeader>
+              <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+                <TableHead className="w-[180px]">ID</TableHead>
+                <TableHead className="w-[220px]">項目名</TableHead>
+                <TableHead>説明</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {fields.map((f) => (
+                <TableRow key={f.id} className="border-b border-[#11111114] text-[14px]">
+                  <TableCell className="font-mono text-xs text-[#555555]">{f.id}</TableCell>
+                  <TableCell className="text-[#111111]">{f.name}</TableCell>
+                  <TableCell className="text-[#555555]">{f.description}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fields.map((f) => (
-                  <TableRow key={f.id}>
-                    <TableCell className="font-mono text-xs">{f.id}</TableCell>
-                    <TableCell>{f.name}</TableCell>
-                    <TableCell>{f.description}</TableCell>
-                  </TableRow>
-                ))}
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-6">
-                    CSV からの項目追加や編集機能は今後追加予定です。
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+              ))}
+              <TableRow>
+                <TableCell colSpan={3} className="border-b border-[#11111114] py-6 text-center text-sm text-[#6f6f6f]">
+                  CSV からの項目追加や編集機能は今後追加予定です。
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

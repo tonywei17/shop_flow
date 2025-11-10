@@ -86,10 +86,10 @@ export default function NotificationsManagementPage() {
             <input
               type="text"
               placeholder="通知を検索..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <select className="border rounded-lg px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 text-gray-900">
             <option>全ての送信先</option>
             <option>全会員</option>
             <option>プレミアム会員</option>
@@ -97,12 +97,12 @@ export default function NotificationsManagementPage() {
             <option>資格保持者</option>
             <option>個別送信</option>
           </select>
-          <select className="border rounded-lg px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 text-gray-900">
             <option>全てのステータス</option>
             <option>送信済み</option>
             <option>下書き</option>
           </select>
-          <button className="flex items-center gap-2 border rounded-lg px-4 py-2 hover:bg-gray-50">
+          <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50">
             <Filter className="h-4 w-4" />
             フィルター
           </button>
@@ -114,20 +114,20 @@ export default function NotificationsManagementPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="text-left p-4 font-medium text-sm">タイトル</th>
-              <th className="text-left p-4 font-medium text-sm">送信先</th>
-              <th className="text-left p-4 font-medium text-sm">送信日時</th>
-              <th className="text-left p-4 font-medium text-sm">送信者</th>
-              <th className="text-left p-4 font-medium text-sm">開封状況</th>
-              <th className="text-left p-4 font-medium text-sm">ステータス</th>
-              <th className="text-left p-4 font-medium text-sm">操作</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">タイトル</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">送信先</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">送信日時</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">送信者</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">開封状況</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">ステータス</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">操作</th>
             </tr>
           </thead>
           <tbody>
             {notifications.map((notification) => (
               <tr key={notification.id} className="border-b hover:bg-gray-50">
                 <td className="p-4">
-                  <div className="font-medium">{notification.title}</div>
+                  <div className="font-medium text-gray-900">{notification.title}</div>
                   <div className="text-sm text-gray-500 line-clamp-1">
                     {notification.message}
                   </div>
@@ -147,16 +147,16 @@ export default function NotificationsManagementPage() {
                     {notification.totalRecipients}名
                   </div>
                 </td>
-                <td className="p-4 text-sm">
+                <td className="p-4 text-sm text-gray-900">
                   {notification.sentAt || "-"}
                 </td>
-                <td className="p-4 text-sm">
+                <td className="p-4 text-sm text-gray-900">
                   {notification.sentBy}
                 </td>
                 <td className="p-4">
                   {notification.status === "sent" ? (
                     <div>
-                      <div className="text-sm font-medium">
+                      <div className="text-sm font-medium text-gray-900">
                         {notification.readCount}/{notification.totalRecipients}
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
@@ -182,11 +182,11 @@ export default function NotificationsManagementPage() {
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg" title="詳細">
+                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900" title="詳細">
                       <Eye className="h-4 w-4" />
                     </button>
                     {notification.status === "draft" && (
-                      <button className="p-2 hover:bg-gray-100 rounded-lg text-blue-600" title="送信">
+                      <button className="p-2 hover:bg-gray-100 rounded-lg text-blue-600 hover:text-blue-700" title="送信">
                         <Send className="h-4 w-4" />
                       </button>
                     )}
@@ -208,7 +208,7 @@ function StatCard({ title, value, icon }: { title: string; value: string; icon: 
         <div className="text-sm text-gray-600">{title}</div>
         <div className="text-blue-600">{icon}</div>
       </div>
-      <div className="text-3xl font-bold">{value}</div>
+      <div className="text-3xl font-bold text-gray-900">{value}</div>
     </div>
   );
 }

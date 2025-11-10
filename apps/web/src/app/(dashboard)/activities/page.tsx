@@ -86,22 +86,22 @@ export default function ActivitiesManagementPage() {
             <input
               type="text"
               placeholder="活動を検索..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <select className="border rounded-lg px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 text-gray-900">
             <option>全ての種類</option>
             <option>体験</option>
             <option>見学</option>
             <option>研修</option>
           </select>
-          <select className="border rounded-lg px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 text-gray-900">
             <option>全てのステータス</option>
             <option>公開中</option>
             <option>下書き</option>
             <option>終了</option>
           </select>
-          <button className="flex items-center gap-2 border rounded-lg px-4 py-2 hover:bg-gray-50">
+          <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50">
             <Filter className="h-4 w-4" />
             フィルター
           </button>
@@ -113,21 +113,21 @@ export default function ActivitiesManagementPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="text-left p-4 font-medium text-sm">活動名</th>
-              <th className="text-left p-4 font-medium text-sm">種類</th>
-              <th className="text-left p-4 font-medium text-sm">開催日時</th>
-              <th className="text-left p-4 font-medium text-sm">場所</th>
-              <th className="text-left p-4 font-medium text-sm">参加状況</th>
-              <th className="text-left p-4 font-medium text-sm">価格</th>
-              <th className="text-left p-4 font-medium text-sm">ステータス</th>
-              <th className="text-left p-4 font-medium text-sm">操作</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">活動名</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">種類</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">日時</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">場所</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">参加状況</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">価格</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">ステータス</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">操作</th>
             </tr>
           </thead>
           <tbody>
             {activities.map((activity) => (
               <tr key={activity.id} className="border-b hover:bg-gray-50">
                 <td className="p-4">
-                  <div className="font-medium">{activity.title}</div>
+                  <div className="font-medium text-gray-900">{activity.title}</div>
                   <div className="text-sm text-gray-500">
                     {activity.requiredMembership === "premium" ? "プレミアム会員限定" : "全会員"}
                   </div>
@@ -141,19 +141,19 @@ export default function ActivitiesManagementPage() {
                     {activity.type}
                   </span>
                 </td>
-                <td className="p-4 text-sm">
+                <td className="p-4 text-sm text-gray-900">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-400" />
                     {activity.date}
                   </div>
                 </td>
-                <td className="p-4 text-sm">
+                <td className="p-4 text-sm text-gray-900">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-gray-400" />
                     {activity.location}
                   </div>
                 </td>
-                <td className="p-4 text-sm">
+                <td className="p-4 text-sm text-gray-900">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-gray-400" />
                     {activity.enrolled}/{activity.capacity}名
@@ -165,7 +165,7 @@ export default function ActivitiesManagementPage() {
                     />
                   </div>
                 </td>
-                <td className="p-4 text-sm font-medium">
+                <td className="p-4 text-sm font-medium text-gray-900">
                   {activity.price === 0 ? "無料" : `¥${activity.price.toLocaleString()}`}
                 </td>
                 <td className="p-4">
@@ -177,13 +177,17 @@ export default function ActivitiesManagementPage() {
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg" title="詳細">
+                    <Link
+                      href={`/activities/${activity.id}`}
+                      className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900"
+                      title="詳細・チェックイン"
+                    >
                       <Eye className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg" title="編集">
+                    </Link>
+                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900" title="編集">
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg text-red-600" title="削除">
+                    <button className="p-2 hover:bg-gray-100 rounded-lg text-red-600 hover:text-red-700" title="削除">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -201,7 +205,7 @@ function StatCard({ title, value }: { title: string; value: string }) {
   return (
     <div className="bg-white rounded-lg border p-6">
       <div className="text-sm text-gray-600 mb-2">{title}</div>
-      <div className="text-3xl font-bold">{value}</div>
+      <div className="text-3xl font-bold text-gray-900">{value}</div>
     </div>
   );
 }

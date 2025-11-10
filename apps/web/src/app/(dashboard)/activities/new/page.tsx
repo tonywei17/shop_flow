@@ -33,7 +33,7 @@ export default function NewActivityPage() {
           <div className="flex gap-3">
             <button
               onClick={() => handleSubmit("draft")}
-              className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50"
+              className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50"
             >
               <Save className="h-4 w-4" />
               下書き保存
@@ -54,26 +54,26 @@ export default function NewActivityPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
           <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-bold mb-4">基本情報</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">基本情報</h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">活動名 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動名 *</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="例：リトミック体験会"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">種類 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">種類 *</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="体験">体験</option>
                   <option value="見学">見学</option>
@@ -82,12 +82,12 @@ export default function NewActivityPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">説明 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">説明 *</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={6}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="活動の詳細を入力してください"
                 />
               </div>
@@ -96,32 +96,32 @@ export default function NewActivityPage() {
 
           {/* Schedule & Location */}
           <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-bold mb-4">日時・場所</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">日時・場所</h2>
             
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">開催日 *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">開催日 *</label>
                   <input
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">開始時刻 *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">開始時刻 *</label>
                   <input
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">開催形式 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">開催形式 *</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2">
                     <input
@@ -131,7 +131,7 @@ export default function NewActivityPage() {
                       onChange={(e) => setFormData({ ...formData, locationType: e.target.value })}
                       className="w-4 h-4"
                     />
-                    <span>対面</span>
+                    <span className="text-gray-700">対面</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input
@@ -141,31 +141,31 @@ export default function NewActivityPage() {
                       onChange={(e) => setFormData({ ...formData, locationType: e.target.value })}
                       className="w-4 h-4"
                     />
-                    <span>オンライン</span>
+                    <span className="text-gray-700">オンライン</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   {formData.locationType === "対面" ? "開催場所" : "オンライン会議URL"} *
                 </label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder={formData.locationType === "対面" ? "例：東京本部" : "例：https://zoom.us/j/..."}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">定員 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">定員 *</label>
                 <input
                   type="number"
                   value={formData.capacity}
                   onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="例：30"
                   min="1"
                 />
@@ -175,17 +175,17 @@ export default function NewActivityPage() {
 
           {/* Pricing & Requirements */}
           <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-bold mb-4">価格・参加条件</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">価格・参加条件</h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">参加費 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">参加費 *</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="0"
                     min="0"
                   />
@@ -195,11 +195,11 @@ export default function NewActivityPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">必要な会員レベル *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">必要な会員レベル *</label>
                 <select
                   value={formData.requiredMembership}
                   onChange={(e) => setFormData({ ...formData, requiredMembership: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="free">無料会員以上</option>
                   <option value="premium">プレミアム会員のみ</option>
@@ -207,19 +207,19 @@ export default function NewActivityPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">必要な資格（任意）</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">必要な資格（任意）</label>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2">
                     <input type="checkbox" className="w-4 h-4" />
-                    <span>初級指導者資格</span>
+                    <span className="text-gray-700">初級指導者資格</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" className="w-4 h-4" />
-                    <span>中級指導者資格</span>
+                    <span className="text-gray-700">中級指導者資格</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" className="w-4 h-4" />
-                    <span>上級指導者資格</span>
+                    <span className="text-gray-700">上級指導者資格</span>
                   </label>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function NewActivityPage() {
         <div className="space-y-6">
           {/* Image Upload */}
           <div className="bg-white rounded-lg border p-6">
-            <h3 className="font-bold mb-4">サムネイル画像</h3>
+            <h3 className="font-bold text-gray-900 mb-4">サムネイル画像</h3>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <div className="text-gray-400 mb-2">
                 <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,12 +249,12 @@ export default function NewActivityPage() {
 
           {/* Preview */}
           <div className="bg-white rounded-lg border p-6">
-            <h3 className="font-bold mb-4">プレビュー</h3>
+            <h3 className="font-bold text-gray-900 mb-4">プレビュー</h3>
             <div className="border rounded-lg p-4">
               <div className="text-sm text-gray-500 mb-2">
                 {formData.type || "種類未設定"}
               </div>
-              <div className="font-bold mb-2">
+              <div className="font-bold text-gray-900 mb-2">
                 {formData.title || "活動名未設定"}
               </div>
               <div className="text-sm text-gray-600 mb-2">

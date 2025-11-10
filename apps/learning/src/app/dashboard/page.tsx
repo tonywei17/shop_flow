@@ -1,10 +1,12 @@
+'use client';
+
 import { Header } from "@/components/header";
 import Link from "next/link";
 import { Award, BookOpen, Calendar, CreditCard, User } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
-  // Mock user data
-  const user = {
+  const [user, setUser] = useState({
     name: "山田太郎",
     email: "yamada@example.com",
     membershipType: "premium",
@@ -13,7 +15,27 @@ export default function DashboardPage() {
     enrolledCourses: 3,
     completedCourses: 1,
     upcomingActivities: 2,
-  };
+  });
+
+  useEffect(() => {
+    // 从 localStorage 读取演示账号信息
+    const demoUserStr = localStorage.getItem('demoUser');
+    if (demoUserStr) {
+      const demoUser = JSON.parse(demoUserStr);
+      setUser({
+        name: demoUser.name,
+        email: demoUser.email,
+        membershipType: demoUser.memberType,
+        membershipExpiry: demoUser.memberType === 'premium' ? "2026年1月15日" : "無料会員",
+        qualifications: demoUser.qualifications > 0 
+          ? Array(demoUser.qualifications).fill(0).map((_, i) => `資格${i + 1}`)
+          : [],
+        enrolledCourses: demoUser.coursesEnrolled,
+        completedCourses: Math.floor(demoUser.coursesEnrolled / 2),
+        upcomingActivities: 2,
+      });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -23,23 +45,23 @@ export default function DashboardPage() {
         <h1 className="text-4xl font-bold mb-8">マイページ</h1>
 
         {/* User Info Card */}
-        <div className="bg-gradient-to-r from-primary to-blue-600 text-white rounded-lg p-8 mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-8 mb-8">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">{user.name}</h2>
-              <p className="opacity-90 mb-4">{user.email}</p>
+              <h2 className="text-3xl font-bold text-white mb-2">{user.name}</h2>
+              <p className="text-white opacity-90 mb-4">{user.email}</p>
               <div className="flex items-center gap-4">
-                <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-medium">
+                <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-medium text-white">
                   {user.membershipType === "premium" ? "プレミアム会員" : "無料会員"}
                 </span>
-                <span className="text-sm opacity-90">
+                <span className="text-sm text-white opacity-90">
                   有効期限: {user.membershipExpiry}
                 </span>
               </div>
             </div>
             <Link
               href="/membership"
-              className="bg-white text-primary px-6 py-3 rounded-lg font-medium hover:bg-gray-100"
+              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100"
             >
               会員プラン変更
             </Link>

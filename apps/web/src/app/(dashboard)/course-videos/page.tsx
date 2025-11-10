@@ -86,21 +86,21 @@ export default function CourseVideosPage() {
             <input
               type="text"
               placeholder="動画を検索..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <select className="border rounded-lg px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 text-gray-900">
             <option>全てのコース</option>
             <option>リトミック基礎コース</option>
             <option>リトミック指導法 中級</option>
             <option>リトミック教育学</option>
           </select>
-          <select className="border rounded-lg px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 text-gray-900">
             <option>全てのステータス</option>
             <option>公開中</option>
             <option>下書き</option>
           </select>
-          <button className="flex items-center gap-2 border rounded-lg px-4 py-2 hover:bg-gray-50">
+          <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50">
             <Filter className="h-4 w-4" />
             フィルター
           </button>
@@ -121,7 +121,7 @@ function StatCard({ title, value }: { title: string; value: string }) {
   return (
     <div className="bg-white rounded-lg border p-6">
       <div className="text-sm text-gray-600 mb-2">{title}</div>
-      <div className="text-3xl font-bold">{value}</div>
+      <div className="text-3xl font-bold text-gray-900">{value}</div>
     </div>
   );
 }
@@ -162,7 +162,7 @@ function VideoCard({ video }: { video: typeof videos[0] }) {
           <span className="text-xs text-gray-500">{video.course}</span>
         </div>
         
-        <h3 className="font-bold mb-2 line-clamp-2">{video.title}</h3>
+        <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{video.title}</h3>
         
         <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
           <div className="flex items-center gap-1">
@@ -173,15 +173,15 @@ function VideoCard({ video }: { video: typeof videos[0] }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="flex-1 flex items-center justify-center gap-2 border rounded-lg px-3 py-2 hover:bg-gray-50 text-sm">
+          <button className="flex-1 flex items-center justify-center gap-2 border rounded-lg px-3 py-2 hover:bg-gray-50 text-sm text-gray-700 hover:text-gray-900">
             <Eye className="h-4 w-4" />
             詳細
           </button>
-          <button className="flex-1 flex items-center justify-center gap-2 border rounded-lg px-3 py-2 hover:bg-gray-50 text-sm">
+          <button className="flex-1 flex items-center justify-center gap-2 border rounded-lg px-3 py-2 hover:bg-gray-50 text-sm text-gray-700 hover:text-gray-900">
             <Edit className="h-4 w-4" />
             編集
           </button>
-          <button className="flex items-center justify-center border rounded-lg px-3 py-2 hover:bg-gray-50 text-red-600">
+          <button className="flex items-center justify-center border rounded-lg px-3 py-2 hover:bg-gray-50 text-red-600 hover:text-red-700">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>

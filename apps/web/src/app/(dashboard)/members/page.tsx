@@ -72,15 +72,15 @@ export default function MembersPage() {
               <input
                 type="text"
                 placeholder="会員を検索..."
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <select className="border rounded-lg px-4 py-2">
+            <select className="border rounded-lg px-4 py-2 text-gray-900">
               <option>全ての会員タイプ</option>
               <option>プレミアム会員</option>
               <option>無料会員</option>
             </select>
-            <button className="flex items-center gap-2 border rounded-lg px-4 py-2 hover:bg-gray-50">
+            <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50">
               <Filter className="h-4 w-4" />
               フィルター
             </button>
@@ -97,14 +97,14 @@ export default function MembersPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="text-left p-4 font-medium text-sm">会員名</th>
-              <th className="text-left p-4 font-medium text-sm">メールアドレス</th>
-              <th className="text-left p-4 font-medium text-sm">会員タイプ</th>
-              <th className="text-left p-4 font-medium text-sm">登録日</th>
-              <th className="text-left p-4 font-medium text-sm">受講コース</th>
-              <th className="text-left p-4 font-medium text-sm">取得資格</th>
-              <th className="text-left p-4 font-medium text-sm">総支払額</th>
-              <th className="text-left p-4 font-medium text-sm">操作</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">会員名</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">メールアドレス</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">会員タイプ</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">登録日</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">受講コース</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">取得資格</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">総支払額</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -112,11 +112,11 @@ export default function MembersPage() {
               <tr key={member.id} className="border-b hover:bg-gray-50">
                 <td className="p-4">
                   <div>
-                    <div className="font-medium">{member.name}</div>
+                    <div className="font-medium text-gray-900">{member.name}</div>
                     <div className="text-sm text-gray-500">最終アクティブ: {member.lastActive}</div>
                   </div>
                 </td>
-                <td className="p-4 text-sm">{member.email}</td>
+                <td className="p-4 text-sm text-gray-900">{member.email}</td>
                 <td className="p-4">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                     member.membershipType === "premium"
@@ -126,20 +126,20 @@ export default function MembersPage() {
                     {member.membershipType === "premium" ? "プレミアム" : "無料"}
                   </span>
                 </td>
-                <td className="p-4 text-sm">{member.joinDate}</td>
-                <td className="p-4 text-sm text-center">{member.coursesEnrolled}</td>
-                <td className="p-4 text-sm text-center">{member.qualifications}</td>
-                <td className="p-4 text-sm font-medium">¥{member.totalSpent.toLocaleString()}</td>
+                <td className="p-4 text-sm text-gray-900">{member.joinDate}</td>
+                <td className="p-4 text-sm text-center text-gray-900">{member.coursesEnrolled}</td>
+                <td className="p-4 text-sm text-center text-gray-900">{member.qualifications}</td>
+                <td className="p-4 text-sm font-medium text-gray-900">¥{member.totalSpent.toLocaleString()}</td>
                 <td className="p-4">
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/members/${member.id}`}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
+                      className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900"
                       title="詳細"
                     >
                       <Eye className="h-4 w-4" />
                     </Link>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg" title="メール送信">
+                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900" title="メール送信">
                       <Mail className="h-4 w-4" />
                     </button>
                   </div>
@@ -175,7 +175,7 @@ function StatCard({ title, value, change }: { title: string; value: string; chan
     <div className="bg-white rounded-lg border p-6">
       <div className="text-sm text-gray-600 mb-2">{title}</div>
       <div className="flex items-end justify-between">
-        <div className="text-3xl font-bold">{value}</div>
+        <div className="text-3xl font-bold text-gray-900">{value}</div>
         <div className={`text-sm font-medium ${isPositive ? "text-green-600" : "text-red-600"}`}>
           {change}
         </div>

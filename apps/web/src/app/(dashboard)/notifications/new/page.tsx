@@ -53,7 +53,7 @@ export default function NewNotificationPage() {
           <div className="flex gap-3">
             <button
               onClick={() => handleSubmit("draft")}
-              className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50"
+              className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50"
             >
               <Save className="h-4 w-4" />
               下書き保存
@@ -74,27 +74,27 @@ export default function NewNotificationPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Message Content */}
           <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-bold mb-4">通知内容</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">通知内容</h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">タイトル *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">タイトル *</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="例：新コース公開のお知らせ"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">メッセージ *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">メッセージ *</label>
                 <textarea
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   rows={6}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="通知の内容を入力してください"
                 />
                 <p className="text-sm text-gray-500 mt-1">
@@ -106,7 +106,7 @@ export default function NewNotificationPage() {
 
           {/* Target Selection */}
           <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-bold mb-4">送信先設定</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">送信先設定</h2>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -121,7 +121,7 @@ export default function NewNotificationPage() {
                   <Users className={`h-8 w-8 mx-auto mb-2 ${
                     formData.targetType === "all" ? "text-blue-600" : "text-gray-400"
                   }`} />
-                  <div className="font-medium">全会員</div>
+                  <div className="font-medium text-gray-900">全会員</div>
                   <div className="text-sm text-gray-500">1,234名</div>
                 </button>
 
@@ -136,7 +136,7 @@ export default function NewNotificationPage() {
                   <Users className={`h-8 w-8 mx-auto mb-2 ${
                     formData.targetType === "membership" ? "text-blue-600" : "text-gray-400"
                   }`} />
-                  <div className="font-medium">会員レベル別</div>
+                  <div className="font-medium text-gray-900">会員レベル別</div>
                   <div className="text-sm text-gray-500">選択可能</div>
                 </button>
 
@@ -151,7 +151,7 @@ export default function NewNotificationPage() {
                   <Award className={`h-8 w-8 mx-auto mb-2 ${
                     formData.targetType === "qualification" ? "text-blue-600" : "text-gray-400"
                   }`} />
-                  <div className="font-medium">資格保持者</div>
+                  <div className="font-medium text-gray-900">資格保持者</div>
                   <div className="text-sm text-gray-500">選択可能</div>
                 </button>
 
@@ -166,7 +166,7 @@ export default function NewNotificationPage() {
                   <User className={`h-8 w-8 mx-auto mb-2 ${
                     formData.targetType === "individual" ? "text-blue-600" : "text-gray-400"
                   }`} />
-                  <div className="font-medium">個別送信</div>
+                  <div className="font-medium text-gray-900">個別送信</div>
                   <div className="text-sm text-gray-500">1名</div>
                 </button>
               </div>
@@ -174,14 +174,14 @@ export default function NewNotificationPage() {
               {/* Conditional Fields */}
               {formData.targetType === "membership" && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">会員レベル *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">会員レベル *</label>
                   <select
                     value={formData.membershipType}
                     onChange={(e) => {
                       setFormData({ ...formData, membershipType: e.target.value });
                       setRecipientCount(e.target.value === "premium" ? 456 : e.target.value === "free" ? 778 : 1234);
                     }}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">全ての会員（1,234名）</option>
                     <option value="premium">プレミアム会員のみ（456名）</option>
@@ -192,7 +192,7 @@ export default function NewNotificationPage() {
 
               {formData.targetType === "qualification" && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">資格種類 *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">資格種類 *</label>
                   <select
                     value={formData.qualificationType}
                     onChange={(e) => {
@@ -205,7 +205,7 @@ export default function NewNotificationPage() {
                       };
                       setRecipientCount(counts[e.target.value] || 0);
                     }}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">選択してください</option>
                     <option value="beginner">初級指導者資格（156名）</option>
@@ -217,13 +217,13 @@ export default function NewNotificationPage() {
 
               {formData.targetType === "individual" && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">会員を選択 *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">会員を選択 *</label>
                   <div className="relative">
                     <input
                       type="text"
                       value={formData.individualMemberName}
                       onChange={(e) => setFormData({ ...formData, individualMemberName: e.target.value })}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="会員名またはメールアドレスで検索"
                     />
                   </div>
@@ -237,7 +237,7 @@ export default function NewNotificationPage() {
 
           {/* Scheduling */}
           <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-bold mb-4">送信タイミング</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">送信タイミング</h2>
             
             <div className="space-y-4">
               <div className="flex gap-4">
@@ -248,7 +248,7 @@ export default function NewNotificationPage() {
                     onChange={() => setFormData({ ...formData, sendImmediately: true })}
                     className="w-4 h-4"
                   />
-                  <span>今すぐ送信</span>
+                  <span className="text-gray-700">今すぐ送信</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -257,28 +257,28 @@ export default function NewNotificationPage() {
                     onChange={() => setFormData({ ...formData, sendImmediately: false })}
                     className="w-4 h-4"
                   />
-                  <span>送信予約</span>
+                  <span className="text-gray-700">送信予約</span>
                 </label>
               </div>
 
               {!formData.sendImmediately && (
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">送信日 *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">送信日 *</label>
                     <input
                       type="date"
                       value={formData.scheduledDate}
                       onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">送信時刻 *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">送信時刻 *</label>
                     <input
                       type="time"
                       value={formData.scheduledTime}
                       onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -291,14 +291,14 @@ export default function NewNotificationPage() {
         <div className="space-y-6">
           {/* Preview */}
           <div className="bg-white rounded-lg border p-6">
-            <h3 className="font-bold mb-4">プレビュー</h3>
+            <h3 className="font-bold text-gray-900 mb-4">プレビュー</h3>
             <div className="border rounded-lg p-4 bg-gray-50">
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
                   R
                 </div>
                 <div className="flex-1">
-                  <div className="font-bold text-sm mb-1">
+                  <div className="font-bold text-sm text-gray-900 mb-1">
                     リトミック研究センター
                   </div>
                   <div className="text-xs text-gray-500">
@@ -306,7 +306,7 @@ export default function NewNotificationPage() {
                   </div>
                 </div>
               </div>
-              <div className="font-bold mb-2">
+              <div className="font-bold text-gray-900 mb-2">
                 {formData.title || "タイトル未設定"}
               </div>
               <div className="text-sm text-gray-600">
@@ -317,11 +317,11 @@ export default function NewNotificationPage() {
 
           {/* Recipient Summary */}
           <div className="bg-white rounded-lg border p-6">
-            <h3 className="font-bold mb-4">送信先サマリー</h3>
+            <h3 className="font-bold text-gray-900 mb-4">送信先サマリー</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">送信先:</span>
-                <span className="font-medium">
+                <span className="font-medium text-gray-900">
                   {formData.targetType === "all" ? "全会員" :
                    formData.targetType === "membership" ? "会員レベル別" :
                    formData.targetType === "qualification" ? "資格保持者" :
@@ -336,7 +336,7 @@ export default function NewNotificationPage() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">送信方法:</span>
-                <span className="font-medium">
+                <span className="font-medium text-gray-900">
                   {formData.sendImmediately ? "即時送信" : "予約送信"}
                 </span>
               </div>

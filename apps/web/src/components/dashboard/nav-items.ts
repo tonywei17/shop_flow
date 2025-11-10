@@ -9,6 +9,11 @@ import {
   ShoppingBag,
   UserCog,
   Wallet,
+  Users,
+  BarChart3,
+  Calendar,
+  Video,
+  Bell,
 } from "lucide-react";
 
 export type NavItem = {
@@ -36,6 +41,16 @@ export const navSections: NavSection[] = [
     items: [
       { label: "商品管理", href: "/commerce", icon: Package },
       { label: "注文管理", href: "/commerce/orders", icon: ShoppingBag },
+    ],
+  },
+  {
+    label: "学習プラットフォーム",
+    items: [
+      { label: "会員管理", href: "/members", icon: Users },
+      { label: "データ分析", href: "/learning-analytics", icon: BarChart3 },
+      { label: "活動・研修管理", href: "/activities", icon: Calendar },
+      { label: "動画コンテンツ", href: "/course-videos", icon: Video },
+      { label: "通知管理", href: "/notifications", icon: Bell },
     ],
   },
   {

@@ -1,8 +1,24 @@
+"use client";
+
+import React, { useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
 import { Plus, Search, Filter, Eye, Users, CheckCircle, Clock, Send } from "lucide-react";
 
+type NotificationCategory = {
+  id: string;
+  name: string;
+  colorClass?: string;
+};
+
 // Mock data
+const notificationCategories: NotificationCategory[] = [
+  { id: "general", name: "お知らせ", colorClass: "bg-blue-100 text-blue-700" },
+  { id: "exam", name: "資格試験", colorClass: "bg-purple-100 text-purple-700" },
+  { id: "system", name: "システム", colorClass: "bg-amber-100 text-amber-700" },
+  { id: "campaign", name: "キャンペーン", colorClass: "bg-emerald-100 text-emerald-700" },
+];
+
 const notifications = [
   {
     id: "1",
@@ -10,6 +26,7 @@ const notifications = [
     message: "リトミック上級指導者養成コースが公開されました。",
     targetType: "all",
     targetLabel: "全会員",
+    categoryId: "general",
     sentAt: "2025-11-10 14:30",
     sentBy: "東京花子",
     readCount: 856,
@@ -22,6 +39,7 @@ const notifications = [
     message: "12月の中級資格試験の申し込みを開始しました。",
     targetType: "qualification",
     targetLabel: "初級指導者資格保持者",
+    categoryId: "exam",
     sentAt: "2025-11-09 10:00",
     sentBy: "東京花子",
     readCount: 142,
@@ -34,6 +52,7 @@ const notifications = [
     message: "11月15日 2:00-4:00にシステムメンテナンスを実施します。",
     targetType: "membership",
     targetLabel: "プレミアム会員",
+    categoryId: "system",
     sentAt: "2025-11-08 16:00",
     sentBy: "東京花子",
     readCount: 398,
@@ -46,6 +65,7 @@ const notifications = [
     message: "年末特別ワークショップの参加者を募集しています。",
     targetType: "individual",
     targetLabel: "山田太郎",
+    categoryId: "campaign",
     sentAt: null,
     sentBy: "東京花子",
     readCount: 0,
@@ -55,18 +75,36 @@ const notifications = [
 ];
 
 export default function NotificationsManagementPage() {
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
+
+  const filteredNotifications = useMemo(
+    () =>
+      notifications.filter((notification) =>
+        selectedCategoryId === "all" ? true : notification.categoryId === selectedCategoryId,
+      ),
+    [selectedCategoryId],
+  );
+
   return (
     <div className="p-8">
       <DashboardHeader
         title="通知管理"
         actions={
-          <Link
-            href="/notifications/new"
-            className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4" />
-            新規通知を作成
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/notifications/categories"
+              className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              分類を管理
+            </Link>
+            <Link
+              href="/notifications/new"
+              className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4" />
+              新規通知を作成
+            </Link>
+          </div>
         }
       />
 
@@ -97,6 +135,18 @@ export default function NotificationsManagementPage() {
             <option>資格保持者</option>
             <option>個別送信</option>
           </select>
+          <select
+            className="border rounded-lg px-4 py-2 text-gray-900"
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+          >
+            <option value="all">全ての分類</option>
+            {notificationCategories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
           <select className="border rounded-lg px-4 py-2 text-gray-900">
             <option>全てのステータス</option>
             <option>送信済み</option>
@@ -116,6 +166,7 @@ export default function NotificationsManagementPage() {
             <tr>
               <th className="text-left p-4 font-medium text-sm text-gray-700">タイトル</th>
               <th className="text-left p-4 font-medium text-sm text-gray-700">送信先</th>
+              <th className="text-left p-4 font-medium text-sm text-gray-700">分類</th>
               <th className="text-left p-4 font-medium text-sm text-gray-700">送信日時</th>
               <th className="text-left p-4 font-medium text-sm text-gray-700">送信者</th>
               <th className="text-left p-4 font-medium text-sm text-gray-700">開封状況</th>
@@ -124,76 +175,101 @@ export default function NotificationsManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {notifications.map((notification) => (
-              <tr key={notification.id} className="border-b hover:bg-gray-50">
-                <td className="p-4">
-                  <div className="font-medium text-gray-900">{notification.title}</div>
-                  <div className="text-sm text-gray-500 line-clamp-1">
-                    {notification.message}
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                      notification.targetType === "all" ? "bg-blue-100 text-blue-700" :
-                      notification.targetType === "qualification" ? "bg-purple-100 text-purple-700" :
-                      notification.targetType === "membership" ? "bg-green-100 text-green-700" :
-                      "bg-gray-100 text-gray-700"
-                    }`}>
-                      {notification.targetLabel}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {notification.totalRecipients}名
-                  </div>
-                </td>
-                <td className="p-4 text-sm text-gray-900">
-                  {notification.sentAt || "-"}
-                </td>
-                <td className="p-4 text-sm text-gray-900">
-                  {notification.sentBy}
-                </td>
-                <td className="p-4">
-                  {notification.status === "sent" ? (
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {notification.readCount}/{notification.totalRecipients}
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                        <div
-                          className="bg-green-600 h-1.5 rounded-full"
-                          style={{ width: `${(notification.readCount / notification.totalRecipients) * 100}%` }}
-                        />
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {Math.round((notification.readCount / notification.totalRecipients) * 100)}%
-                      </div>
+            {filteredNotifications.map((notification) => {
+              const category = notificationCategories.find((c) => c.id === notification.categoryId);
+              return (
+                <tr key={notification.id} className="border-b hover:bg-gray-50">
+                  <td className="p-4">
+                    <div className="font-medium text-gray-900">{notification.title}</div>
+                    <div className="text-sm text-gray-500 line-clamp-1">
+                      {notification.message}
                     </div>
-                  ) : (
-                    <span className="text-sm text-gray-400">-</span>
-                  )}
-                </td>
-                <td className="p-4">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    notification.status === "sent" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                  }`}>
-                    {notification.status === "sent" ? "送信済み" : "下書き"}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900" title="詳細">
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    {notification.status === "draft" && (
-                      <button className="p-2 hover:bg-gray-100 rounded-lg text-blue-600 hover:text-blue-700" title="送信">
-                        <Send className="h-4 w-4" />
-                      </button>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          notification.targetType === "all"
+                            ? "bg-blue-100 text-blue-700"
+                            : notification.targetType === "qualification"
+                              ? "bg-purple-100 text-purple-700"
+                              : notification.targetType === "membership"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {notification.targetLabel}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {notification.totalRecipients}名
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        category?.colorClass ?? "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {category?.name ?? "未分類"}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm text-gray-900">
+                    {notification.sentAt || "-"}
+                  </td>
+                  <td className="p-4 text-sm text-gray-900">
+                    {notification.sentBy}
+                  </td>
+                  <td className="p-4">
+                    {notification.status === "sent" ? (
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {notification.readCount}/{notification.totalRecipients}
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                          <div
+                            className="bg-green-600 h-1.5 rounded-full"
+                            style={{ width: `${(notification.readCount / notification.totalRecipients) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {Math.round((notification.readCount / notification.totalRecipients) * 100)}%
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">-</span>
                     )}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="p-4">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        notification.status === "sent" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {notification.status === "sent" ? "送信済み" : "下書き"}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900"
+                        title="詳細"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      {notification.status === "draft" && (
+                        <button
+                          className="p-2 hover:bg-gray-100 rounded-lg text-blue-600 hover:text-blue-700"
+                          title="送信"
+                        >
+                          <Send className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

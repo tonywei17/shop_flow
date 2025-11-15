@@ -1,5 +1,5 @@
 import { DashboardHeader } from "@/components/dashboard/header";
-import { TrendingUp, Users, DollarSign, BookOpen, Award, Calendar } from "lucide-react";
+import { TrendingUp, Users, DollarSign, BookOpen, Award } from "lucide-react";
 
 export default function LearningAnalyticsPage() {
   return (

@@ -35,7 +35,7 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
     <aside
       className={cn(
         "flex h-full w-[268px] min-w-[268px] flex-col border-r border-border bg-white",
-        isMobile ? "" : "hidden md:flex md:min-h-screen",
+        isMobile ? "" : "hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-screen",
         className,
       )}
     >

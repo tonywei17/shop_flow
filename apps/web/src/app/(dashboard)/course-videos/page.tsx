@@ -1,6 +1,7 @@
 import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
-import { Plus, Search, Filter, Eye, Edit, Trash2, Play, Lock, Users } from "lucide-react";
+import Image from "next/image";
+import { Plus, Search, Filter, Eye, Edit, Trash2, Play, Users } from "lucide-react";
 
 // Mock data
 const videos = [
@@ -130,9 +131,11 @@ function VideoCard({ video }: { video: typeof videos[0] }) {
   return (
     <div className="bg-white rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative group">
-        <img
+        <Image
           src={video.thumbnail}
           alt={video.title}
+          width={320}
+          height={180}
           className="w-full h-48 object-cover"
         />
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

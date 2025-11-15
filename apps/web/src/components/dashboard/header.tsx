@@ -46,6 +46,7 @@ export function DashboardHeader({
       permissions: "権限管理",
       "system-fields": "システム項目管理",
       "master-data": "マスター管理",
+      exams: "試験管理",
       new: "新規作成",
       users: "ユーザー",
     }),
@@ -68,7 +69,7 @@ export function DashboardHeader({
   const headerRightSlot = rightSlot ?? <DefaultUserSummary />;
 
   return (
-    <div className="space-y-3">
+    <div className="sticky top-0 z-20 space-y-3 bg-[#f4f6f4]">
       <div className="space-y-3">
         <div className="flex items-center justify-between rounded-lg border-b border-[#11111114] bg-white pl-9 pr-6 py-3 shadow-sm">
           <div className="flex items-center gap-3">

@@ -2,7 +2,7 @@
 
 import { DashboardHeader } from "@/components/dashboard/header";
 import { useState } from "react";
-import { Save, Eye, Upload, X } from "lucide-react";
+import { Save, Eye, Upload } from "lucide-react";
 
 export default function NewVideoPage() {
   const [formData, setFormData] = useState({

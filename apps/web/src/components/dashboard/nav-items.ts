@@ -14,6 +14,8 @@ import {
   Calendar,
   Video,
   Bell,
+  Award,
+  MapPin,
 } from "lucide-react";
 
 export type NavItem = {
@@ -50,8 +52,14 @@ export const navSections: NavSection[] = [
       { label: "データ分析", href: "/learning-analytics", icon: BarChart3 },
       { label: "活動・研修管理", href: "/activities", icon: Calendar },
       { label: "動画コンテンツ", href: "/course-videos", icon: Video },
+      { label: "資格一覧", href: "/qualifications", icon: Award },
+      { label: "試験管理", href: "/exams", icon: Award },
       { label: "通知管理", href: "/notifications", icon: Bell },
     ],
+  },
+  {
+    label: "会場関連",
+    items: [{ label: "会場一覧", href: "/venues", icon: MapPin }],
   },
   {
     label: "システム管理",

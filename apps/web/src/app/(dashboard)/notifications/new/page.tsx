@@ -4,11 +4,38 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { useState } from "react";
 import { Save, Send, Users, Award, User } from "lucide-react";
 
+type NotificationCategory = {
+  id: string;
+  name: string;
+  colorClass?: string;
+};
+
+type NewNotificationFormData = {
+  title: string;
+  message: string;
+  targetType: "all" | "membership" | "qualification" | "individual";
+  membershipType: "all" | "premium" | "free";
+  qualificationType: string;
+  individualMemberId: string;
+  individualMemberName: string;
+  sendImmediately: boolean;
+  scheduledDate: string;
+  scheduledTime: string;
+  categoryId: string | null;
+};
+
+const initialCategories: NotificationCategory[] = [
+  { id: "general", name: "お知らせ", colorClass: "bg-blue-100 text-blue-700" },
+  { id: "exam", name: "資格試験", colorClass: "bg-purple-100 text-purple-700" },
+  { id: "system", name: "システム", colorClass: "bg-amber-100 text-amber-700" },
+  { id: "campaign", name: "キャンペーン", colorClass: "bg-emerald-100 text-emerald-700" },
+];
+
 export default function NewNotificationPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<NewNotificationFormData>({
     title: "",
     message: "",
-    targetType: "all" as "all" | "membership" | "qualification" | "individual",
+    targetType: "all",
     membershipType: "all",
     qualificationType: "",
     individualMemberId: "",
@@ -16,9 +43,14 @@ export default function NewNotificationPage() {
     sendImmediately: true,
     scheduledDate: "",
     scheduledTime: "",
+    categoryId: null,
   });
 
   const [recipientCount, setRecipientCount] = useState(1234);
+  const [categories, setCategories] = useState<NotificationCategory[]>(initialCategories);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryColorClass, setNewCategoryColorClass] = useState("bg-blue-100 text-blue-700");
 
   const handleTargetTypeChange = (type: typeof formData.targetType) => {
     setFormData({ ...formData, targetType: type });
@@ -40,10 +72,26 @@ export default function NewNotificationPage() {
     }
   };
 
+  const handleCreateCategory = () => {
+    const trimmedName = newCategoryName.trim();
+    if (!trimmedName) return;
+    const newCategory: NotificationCategory = {
+      id: `custom-${Date.now()}`,
+      name: trimmedName,
+      colorClass: newCategoryColorClass,
+    };
+    setCategories([...categories, newCategory]);
+    setFormData({ ...formData, categoryId: newCategory.id });
+    setIsCreatingCategory(false);
+    setNewCategoryName("");
+  };
+
   const handleSubmit = (action: "draft" | "send") => {
     console.log("Submit:", { ...formData, action });
     // 实际应该调用API保存/发送通知
   };
+
+  const selectedCategory = categories.find((category) => category.id === formData.categoryId);
 
   return (
     <div className="p-8">
@@ -100,6 +148,80 @@ export default function NewNotificationPage() {
                 <p className="text-sm text-gray-500 mt-1">
                   {formData.message.length}/500文字
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">分類</label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.categoryId ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, categoryId: e.target.value ? e.target.value : null })
+                    }
+                  >
+                    <option value="">未分類</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="mt-2 inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:mt-0"
+                    onClick={() => setIsCreatingCategory(true)}
+                  >
+                    新規カテゴリ
+                  </button>
+                </div>
+                {isCreatingCategory && (
+                  <div className="mt-3 space-y-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="カテゴリ名を入力"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {initialCategories.map((category) => (
+                        <button
+                          type="button"
+                          key={category.id}
+                          onClick={() => setNewCategoryColorClass(category.colorClass ?? "bg-gray-100 text-gray-700")}
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                            newCategoryColorClass === (category.colorClass ?? "bg-gray-100 text-gray-700")
+                              ? `${category.colorClass ?? "bg-gray-100 text-gray-700"} ring-2 ring-blue-400`
+                              : category.colorClass ?? "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {category.name}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => {
+                          setIsCreatingCategory(false);
+                          setNewCategoryName("");
+                        }}
+                      >
+                        キャンセル
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                        onClick={handleCreateCategory}
+                        disabled={!newCategoryName.trim()}
+                      >
+                        保存
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -332,6 +454,12 @@ export default function NewNotificationPage() {
                 <span className="text-sm text-gray-600">受信者数:</span>
                 <span className="text-2xl font-bold text-blue-600">
                   {recipientCount.toLocaleString()}名
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">分類:</span>
+                <span className="font-medium text-gray-900">
+                  {selectedCategory?.name ?? "未分類"}
                 </span>
               </div>
               <div className="flex justify-between items-center">

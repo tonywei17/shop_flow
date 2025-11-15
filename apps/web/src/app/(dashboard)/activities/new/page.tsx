@@ -1,8 +1,16 @@
 "use client";
 
 import { DashboardHeader } from "@/components/dashboard/header";
+import Link from "next/link";
 import { useState } from "react";
 import { Save, Eye } from "lucide-react";
+
+type Venue = {
+  id: string;
+  name: string;
+  type: "対面" | "オンライン";
+  address: string;
+};
 
 export default function NewActivityPage() {
   const [formData, setFormData] = useState({
@@ -13,6 +21,7 @@ export default function NewActivityPage() {
     time: "",
     location: "",
     locationType: "対面",
+    venueId: "",
     capacity: "",
     price: "",
     requiredMembership: "free",
@@ -20,9 +29,29 @@ export default function NewActivityPage() {
     image: "",
   });
 
+  const venues: Venue[] = [
+    { id: "tokyo-hq", name: "東京本部", type: "対面", address: "東京都千代田区丸の内1-1-1" },
+    { id: "aomori-hall", name: "青森市民ホール", type: "対面", address: "青森県青森市中央1-2-3" },
+    { id: "online-zoom", name: "オンライン（Zoom会場）", type: "オンライン", address: "ZoomミーティングURL" },
+  ];
+
   const handleSubmit = (status: "draft" | "published") => {
     console.log("Submit:", { ...formData, status });
     // 实际应该调用API保存数据
+  };
+
+  const handleSelectVenue = (venueId: string) => {
+    const selected = venues.find((v) => v.id === venueId);
+    if (!selected) {
+      setFormData({ ...formData, venueId: "" });
+      return;
+    }
+    setFormData({
+      ...formData,
+      venueId,
+      locationType: selected.type,
+      location: selected.name,
+    });
   };
 
   return (
@@ -120,29 +149,57 @@ export default function NewActivityPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">開催形式 *</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      value="対面"
-                      checked={formData.locationType === "対面"}
-                      onChange={(e) => setFormData({ ...formData, locationType: e.target.value })}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-gray-700">対面</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      value="オンライン"
-                      checked={formData.locationType === "オンライン"}
-                      onChange={(e) => setFormData({ ...formData, locationType: e.target.value })}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-gray-700">オンライン</span>
-                  </label>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">会場を選択</label>
+                  <select
+                    value={formData.venueId}
+                    onChange={(e) => handleSelectVenue(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">会場を選択してください</option>
+                    {venues.map((venue) => (
+                      <option key={venue.id} value={venue.id}>{`${venue.name}（${venue.type}）`}</option>
+                    ))}
+                  </select>
+                  {formData.venueId && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      選択中: {venues.find((v) => v.id === formData.venueId)?.address ?? ""}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">開催形式 *</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        value="対面"
+                        checked={formData.locationType === "対面"}
+                        onChange={(e) => setFormData({ ...formData, locationType: e.target.value })}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-gray-700">対面</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        value="オンライン"
+                        checked={formData.locationType === "オンライン"}
+                        onChange={(e) => setFormData({ ...formData, locationType: e.target.value })}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-gray-700">オンライン</span>
+                    </label>
+                  </div>
+                  <div className="mt-2 text-right">
+                    <Link
+                      href="/venues"
+                      className="inline-flex items-center text-xs text-blue-600 hover:text-blue-700"
+                    >
+                      会場を管理する
+                    </Link>
+                  </div>
                 </div>
               </div>
 

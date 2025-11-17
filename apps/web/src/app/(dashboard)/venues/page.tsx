@@ -189,7 +189,14 @@ export default function VenuesManagementPage() {
                   {sortedVenues.map((venue) => (
                     <tr key={venue.id} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2 align-top">
-                        <div className="font-medium text-gray-900">{venue.name}</div>
+                        <div className="font-medium text-gray-900">
+                          <Link
+                            href={`/venues/${venue.id}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {venue.name}
+                          </Link>
+                        </div>
                       </td>
                       <td className="px-4 py-2 align-top">
                         <span className="text-gray-900">{venue.code}</span>

@@ -50,6 +50,7 @@ export const navSections: NavSection[] = [
     items: [
       { label: "会員管理", href: "/members", icon: Users },
       { label: "データ分析", href: "/learning-analytics", icon: BarChart3 },
+      { label: "注文一覧", href: "/learning-orders", icon: CreditCard },
       { label: "活動・研修管理", href: "/activities", icon: Calendar },
       { label: "動画コンテンツ", href: "/course-videos", icon: Video },
       { label: "資格一覧", href: "/qualifications", icon: Award },

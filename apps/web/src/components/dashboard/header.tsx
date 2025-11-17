@@ -40,6 +40,7 @@ export function DashboardHeader({
       commerce: "オンラインストア管理",
       internal: "内部商品",
       orders: "注文管理",
+      "learning-orders": "学習PF注文",
       departments: "部署管理",
       account: "アカウント管理",
       roles: "ロール管理",

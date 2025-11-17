@@ -21,6 +21,9 @@ export default function HomePage() {
             <Link href="/activities" className="text-sm hover:text-primary">
               活動・研修
             </Link>
+            <Link href="/exams" className="text-sm hover:text-primary">
+              資格試験
+            </Link>
             <Link href="/auth/login" className="text-sm hover:text-primary">
               ログイン
             </Link>
@@ -140,6 +143,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/courses" className="hover:text-primary">コース一覧</Link></li>
                 <li><Link href="/activities" className="hover:text-primary">活動・研修</Link></li>
+                <li><Link href="/exams" className="hover:text-primary">資格試験</Link></li>
                 <li><Link href="/qualifications" className="hover:text-primary">資格について</Link></li>
               </ul>
             </div>

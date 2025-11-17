@@ -128,6 +128,41 @@ export interface ActivityRegistration {
   cancelledAt?: Date;
 }
 
+export interface Exam {
+  id: string;
+  name: string;
+  productName: string;
+  qualification: string;
+  description: string;
+  examDate: Date;
+  examTime: string;
+  applicationStart: Date;
+  applicationEnd: Date;
+  publishStartDate: Date;
+  publishEndDate: Date;
+  locationType: Activity['locationType'];
+  location: string;
+  capacity: number;
+  fee: number;
+  targetMembership: Member['membershipType'];
+  venueCode: string;
+  venueId?: string | null;
+  requiredMaterials: string[];
+  isActive: boolean;
+  status: 'draft' | 'published' | 'closed';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ExamApplication {
+  id: string;
+  examId: string;
+  memberId: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  appliedAt: Date;
+  cancelledAt?: Date;
+}
+
 // API Response Types
 export interface ApiResponse<T> {
   data: T;

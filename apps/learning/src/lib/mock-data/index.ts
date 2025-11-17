@@ -5,3 +5,4 @@
 export * from './courses';
 export * from './activities';
 export * from './notifications';
+export * from './exams';

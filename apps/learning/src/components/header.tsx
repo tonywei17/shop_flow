@@ -22,6 +22,9 @@ export function Header({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           <Link href="/activities" className="text-sm hover:text-primary">
             活動・研修
           </Link>
+          <Link href="/exams" className="text-sm hover:text-primary">
+            資格試験
+          </Link>
           
           {isLoggedIn ? (
             <>

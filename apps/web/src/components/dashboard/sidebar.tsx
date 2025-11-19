@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Fragment, type ComponentType } from "react";
+import { GraduationCap, ShoppingBag } from "lucide-react";
+
 import { navSections } from "./nav-items";
 import { cn } from "@/lib/utils";
-import type { ComponentType } from "react";
-import { ArrowUpRight, ShoppingBag } from "lucide-react";
 
 type SidebarProps = {
   isMobile?: boolean;
@@ -34,70 +36,106 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
   return (
     <aside
       className={cn(
-        "flex h-full w-[268px] min-w-[268px] flex-col border-r border-border bg-white",
+        "flex w-[256px] min-w-[256px] flex-col border-r border-[#11111114] bg-white",
         isMobile ? "" : "hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-screen",
         className,
       )}
     >
-      <div className="flex h-20 flex-col justify-center gap-1 px-6">
-        <span className="text-xs font-semibold uppercase tracking-wide text-[#00ac4d]">認定NPO法人</span>
-        <span className="text-lg font-semibold text-[#111111]">リトミック研究センター</span>
+      <div className="border-b border-[#1111111a] px-6 pb-5 pt-6">
+        <Image
+          src="/eu_logo.png"
+          alt="リトミック研究センター ロゴ"
+          width={400}
+          height={120}
+          className="h-auto w-full"
+          priority
+        />
       </div>
-      <nav className="flex-1 overflow-y-auto px-4 pb-6 pt-2">
-        <div className="flex flex-col gap-6">
-          {navSections.map((section) => (
-            <div key={section.label} className="space-y-2">
-              <p className="px-2 text-sm font-medium text-[#6f6f6f]">{section.label}</p>
-              <div className="space-y-1">
-                {section.items.map((item) => {
-                  const Icon: ComponentType<{ className?: string }> = item.icon;
-                  const normalizedHref = normalize(item.href);
-                  const active = normalizedHref === activeHref;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={onNavigate}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-[#e9f8ef] text-[#00ac4d]"
-                          : "text-[#4f4f4f] hover:bg-[#f2f2f2] hover:text-[#111111]",
-                      )}
-                    >
-                      <Icon className={cn("h-4 w-4", active ? "text-[#00ac4d]" : "text-[#8a8a8a]")} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+      <div className="flex flex-1 min-h-0 flex-col px-4 pb-5 pt-4">
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="h-full overflow-y-auto rounded-2xl border border-[#11111114] bg-white pb-3 pr-1">
+            {navSections.map((section, index) => (
+              <Fragment key={section.label}>
+                <SidebarSection
+                  section={section}
+                  activeHref={activeHref}
+                  normalize={normalize}
+                  onNavigate={onNavigate}
+                />
+                {index < navSections.length - 1 && <div className="mx-4 h-px bg-[#1111110d]" />}
+              </Fragment>
+            ))}
+          </div>
         </div>
-      </nav>
-      <div className="px-4 pb-6 space-y-3">
         <Link
           href="http://localhost:3002"
           target="_blank"
+          rel="noreferrer"
           onClick={onNavigate}
-          className="flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+          className="mt-4 flex items-center justify-center gap-2 rounded-md border border-[#00ac4d26] bg-[#f2fbf5] px-4 py-3 text-sm font-semibold text-[#008a3e] transition-colors hover:bg-[#e6f6ec]"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          <span>学習プラットフォーム</span>
-          <ArrowUpRight className="h-3.5 w-3.5 opacity-80" />
+          <GraduationCap className="h-4 w-4" />
+          <span>学習プラットフォームへ</span>
         </Link>
         <Link
           href="/storefront"
           onClick={onNavigate}
-          className="flex items-center justify-center gap-2 rounded-md bg-[#00ac4d] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#00943f]"
+          className="mt-3 flex items-center justify-center gap-2 rounded-md bg-[#00ac4d] px-4 py-3 text-sm font-semibold text-white shadow-[0px_4px_14px_rgba(0,0,0,0.15)] transition-colors hover:bg-[#009043]"
         >
           <ShoppingBag className="h-4 w-4" />
           <span>オンラインストアへ</span>
-          <ArrowUpRight className="h-3.5 w-3.5 opacity-80" />
         </Link>
       </div>
     </aside>
+  );
+}
+
+type SidebarSectionProps = {
+  section: (typeof navSections)[number];
+  activeHref?: string;
+  normalize: (value: string | null | undefined) => string;
+  onNavigate?: () => void;
+};
+
+function SidebarSection({ section, activeHref, normalize, onNavigate }: SidebarSectionProps) {
+  return (
+    <div className="px-2 pb-3 pt-4">
+      <p className="px-3 text-[12px] font-medium tracking-wide text-[#9b9b9b]">{section.label}</p>
+      <div className="mt-2 space-y-1">
+        {section.items.map((item) => (
+          <SidebarNavItem
+            key={item.href}
+            item={item}
+            active={normalize(item.href) === activeHref}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type SidebarNavItemProps = {
+  item: (typeof navSections)[number]["items"][number];
+  active: boolean;
+  onNavigate?: () => void;
+};
+
+function SidebarNavItem({ item, active, onNavigate }: SidebarNavItemProps) {
+  const Icon: ComponentType<{ className?: string }> = item.icon;
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
+        active
+          ? "bg-[rgba(0,172,75,0.12)] text-[#00ac4d]"
+          : "text-[#333333] hover:bg-[#f3f5f4]",
+      )}
+    >
+      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-[#00ac4d]" : "text-[#4d4d4d]")} />
+      <span className="truncate">{item.label}</span>
+    </Link>
   );
 }

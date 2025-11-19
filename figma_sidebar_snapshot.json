@@ -1,0 +1,14 @@
+uid=1_0 RootWebArea "Figma" url="https://www.figma.com/design/SN3iQXS5zY9b9eCffA3cwl/%E3%83%AA%E3%83%88%E3%83%9F%E3%83%83%E3%82%AF-UI?node-id=1922-30945&m=dev"
+  uid=1_1 heading "Want to check out this file? Sign up or Log in" level="1"
+  uid=1_2 button "Continue with Google" focusable focused
+  uid=1_3 StaticText "or"
+  uid=1_4 StaticText "EMAIL"
+  uid=1_5 textbox "EMAIL"
+  uid=1_6 button "Continue with email"
+  uid=1_7 region "Consent Manager"
+    uid=1_8 StaticText "This website uses cookies, pixel tags, and local storage for performance, personalization, and marketing purposes. We use our own cookies and some from third parties. Only essential cookies are turned on by default."
+    uid=1_9 link "Cookies settings" url="https://www.figma.com/consent-preferences/"
+      uid=1_10 StaticText "Cookies settings"
+    uid=1_11 button "Do not allow cookies"
+    uid=1_12 button "Allow all cookies"
+    uid=1_13 button

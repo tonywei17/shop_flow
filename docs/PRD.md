@@ -22,6 +22,25 @@
 
 ## 3. 业务范围与模块划分
 
+### 3.0 当前系统架构（2025-11 更新）
+
+- **Monorepo 与工具链**：根目录采用 Turborepo + pnpm（`package.json`、`turbo.json`），将多套 Next.js 前端与领域包组织在同一个代码库中，便于共享类型、CI 统一与分模块发布。
+- **前端应用层**：
+  - `apps/web`：Next.js App Router 16 + React 19，承载后台 Dashboard。`src/app/(dashboard)` 下按业务域（会员、结算、课程等）拆分 Route Segment，`layout.tsx` 统一注入侧边栏与主题。后台 API 通过同目录下的 `app/api/*` Route Handler 暴露。
+  - `apps/learning`：独立的日文线上学习前台，为 LMS 学员提供课程/考试体验，复用 Tailwind 4 Beta 样式体系。
+  - `apps/storefront`：B2B/B2E 商品展示站点，直接依赖 `@enterprise/db` 读取 Supabase 中的商品数据并渲染产品卡片（`src/app/page.tsx`）。
+- **BFF / API 层**：Dashboard 侧的写操作通过 Next Route Handlers 实现，例如 `apps/web/src/app/api/internal/products/route.ts` 负责商品列表与创建、统一处理租户参数与输入校验，再调用共享领域包。
+- **共享领域包**（`packages/*`）：
+  - `db`：封装 Supabase Admin 客户端与仓储方法（如 `src/products.ts` 提供 list/create/update/adjustStock）。
+  - `domain-*`：按业务域（commerce/crm/lms/org/settlement 等）沉淀领域模型与对外接口，`domain-commerce` 内还封装了 Medusa Admin API 客户端。
+  - `ai`、`auth`、`config`、`events`、`reports`、`stripe`、`types`：分别承载 Langflow 调用、鉴权工具、环境与 Feature Flag 解析、事件总线、报表导出、Stripe/支付以及全局类型定义。
+- **外部服务与数据层**：
+  - **Supabase**：作为主数据库/Auth/Storage，`packages/db/src/client.ts` 通过服务密钥创建无状态客户端，`supabase/` 目录预留迁移与策略。
+  - **Stripe**：通过 `packages/stripe` 适配支付/发票流程，Webhook 入口位于 `apps/web/src/app/api/webhooks/stripe`（待实现/扩展）。
+  - **Langflow**：AI 能力通过 `packages/ai` 统一封装（当前为占位实现），后续由 `/api/ai/*` 网关暴露。
+  - **Medusa**：`medusa/` 目录包含独立的 Headless Commerce 服务，配合 `packages/domain-commerce` 进行商品同步与订单检索。
+- **跨模块数据流示例**：后台创建商品 → `apps/web` 表单调用 `/api/internal/products` → `@enterprise/db` 写入 Supabase → `apps/storefront` 通过 `listProducts` 读取同一张表实现前台展示；同理，可将 Medusa SKU 通过 domain 包同步到 Supabase，再由结算/库存模块消费。
+
 ### 3.1 企业内部结算系统
 - **能力**：应收应付、结算周期、分润规则、成本中心、发票管理、账期、对账单、异常处理、审批流。
 - **关键配置**：多币种、税率、发票抬头、开票规则、记账维度。
@@ -199,3 +218,22 @@
 - 运营人效提升（关键流程自动化率≥Z%）。
 - 结算准确率≥99.9%，对账异常快速定位（≤N 分钟）。
 - 学员完成率/复购率、会员活跃度等核心指标提升。
+
+## 10. 开发里程碑与变更记录
+
+### 2025-11-20 里程碑：后台 Sidebar 改造 & Supabase 迁移
+
+- **UI 改造**：
+  - 后台 Dashboard 左侧 Sidebar 按 Figma 设计重构，统一导航结构与视觉风格。
+  - Sidebar 支持内部菜单区域垂直滚动，底部 CTA 区域固定，新增「学習プラットフォームへ」「オンラインストアへ」按钮。
+  - 替换管理端 Logo 为 `/apps/web/public/eu_logo.png` 资源。
+- **Supabase 迁移**：
+  - 将本地/项目 Supabase 配置整体迁移至自建实例 `https://supabase.nexus-tech.cloud`。
+  - 更新根目录与 apps 层 `.env.local` 中的 `SUPABASE_URL`、`SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`，以及 `apps/storefront/.env.local` 中的 `NEXT_PUBLIC_SUPABASE_*`。
+  - 新建《MY_SUPABASE_COMPLETE_GUIDE.md》文档，统一记录自建 Supabase 的连接信息与 MCP 使用指南。
+- **MCP 集成**：
+  - 在 Windsurf 中配置 Supabase MCP（Docker 镜像 `mcp/supabase`），通过 `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` 完成连接。
+  - 已通过 MCP 进行基础读写验证（认证通过，能访问自建实例中的表）。
+- **下一步计划**：
+  - 基于 Supabase 设计并落地账号体系（角色/部门/账号），通过 MCP 批量初始化基础数据。
+  - 将后台、学习平台与商城的登录与权限模型逐步对齐到统一账号体系。

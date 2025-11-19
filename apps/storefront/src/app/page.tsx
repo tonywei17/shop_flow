@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import Link from "next/link";
 import { listProducts } from "@enterprise/db";
 
@@ -6,9 +7,14 @@ function formatPrice(cents?: number | null) {
   return (value / 100).toLocaleString("ja-JP", { style: "currency", currency: "JPY" });
 }
 
-export default async function Home() {
-  const { items } = await listProducts({ limit: 100 });
-  const products = Array.isArray(items) ? items : [];
+export default async function Home(): Promise<ReactElement> {
+  let products: any[] = [];
+  try {
+    const { items } = await listProducts({ limit: 100 });
+    products = Array.isArray(items) ? items : [];
+  } catch (error) {
+    console.error("Failed to load products", error);
+  }
 
   return (
     <div>

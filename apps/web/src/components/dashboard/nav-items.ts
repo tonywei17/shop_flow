@@ -16,6 +16,8 @@ import {
   Bell,
   Award,
   MapPin,
+  ClipboardList,
+  FileText,
 } from "lucide-react";
 
 export type NavItem = {
@@ -51,10 +53,12 @@ export const navSections: NavSection[] = [
       { label: "会員管理", href: "/members", icon: Users },
       { label: "データ分析", href: "/learning-analytics", icon: BarChart3 },
       { label: "注文一覧", href: "/learning-orders", icon: CreditCard },
-      { label: "活動・研修管理", href: "/activities", icon: Calendar },
-      { label: "動画コンテンツ", href: "/course-videos", icon: Video },
+      { label: "研修管理", href: "/trainings", icon: Calendar },
+      { label: "見学・体験管理", href: "/experiences", icon: Users },
       { label: "資格一覧", href: "/qualifications", icon: Award },
       { label: "試験管理", href: "/exams", icon: Award },
+      { label: "申込一覧", href: "/applications", icon: ClipboardList },
+      { label: "資料請求管理", href: "/information-requests", icon: FileText },
       { label: "通知管理", href: "/notifications", icon: Bell },
     ],
   },

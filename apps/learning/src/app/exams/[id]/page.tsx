@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Calendar, MapPin, Users, DollarSign, Award, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { getExamById, type Exam } from '@/lib/mock-data';
@@ -10,7 +10,6 @@ import { ErrorMessage } from '@/components/error/error-message';
 
 export default function ExamDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [exam, setExam] = useState<Exam | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -86,7 +85,7 @@ export default function ExamDetailPage() {
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-8 sm:py-12">
           <div className="max-w-4xl">
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
@@ -116,10 +115,10 @@ export default function ExamDetailPage() {
               </span>
             </div>
 
-            <h1 className="text-4xl font-bold mb-4">{exam.name}</h1>
-            <p className="text-xl opacity-90 mb-6">{exam.description}</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 leading-tight">{exam.name}</h1>
+            <p className="text-base sm:text-lg md:text-xl opacity-90 mb-4 sm:mb-6">{exam.description}</p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <div className="bg-white/10 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-1 text-sm opacity-75">
                   <Calendar className="h-4 w-4" />
@@ -171,8 +170,8 @@ export default function ExamDetailPage() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Application Period */}
@@ -255,7 +254,7 @@ export default function ExamDetailPage() {
 
           {/* Sidebar - Application Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border p-6 sticky top-4">
+            <div className="bg-white rounded-lg border p-6 lg:sticky lg:top-4">
               <div className="text-center mb-6">
                 <div className="text-4xl font-bold mb-2">
                   {exam.fee === 0 ? '無料' : `¥${exam.fee.toLocaleString()}`}

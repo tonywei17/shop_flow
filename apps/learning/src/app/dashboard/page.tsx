@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/header";
 import Link from "next/link";
-import { Award, BookOpen, Calendar, CreditCard, User } from "lucide-react";
+import { Award, Calendar, CreditCard, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
@@ -42,10 +42,10 @@ export default function DashboardPage() {
       <Header isLoggedIn />
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">マイページ</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8">マイページ</h1>
 
         {/* User Info Card */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-8 mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 sm:p-8 mb-6 sm:mb-8">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-3xl font-bold text-white mb-2">{user.name}</h2>
@@ -68,13 +68,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            icon={<BookOpen className="h-8 w-8" />}
-            title="受講中のコース"
-            value={user.enrolledCourses}
-            link="/dashboard/courses"
-          />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
             icon={<Award className="h-8 w-8" />}
             title="取得資格"
@@ -83,7 +77,7 @@ export default function DashboardPage() {
           />
           <StatCard
             icon={<Calendar className="h-8 w-8" />}
-            title="参加予定の活動"
+            title="参加予定の体験・研修"
             value={user.upcomingActivities}
             link="/dashboard/activities"
           />
@@ -96,33 +90,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* My Courses */}
-          <div className="bg-white rounded-lg border p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">受講中のコース</h3>
-              <Link href="/courses" className="text-primary text-sm hover:underline">
-                すべて見る →
-              </Link>
-            </div>
-            <div className="space-y-4">
-              <CourseProgress
-                title="リトミック基礎コース"
-                progress={100}
-                status="完了"
-              />
-              <CourseProgress
-                title="リトミック指導法 中級"
-                progress={65}
-                status="受講中"
-              />
-              <CourseProgress
-                title="リトミック教育学"
-                progress={30}
-                status="受講中"
-              />
-            </div>
-          </div>
-
           {/* My Qualifications */}
           <div className="bg-white rounded-lg border p-6">
             <div className="flex items-center justify-between mb-6">
@@ -157,18 +124,20 @@ export default function DashboardPage() {
           {/* Upcoming Activities */}
           <div className="bg-white rounded-lg border p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">参加予定の活動</h3>
+              <h3 className="text-xl font-bold">参加予定の体験・研修</h3>
               <Link href="/activities" className="text-primary text-sm hover:underline">
-                活動を探す →
+                体験・研修を探す →
               </Link>
             </div>
             <div className="space-y-4">
               <ActivityItem
+                id="2"
                 title="幼児指導法ワークショップ"
                 date="2025年11月25日 10:00"
                 location="大阪支部"
               />
               <ActivityItem
+                id="4"
                 title="中級指導者認定研修"
                 date="2025年12月10日 09:00"
                 location="東京本部"
@@ -216,32 +185,14 @@ function StatCard({ icon, title, value, link }: { icon: React.ReactNode; title: 
   );
 }
 
-function CourseProgress({ title, progress, status }: { title: string; progress: number; status: string }) {
+function ActivityItem({ id, title, date, location }: { id: string; title: string; date: string; location: string }) {
   return (
     <div className="border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium">{title}</h4>
-        <span className={`text-xs px-2 py-1 rounded ${
-          status === "完了" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
-        }`}>
-          {status}
-        </span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div
-          className="bg-primary h-2 rounded-full transition-all"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <p className="text-sm text-muted-foreground mt-2">{progress}% 完了</p>
-    </div>
-  );
-}
-
-function ActivityItem({ title, date, location }: { title: string; date: string; location: string }) {
-  return (
-    <div className="border rounded-lg p-4">
-      <h4 className="font-medium mb-2">{title}</h4>
+      <h4 className="font-medium mb-2">
+        <Link href={`/activities/${id}`} className="text-primary hover:underline">
+          {title}
+        </Link>
+      </h4>
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <span className="flex items-center gap-1">
           <Calendar className="h-4 w-4" />
@@ -254,6 +205,11 @@ function ActivityItem({ title, date, location }: { title: string; date: string; 
           </svg>
           {location}
         </span>
+      </div>
+      <div className="mt-3">
+        <Link href={`/activities/${id}`} className="text-xs text-primary hover:underline">
+          詳細・動画を見る
+        </Link>
       </div>
     </div>
   );

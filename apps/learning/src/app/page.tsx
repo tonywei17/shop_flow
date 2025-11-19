@@ -1,73 +1,50 @@
 import Link from "next/link";
-import { BookOpen, Award, Users, Video } from "lucide-react";
+import { Award, Users, Video, BookOpen } from "lucide-react";
+
+import { Header } from "@/components/header";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-xl font-bold">リトミック研究センター</h1>
-              <p className="text-sm text-muted-foreground">オンライン学習プラットフォーム</p>
-            </div>
-          </div>
-          <nav className="flex items-center gap-6">
-            <Link href="/courses" className="text-sm hover:text-primary">
-              コース一覧
-            </Link>
-            <Link href="/activities" className="text-sm hover:text-primary">
-              活動・研修
-            </Link>
-            <Link href="/exams" className="text-sm hover:text-primary">
-              資格試験
-            </Link>
-            <Link href="/auth/login" className="text-sm hover:text-primary">
-              ログイン
-            </Link>
-            <Link
-              href="/auth/register"
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90"
-            >
-              無料登録
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white">
+      <Header variant="landing" tagline="オンライン学習プラットフォーム" ctaHref="/auth/register" ctaLabel="無料で始める" />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-blue-50 to-white py-20">
+      <section className="bg-gradient-to-b from-blue-50 to-white pb-12 pt-16 sm:py-16 md:py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-5xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
             リトミック指導者への道を<br />オンラインで学ぶ
           </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
             体験活動から資格取得まで、あなたの学びをサポートします
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link
               href="/auth/register"
-              className="bg-primary text-primary-foreground px-8 py-4 rounded-lg text-lg font-medium hover:opacity-90"
+              className="bg-primary text-primary-foreground px-8 py-3 rounded-lg text-base sm:text-lg font-medium hover:opacity-90"
             >
               無料で始める
             </Link>
             <Link
-              href="/courses"
-              className="border border-primary text-primary px-8 py-4 rounded-lg text-lg font-medium hover:bg-primary/5"
+              href="/activities"
+              className="border border-primary text-primary px-8 py-3 rounded-lg text-base sm:text-lg font-medium hover:bg-primary/5"
             >
-              コースを見る
+              体験・研修を探す
+            </Link>
+            <Link
+              href="/request-info"
+              className="border border-emerald-200 bg-white text-emerald-700 px-8 py-3 rounded-lg text-base sm:text-lg font-medium hover:bg-emerald-50"
+            >
+              資料を請求する
             </Link>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20">
+      <section className="py-12 sm:py-16 md:py-20">
         <div className="container mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center mb-12">プラットフォームの特徴</h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <h3 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">プラットフォームの特徴</h3>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 md:gap-8">
             <FeatureCard
               icon={<Video className="h-12 w-12 text-primary" />}
               title="オンライン講座"
@@ -93,9 +70,9 @@ export default function HomePage() {
       </section>
 
       {/* Membership Plans */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-12 sm:py-16 md:py-20">
         <div className="container mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center mb-12">会員プラン</h3>
+          <h3 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">会員プラン</h3>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <PricingCard
               title="無料会員"
@@ -141,8 +118,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-bold mb-4">学習</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/courses" className="hover:text-primary">コース一覧</Link></li>
-                <li><Link href="/activities" className="hover:text-primary">活動・研修</Link></li>
+                <li><Link href="/activities" className="hover:text-primary">体験・研修</Link></li>
                 <li><Link href="/exams" className="hover:text-primary">資格試験</Link></li>
                 <li><Link href="/qualifications" className="hover:text-primary">資格について</Link></li>
               </ul>

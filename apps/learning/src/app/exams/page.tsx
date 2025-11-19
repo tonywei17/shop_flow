@@ -56,30 +56,30 @@ export default function ExamsPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">資格試験一覧</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">資格試験一覧</h1>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
             指導者資格試験の中から受験したい試験を選択してください
           </p>
         </div>
 
         {/* Filters （UIのみ / 今はロジックなし） */}
-        <div className="bg-white p-6 rounded-lg border mb-8">
-          <div className="flex flex-wrap gap-4">
-            <select className="border rounded-md px-4 py-2 text-sm">
+        <div className="bg-white p-4 sm:p-6 rounded-lg border mb-6 sm:mb-8">
+          <div className="flex flex-wrap gap-3 sm:gap-4">
+            <select className="border rounded-md px-3 py-2 text-sm w-full sm:w-auto">
               <option>全ての資格種別</option>
               <option>初級指導者資格</option>
               <option>中級指導者資格</option>
               <option>上級指導者資格</option>
             </select>
-            <select className="border rounded-md px-4 py-2 text-sm">
+            <select className="border rounded-md px-3 py-2 text-sm w-full sm:w-auto">
               <option>全ての実施形式</option>
               <option>対面</option>
               <option>オンライン</option>
             </select>
-            <select className="border rounded-md px-4 py-2 text-sm">
+            <select className="border rounded-md px-3 py-2 text-sm w-full sm:w-auto">
               <option>全ての価格</option>
               <option>無料</option>
               <option>有料</option>
@@ -88,7 +88,7 @@ export default function ExamsPage() {
         </div>
 
         {/* Exams List */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {exams.map((exam) => (
             <ExamCard key={exam.id} exam={exam} />
           ))}
@@ -111,8 +111,8 @@ function ExamCard({ exam }: { exam: Exam }) {
   const remaining = Math.max(exam.capacity - exam.applied, 0);
 
   return (
-    <div className="bg-white rounded-lg border p-6 hover:shadow-lg transition-shadow">
-      <div className="flex flex-col md:flex-row gap-6">
+    <div className="bg-white rounded-lg border p-4 sm:p-6 hover:shadow-lg transition-shadow">
+      <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full font-medium bg-blue-100 text-blue-700">
@@ -142,10 +142,10 @@ function ExamCard({ exam }: { exam: Exam }) {
             </span>
           </div>
 
-          <h2 className="text-2xl font-bold mb-2">{exam.name}</h2>
-          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{exam.description}</p>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">{exam.name}</h2>
+          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{exam.description}</p>
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>
@@ -174,9 +174,9 @@ function ExamCard({ exam }: { exam: Exam }) {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between md:w-56">
+        <div className="flex flex-col justify-between md:w-56 w-full">
           <div className="text-right mb-4">
-            <div className="text-3xl font-bold mb-1">
+            <div className="text-2xl sm:text-3xl font-bold mb-1">
               {exam.fee === 0 ? '無料' : `¥${exam.fee.toLocaleString()}`}
             </div>
             <div className="text-xs text-muted-foreground">
@@ -186,7 +186,7 @@ function ExamCard({ exam }: { exam: Exam }) {
 
           <Link
             href={`/exams/${exam.id}`}
-            className={`block text-center px-6 py-3 rounded-lg font-medium text-sm ${
+            className={`block text-center px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm ${
               !isOpen || isFull
                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                 : 'bg-primary text-primary-foreground hover:opacity-90'

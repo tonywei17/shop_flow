@@ -2,8 +2,20 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
 import { Search, Filter, Download, Eye, Mail } from "lucide-react";
 
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  membershipType: "premium" | "trial";
+  joinDate: string;
+  lastActive: string;
+  coursesEnrolled: number;
+  qualifications: number;
+  totalSpent: number;
+};
+
 // Mock data
-const members = [
+const members: Member[] = [
   {
     id: "1",
     name: "山田太郎",
@@ -19,7 +31,7 @@ const members = [
     id: "2",
     name: "佐藤花子",
     email: "sato@example.com",
-    membershipType: "free",
+    membershipType: "trial",
     joinDate: "2024-09-20",
     lastActive: "2025-11-10",
     coursesEnrolled: 1,
@@ -41,7 +53,7 @@ const members = [
     id: "4",
     name: "田中美咲",
     email: "tanaka@example.com",
-    membershipType: "free",
+    membershipType: "trial",
     joinDate: "2025-10-01",
     lastActive: "2025-11-10",
     coursesEnrolled: 2,
@@ -51,16 +63,20 @@ const members = [
 ];
 
 export default function MembersPage() {
+  const totalMembers = members.length;
+  const premiumMembers = members.filter((member) => member.membershipType === "premium").length;
+  const trialMembers = members.filter((member) => member.membershipType === "trial").length;
+
   return (
     <div className="p-8">
       <DashboardHeader title="会員管理" />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <StatCard title="総会員数" value="1,234" change="+12%" />
-        <StatCard title="プレミアム会員" value="456" change="+8%" />
-        <StatCard title="無料会員" value="778" change="+15%" />
-        <StatCard title="今月の新規" value="89" change="+23%" />
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
+        <StatCard title="総会員数" value={`${totalMembers.toLocaleString()}名`} change="+12%" />
+        <StatCard title="プレミアム会員" value={`${premiumMembers}名`} change="+8%" />
+        <StatCard title="仮会員" value={`${trialMembers}名`} change="+15%" />
+        <StatCard title="今月の新規" value="89名" change="+23%" />
       </div>
 
       {/* Filters and Actions */}
@@ -78,7 +94,7 @@ export default function MembersPage() {
             <select className="border rounded-lg px-4 py-2 text-gray-900">
               <option>全ての会員タイプ</option>
               <option>プレミアム会員</option>
-              <option>無料会員</option>
+              <option>仮会員</option>
             </select>
             <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50">
               <Filter className="h-4 w-4" />
@@ -118,12 +134,14 @@ export default function MembersPage() {
                 </td>
                 <td className="p-4 text-sm text-gray-900">{member.email}</td>
                 <td className="p-4">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    member.membershipType === "premium"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}>
-                    {member.membershipType === "premium" ? "プレミアム" : "無料"}
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                      member.membershipType === "premium"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {member.membershipType === "premium" ? "プレミアム" : "仮会員"}
                   </span>
                 </td>
                 <td className="p-4 text-sm text-gray-900">{member.joinDate}</td>

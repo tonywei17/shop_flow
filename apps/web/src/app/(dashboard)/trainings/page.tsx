@@ -1,53 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
+import { DashboardHeader } from "@/components/dashboard/header";
 import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, MapPin, Users } from "lucide-react";
 
-type TrainingCategory = {
-  id: string;
-  name: string;
-  description: string;
-  colorClass: string;
-};
+import { trainingCategories, trainingCourses, flattenTrainings } from "../activities/data";
 
-type Training = {
-  id: string;
-  title: string;
-  categoryId: string;
-  date: string;
-  location: string;
-  capacity: number;
-  enrolled: number;
-  price: number;
-  status: "公開中" | "下書き" | "終了";
-  requiredMembership: "free" | "premium";
-  videos: TrainingVideo[];
-};
-
-type TrainingCourse = {
-  id: string;
-  name: string;
-  branch: string;
-  description: string;
-  periodLabel: string;
-  status: "受付中" | "準備中" | "終了";
-  trainings: Training[];
-};
-
-type TrainingVideo = {
-  id: string;
-  title: string;
-  duration: string;
-  thumbnail: string;
-  views: number;
-  status: "公開中" | "下書き";
-  requiredMembership: "free" | "premium";
-  uploadDate: string;
-};
-
-const TrainingVideoCard = ({ video }: { video: TrainingVideo & { trainingTitle: string } }) => (
+const TrainingVideoCard = ({ video }: { video: (typeof flattenTrainings)[number]["videos"][number] & { trainingTitle: string } }) => (
   <div className="rounded-xl border bg-white shadow-sm">
     <div className="relative h-40 overflow-hidden rounded-t-xl">
       <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
@@ -77,150 +37,7 @@ const TrainingVideoCard = ({ video }: { video: TrainingVideo & { trainingTitle: 
   </div>
 );
 
-const trainingCategories: TrainingCategory[] = [
-  { id: "basic", name: "基礎研修", description: "入門者向け", colorClass: "bg-indigo-100 text-indigo-700" },
-  { id: "instructor", name: "指導者向け", description: "指導スキル強化", colorClass: "bg-purple-100 text-purple-700" },
-  { id: "certification", name: "資格対策", description: "資格取得サポート", colorClass: "bg-amber-100 text-amber-700" },
-];
-
-const trainingCourses: TrainingCourse[] = [
-  {
-    id: "course-basic",
-    name: "基礎指導者コース",
-    branch: "東京本部",
-    description: "未経験者から指導者デビューまでの導入研修セット",
-    periodLabel: "2025年5月期",
-    status: "受付中",
-    trainings: [
-      {
-        id: "basic-1",
-        title: "幼児指導法ワークショップ",
-        categoryId: "basic",
-        date: "2025-11-25 10:00",
-        location: "東京本部",
-        capacity: 30,
-        enrolled: 22,
-        price: 8800,
-        status: "公開中",
-        requiredMembership: "premium",
-        videos: [
-          {
-            id: "vid-basic-1",
-            title: "導入ステップ講義",
-            duration: "12:45",
-            thumbnail: "https://placehold.co/320x180/22c55e/ffffff?text=Video",
-            views: 312,
-            status: "公開中",
-            requiredMembership: "premium",
-            uploadDate: "2025-10-02",
-          },
-        ],
-      },
-      {
-        id: "basic-2",
-        title: "基礎スキル集中講座",
-        categoryId: "basic",
-        date: "2025-12-08 09:30",
-        location: "大阪支部",
-        capacity: 24,
-        enrolled: 17,
-        price: 6400,
-        status: "公開中",
-        requiredMembership: "free",
-        videos: [],
-      },
-    ],
-  },
-  {
-    id: "course-instructor",
-    name: "指導者アップデートコース",
-    branch: "大阪支部",
-    description: "現役指導者のスキルアップ/資格維持",
-    periodLabel: "2025年6月期",
-    status: "受付中",
-    trainings: [
-      {
-        id: "inst-1",
-        title: "中級指導者認定研修",
-        categoryId: "instructor",
-        date: "2025-12-10 09:00",
-        location: "大阪支部",
-        capacity: 25,
-        enrolled: 18,
-        price: 15000,
-        status: "下書き",
-        requiredMembership: "premium",
-        videos: [
-          {
-            id: "vid-inst-1",
-            title: "ケーススタディ：上級指導",
-            duration: "18:30",
-            thumbnail: "https://placehold.co/320x180/0f172a/ffffff?text=Video",
-            views: 88,
-            status: "下書き",
-            requiredMembership: "premium",
-            uploadDate: "2025-10-10",
-          },
-        ],
-      },
-      {
-        id: "inst-2",
-        title: "オンライン指導スキル研修",
-        categoryId: "instructor",
-        date: "2025-12-18 13:00",
-        location: "オンライン",
-        capacity: 80,
-        enrolled: 54,
-        price: 0,
-        status: "公開中",
-        requiredMembership: "free",
-        videos: [
-          {
-            id: "vid-inst-2",
-            title: "Zoom運営マニュアル",
-            duration: "09:55",
-            thumbnail: "https://placehold.co/320x180/2563eb/ffffff?text=Video",
-            views: 152,
-            status: "公開中",
-            requiredMembership: "free",
-            uploadDate: "2025-09-28",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "course-cert",
-    name: "資格対策コース",
-    branch: "名古屋支部",
-    description: "資格試験に特化した短期集中プラン",
-    periodLabel: "2025年7月期",
-    status: "準備中",
-    trainings: [
-      {
-        id: "cert-1",
-        title: "初級資格試験模擬対策",
-        categoryId: "certification",
-        date: "2025-12-20 10:00",
-        location: "名古屋支部",
-        capacity: 40,
-        enrolled: 0,
-        price: 9800,
-        status: "下書き",
-        requiredMembership: "premium",
-        videos: [],
-      },
-    ],
-  },
-];
-
-const flattenTrainings = trainingCourses.flatMap((course) => course.trainings);
-const totalTrainings = flattenTrainings.length;
-const publishedTrainings = flattenTrainings.filter((training) => training.status === "公開中").length;
-const totalParticipants = flattenTrainings.reduce((sum, training) => sum + training.enrolled, 0);
-const totalRevenue = flattenTrainings.reduce((sum, training) => sum + training.price * training.enrolled, 0);
-
-export default function ActivitiesManagementPage() {
+export default function TrainingsPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>(trainingCourses[0]?.id ?? "");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
 
@@ -241,6 +58,11 @@ export default function ActivitiesManagementPage() {
   const selectedVideos = filteredTrainings.flatMap((training) =>
     training.videos.map((video) => ({ ...video, trainingTitle: training.title })),
   );
+
+  const totalTrainings = flattenTrainings.length;
+  const publishedTrainings = flattenTrainings.filter((training) => training.status === "公開中").length;
+  const totalParticipants = flattenTrainings.reduce((sum, training) => sum + training.enrolled, 0);
+  const totalRevenue = flattenTrainings.reduce((sum, training) => sum + training.price * training.enrolled, 0);
 
   return (
     <div className="p-8">
@@ -266,7 +88,6 @@ export default function ActivitiesManagementPage() {
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,260px)_1fr]">
-        {/* 左：研修コース一覧 */}
         <aside className="rounded-2xl border bg-white">
           <div className="border-b px-4 py-3">
             <p className="text-sm font-bold text-gray-900 tracking-wide">研修コース</p>
@@ -280,9 +101,7 @@ export default function ActivitiesManagementPage() {
                   key={course.id}
                   type="button"
                   className={`w-full px-4 py-3 text-left transition ${
-                    isActive
-                      ? "bg-emerald-600 text-white"
-                      : "bg-white hover:bg-emerald-50"
+                    isActive ? "bg-emerald-600 text-white" : "bg-white hover:bg-emerald-50"
                   }`}
                   onClick={() => setSelectedCourseId(course.id)}
                 >
@@ -306,7 +125,6 @@ export default function ActivitiesManagementPage() {
           </div>
         </aside>
 
-        {/* 右：選択コース詳細 */}
         <section className="rounded-2xl border bg-white p-6">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
             <div>
@@ -322,7 +140,6 @@ export default function ActivitiesManagementPage() {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="mt-4 grid gap-4 md:grid-cols-4">
             <StatCard title="コース全体の研修" value={`${selectedCourse?.trainings.length ?? 0}件`} subtitle={`全体: ${totalTrainings}件`} />
             <StatCard title="公開中" value={`${selectedPublished}件`} subtitle={`全体: ${publishedTrainings}件`} />
@@ -330,7 +147,6 @@ export default function ActivitiesManagementPage() {
             <StatCard title="見込み収入" value={`¥${selectedRevenue.toLocaleString()}`} subtitle={`全体: ¥${totalRevenue.toLocaleString()}`} />
           </div>
 
-          {/* Filters */}
           <div className="mt-6 rounded-xl border bg-gray-50/60 p-4">
             <div className="flex flex-col gap-3 md:flex-row">
               <div className="relative flex-1">
@@ -366,7 +182,6 @@ export default function ActivitiesManagementPage() {
             </div>
           </div>
 
-          {/* Trainings Table */}
           <div className="mt-6 overflow-hidden rounded-xl border">
             <table className="w-full">
               <thead className="border-b bg-gray-50">
@@ -383,7 +198,7 @@ export default function ActivitiesManagementPage() {
               </thead>
               <tbody>
                 {filteredTrainings.map((training) => {
-                  const category = trainingCategories.find((category) => category.id === training.categoryId);
+                  const category = trainingCategories.find((c) => c.id === training.categoryId);
                   return (
                     <tr key={training.id} className="border-b last:border-b-0 hover:bg-gray-50">
                       <td className="p-4">
@@ -423,31 +238,22 @@ export default function ActivitiesManagementPage() {
                           {training.enrolled}/{training.capacity}名
                         </div>
                         <div className="mt-1 h-1.5 w-full rounded-full bg-gray-200">
-                          <div
-                            className="h-1.5 rounded-full bg-blue-600"
-                            style={{ width: `${(training.enrolled / training.capacity) * 100}%` }}
-                          />
+                          <div className="h-1.5 rounded-full bg-blue-600" style={{ width: `${(training.enrolled / training.capacity) * 100}%` }} />
                         </div>
                       </td>
                       <td className="p-4 text-sm font-medium text-gray-900">
                         {training.price === 0 ? "無料" : `¥${training.price.toLocaleString()}`}
                       </td>
                       <td className="p-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                            training.status === "公開中" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                          training.status === "公開中" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"
+                        }`}>
                           {training.status}
                         </span>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <Link
-                            href={`/activities/${training.id}`}
-                            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                            title="詳細・チェックイン"
-                          >
+                          <Link href={`/trainings/${training.id}`} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900" title="詳細・チェックイン">
                             <Eye className="h-4 w-4" />
                           </Link>
                           <button className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900" title="編集">

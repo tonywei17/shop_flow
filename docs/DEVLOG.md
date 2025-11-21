@@ -141,3 +141,39 @@
 - 接入实际认证逻辑（Supabase Auth 或内部 API），落地登录流程。
 - Dashboard 受注页接通 Supabase `orders` 数据，补完界面。
 - 清理仓库中未用的 Medusa 目录与依赖。
+
+## 2025-11-21（JST）
+
+### 本次变更概览
+- **マスタ管理機能（アカウント/部署/ロール）**：
+  - 新增 Supabase 封装：`packages/db/src/accounts.ts`、`departments.ts`、`roles.ts`，并从 `packages/db/src/index.ts` 导出。
+  - 后台 API：`apps/web/src/app/api/internal/{accounts,departments,roles}/route.ts`，统一分页、检索参数与错误处理。
+  - Dashboard 页面：
+    - アカウント管理：`/(dashboard)/account` + `account-client.tsx`，支持搜索、筛选、分页以及新规/編集（抽屉表单）。
+    - 部署管理：`/(dashboard)/departments` + `departments-client.tsx`，支持搜索、分页以及层级/地址信息展示。
+    - ロール管理：`/(dashboard)/roles` + `roles-client.tsx`，支持新规ロール创建、状态/データ範囲 badge 展示。
+  - 通用管理用ドロワー：`apps/web/src/components/dashboard/management-drawer.tsx` 基于 `src/components/ui/sheet.tsx` 实现右侧抽屉布局。
+
+### 受影响文件/目录
+- `apps/web/src/app/(dashboard)/account/page.tsx`
+- `apps/web/src/app/(dashboard)/departments/page.tsx`
+- `apps/web/src/app/(dashboard)/roles/page.tsx`
+- `apps/web/src/app/(dashboard)/account/account-client.tsx`
+- `apps/web/src/app/(dashboard)/departments/departments-client.tsx`
+- `apps/web/src/app/(dashboard)/roles/roles-client.tsx`
+- `apps/web/src/app/api/internal/accounts/route.ts`
+- `apps/web/src/app/api/internal/departments/route.ts`
+- `apps/web/src/app/api/internal/roles/route.ts`
+- `apps/web/src/components/dashboard/management-drawer.tsx`
+- `src/components/ui/sheet.tsx`
+- `packages/db/src/index.ts`
+- `packages/db/src/accounts.ts`
+- `packages/db/src/departments.ts`
+- `packages/db/src/roles.ts`
+- `docs/data/`（Supabase 相关导出数据，供参考）
+
+### 待办与下一步
+- 为账户/部门/ロール新增/编辑接口补齐字段校验与权限检查。
+- 在列表页补充批量操作、导出等后端实现（当前按钮为 UI 占位）。
+- 将账户/部门/ロール操作接入 Supabase RLS 与审计日志表。
+- 在 CI 中加入 `npm run lint` / `npm run build` 检查，保证 Dashboard マスタ管理的回归质量。

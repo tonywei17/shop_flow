@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import Link from "next/link";
 import { getProduct } from "@enterprise/db";
 
@@ -6,7 +7,13 @@ function formatPrice(cents?: number | null) {
   return (value / 100).toLocaleString("ja-JP", { style: "currency", currency: "JPY" });
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
+type ProductPageProps = {
+  params: {
+    id: string;
+  };
+};
+
+export default async function ProductPage({ params }: ProductPageProps): Promise<ReactElement> {
   const product = await getProduct(params.id);
 
   if (!product) {

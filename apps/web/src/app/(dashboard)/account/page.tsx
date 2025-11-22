@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { listAdminAccounts } from "@enterprise/db";
 import { AccountClient } from "./account-client";
@@ -27,15 +28,20 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const status = resolvedSearchParams?.status?.trim();
   const offset = (page - 1) * limit;
 
-  const { accounts, count } = await listAdminAccounts({ limit, offset, search, scope, status });
+  const { accounts, count } = await listAdminAccounts({ limit, offset, search, scope, status }).catch((error) => {
+    console.error("Failed to load admin accounts from Supabase on account page", error);
+    return { accounts: [], count: 0 };
+  });
 
   return (
     <div className="space-y-6">
       <DashboardHeader title="アカウント管理" />
-      <AccountClient
-        accounts={accounts}
-        pagination={{ page, limit, count, search: search ?? "", scope: scope ?? "", status: status ?? "" }}
-      />
+      <Suspense fallback={null}>
+        <AccountClient
+          accounts={accounts}
+          pagination={{ page, limit, count, search: search ?? "", scope: scope ?? "", status: status ?? "" }}
+        />
+      </Suspense>
     </div>
   );
 }

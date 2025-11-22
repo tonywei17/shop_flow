@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Download, Edit, Plus } from "lucide-react";
 import { ManagementDrawer } from "@/components/dashboard/management-drawer";
+import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
 
 export type AccountsPagination = {
   page: number;
@@ -128,10 +129,12 @@ export function AccountClient({
 
   const updateQuery = React.useCallback(
     (next: { page?: number; search?: string; scope?: string; status?: string }) => {
-      const params = new URLSearchParams(searchParams?.toString());
-      const nextPage = next.page ?? pagination.page;
-      params.set("page", String(Math.max(1, Math.min(totalPages, nextPage))));
-      params.set("limit", String(pagination.limit));
+      const params = updatePaginationSearchParams(searchParams, {
+        currentPage: pagination.page,
+        totalPages,
+        limit: pagination.limit,
+        nextPage: next.page,
+      });
 
       if (typeof next.search === "string") {
         if (next.search) {
@@ -239,25 +242,10 @@ export function AccountClient({
     }
   };
 
-  const visiblePages = React.useMemo(() => {
-    const pages: number[] = [];
-    const add = (value: number) => {
-      if (value >= 1 && value <= totalPages && !pages.includes(value)) {
-        pages.push(value);
-      }
-    };
-
-    add(1);
-    add(totalPages);
-    add(pagination.page);
-    add(pagination.page - 1);
-    add(pagination.page + 1);
-
-    return pages
-      .filter((value) => value >= 1 && value <= totalPages)
-      .filter((value, index, arr) => arr.indexOf(value) === index)
-      .sort((a, b) => a - b);
-  }, [pagination.page, totalPages]);
+  const visiblePages = React.useMemo(
+    () => buildVisiblePages(pagination.page, totalPages),
+    [pagination.page, totalPages],
+  );
 
   return (
     <>

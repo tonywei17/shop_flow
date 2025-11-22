@@ -30,6 +30,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Download, Edit, Plus } from "lucide-react";
+import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
 
 const scopeBadgeMap: Record<string, { label: string; className: string }> = {
   "すべてのデータ権限": { label: "全権限", className: "bg-[#e5f5ec] text-[#00ac4d]" },
@@ -80,10 +81,12 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
 
   const updateQuery = React.useCallback(
     (next: { page?: number; search?: string }) => {
-      const params = new URLSearchParams(searchParams?.toString());
-      const nextPage = next.page ?? pagination.page;
-      params.set("page", String(Math.max(1, Math.min(totalPages, nextPage))));
-      params.set("limit", String(pagination.limit));
+      const params = updatePaginationSearchParams(searchParams, {
+        currentPage: pagination.page,
+        totalPages,
+        limit: pagination.limit,
+        nextPage: next.page,
+      });
       if (typeof next.search === "string") {
         if (next.search) {
           params.set("q", next.search);
@@ -139,26 +142,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
       }
     });
   };
-
-  const buildVisiblePages = () => {
-    const pages: number[] = [];
-    const add = (value: number) => {
-      if (value >= 1 && value <= totalPages && !pages.includes(value)) {
-        pages.push(value);
-      }
-    };
-
-    add(1);
-    add(totalPages);
-    add(pagination.page);
-    add(pagination.page - 1);
-    add(pagination.page + 1);
-
-    const sorted = pages.sort((a, b) => a - b);
-    return sorted;
-  };
-
-  const visiblePages = buildVisiblePages();
+  const visiblePages = buildVisiblePages(pagination.page, totalPages);
 
   return (
     <div className="space-y-6">

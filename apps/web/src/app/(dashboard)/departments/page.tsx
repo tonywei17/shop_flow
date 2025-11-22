@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { listDepartments } from "@enterprise/db";
 import { DepartmentsClient } from "./departments-client";
@@ -21,15 +22,20 @@ export default async function DepartmentsPage({ searchParams }: DepartmentsPageP
   const search = searchParams?.q?.trim();
   const offset = (page - 1) * limit;
 
-  const { departments, count } = await listDepartments({ limit, offset, search });
+  const { departments, count } = await listDepartments({ limit, offset, search }).catch((error) => {
+    console.error("Failed to load departments from Supabase on departments page", error);
+    return { departments: [], count: 0 };
+  });
 
   return (
     <div className="space-y-6">
       <DashboardHeader title="部署管理" />
-      <DepartmentsClient
-        departments={departments}
-        pagination={{ page, limit, count, search: search ?? "" }}
-      />
+      <Suspense fallback={null}>
+        <DepartmentsClient
+          departments={departments}
+          pagination={{ page, limit, count, search: search ?? "" }}
+        />
+      </Suspense>
     </div>
   );
 }

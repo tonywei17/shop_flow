@@ -31,7 +31,10 @@ function formatPrice(cents?: number | null) {
 }
 
 export default async function CommerceListPage() {
-  const { items } = await listProducts({ limit: 50 });
+  const { items } = await listProducts({ limit: 50 }).catch((error) => {
+    console.error("Failed to load Supabase products for commerce page", error);
+    return { items: [], count: 0 };
+  });
   const rows = (items as SupabaseProduct[]) ?? [];
   const hasRows = rows.length > 0;
 

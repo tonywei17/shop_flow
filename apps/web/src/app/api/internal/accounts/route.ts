@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listAdminAccounts, createAdminAccount, updateAdminAccount } from "@enterprise/db";
+import { parsePaginationParams } from "@/lib/pagination";
+import {
+  getAdminAccounts,
+  createAdminAccountService,
+  updateAdminAccountService,
+} from "@/lib/services/org";
+import { accountUpsertSchema } from "@/lib/validation/accounts";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const pageParam = Number(searchParams.get("page"));
-  const limitParam = Number(searchParams.get("limit"));
+  const { page, limit, offset } = parsePaginationParams(searchParams, {
+    defaultLimit: 20,
+    maxLimit: 50,
+  });
   const scope = searchParams.get("scope")?.trim() || undefined;
   const status = searchParams.get("status")?.trim() || undefined;
   const search = searchParams.get("q")?.trim() || undefined;
 
-  const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
-  const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 50) : 20;
-  const offset = (page - 1) * limit;
-
   try {
-    const { accounts, count } = await listAdminAccounts({ limit, offset, search, scope, status });
+    const { accounts, count } = await getAdminAccounts({ limit, offset, search, scope, status });
     return NextResponse.json({ accounts, count, page, limit });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -24,23 +28,35 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
+    const rawBody = await req.json().catch(() => ({}));
+    const parsed = accountUpsertSchema.safeParse(rawBody);
 
-    const mode = body.mode === "edit" ? "edit" : "create";
-    const id = typeof body.id === "string" ? body.id : undefined;
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid account payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
 
-    const accountId = typeof body.account_id === "string" ? body.account_id.trim() : "";
-    const displayName = typeof body.display_name === "string" ? body.display_name.trim() : "";
-    const email = typeof body.email === "string" ? body.email.trim() : "";
-    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
-    const statusRaw = body.status;
+    const data = parsed.data;
+    const mode = data.mode ?? "create";
+    const id = data.id;
+
+    const accountId = data.account_id.trim();
+    const displayName = data.display_name.trim();
+    const email = (data.email ?? "").trim();
+    const phone = (data.phone ?? "").trim();
+
+    const statusRaw = data.status;
     const status =
       statusRaw === true || statusRaw === "有効" || statusRaw === "active" ? "有効" : "無効";
-    const roleCode = typeof body.role_code === "string" ? body.role_code.trim() : "";
-    const departmentName =
-      typeof body.department_name === "string" ? body.department_name.trim() : "";
-    const accountScopeRaw =
-      typeof body.account_scope === "string" ? body.account_scope.trim() : "";
+
+    const roleCode = (data.role_code ?? "").trim();
+    const departmentName = (data.department_name ?? "").trim();
+    const accountScopeRaw = (data.account_scope ?? "").trim();
     const accountScope = accountScopeRaw || "admin_portal";
 
     if (!accountId || !displayName) {
@@ -52,7 +68,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Missing id for edit mode" }, { status: 400 });
       }
 
-      await updateAdminAccount(id, {
+      await updateAdminAccountService(id, {
         display_name: displayName,
         email: email || null,
         phone: phone || null,
@@ -65,7 +81,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, mode: "edit" }, { status: 200 });
     }
 
-    const { id: newId } = await createAdminAccount({
+    const { id: newId } = await createAdminAccountService({
       account_id: accountId,
       display_name: displayName,
       email: email || null,

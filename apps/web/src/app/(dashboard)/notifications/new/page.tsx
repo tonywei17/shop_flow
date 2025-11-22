@@ -300,8 +300,9 @@ export default function NewNotificationPage() {
                   <select
                     value={formData.membershipType}
                     onChange={(e) => {
-                      setFormData({ ...formData, membershipType: e.target.value });
-                      setRecipientCount(e.target.value === "premium" ? 456 : e.target.value === "free" ? 778 : 1234);
+                      const value = e.target.value as NewNotificationFormData["membershipType"];
+                      setFormData({ ...formData, membershipType: value });
+                      setRecipientCount(value === "premium" ? 456 : value === "free" ? 778 : 1234);
                     }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >

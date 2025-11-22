@@ -1,7 +1,12 @@
 # 技术框架说明（Technical Architecture）
 
-> 基座：Next.js + Supabase + Stripe + Langflow（AI 引擎）
+> 基座：Next.js + Supabase + Stripe + Langflow（AI 引擎）  
 > 目标：模块化、可扩展、多租户、安全合规、可观测。
+>
+> **当前状态说明（2025-11-23）**：
+> - 已落地：Turborepo + pnpm、`apps/web` / `apps/storefront` / `apps/learning`、`@enterprise/db` 访问 Supabase、部分 `@enterprise/domain-*` 包。  
+> - UI 层：本仓库已采用 shadcn/ui + `src/components/ui/*`，不再使用独立的 `packages/ui` 包（文中如有提及，可视为早期方案）。  
+> - 外部服务：Stripe / Langflow 等仍处于规划或 PoC 阶段，尚未成为强依赖；Supabase 是当前唯一落地的数据基座。
 
 ## 1. 架构概览
 
@@ -33,15 +38,14 @@ flowchart LR
 - **apps/web**：面向用户/员工的主 Web 应用（Next.js）。
 - **apps/admin（可选）**：独立后台（或在 web 内以 role-based routes 实现）。
 - **packages/**（跨模块共享）：
-  - **ui**：可组合 UI 组件集（Tailwind/HeadlessUI/Design System）。
   - **auth**：登录/会话/权限工具（Supabase Auth + RBAC/ABAC helper）。
   - **db**：数据库访问层（supabase-js 客户端、类型、Query Helpers）。
   - **config**：环境/Feature Flags/多租户配置读取。
-  - **ai**：Langflow 网关 SDK、Flow 模板版本管理、回调与SSE。
-  - **stripe**：支付/订阅/开票/对接工具、Webhooks 验证、映射。
-  - **events**：领域事件模型、Outbox、总线发布/订阅工具。
-  - **reports**：报表与导出（CSV/PDF）工具。
-  - **domain-<module>**：每个业务域的服务与模型（可逐步拆出）。
+  - **ai**：Langflow 网关 SDK、Flow 模板版本管理、回调与SSE。（规划中）
+  - **stripe**：支付/订阅/开票/对接工具、Webhooks 验证、映射。（规划中）
+  - **events**：领域事件模型、Outbox、总线发布/订阅工具。（规划/部分 PoC）
+  - **reports**：报表与导出（CSV/PDF）工具。（规划中）
+  - **domain-<module>**：每个业务域的服务与模型（当前已存在 `domain-org` / `domain-crm` / `domain-lms` / `domain-commerce` / `domain-settlement` 等骨架）。
 - **supabase/**：迁移、种子、Edge Functions、策略与触发器。
 - **flows/**：Langflow Flow 模板与版本记录（JSON + 说明）。
 

@@ -4,7 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { listProducts } from "@enterprise/db";
 
 export default async function InternalProductsPage() {
-  const { items } = await listProducts({ limit: 50 });
+  const { items } = await listProducts({ limit: 50 }).catch((error) => {
+    console.error("Failed to load Supabase products for internal commerce page", error);
+    return { items: [], count: 0 };
+  });
   return (
     <div className="flex flex-col min-h-screen">
       <DashboardHeader title="内部商品（Supabase）" />

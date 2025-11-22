@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listRoles, createRole } from "@enterprise/db";
+import { parsePaginationParams } from "@/lib/pagination";
+import { getRoles, createRoleService } from "@/lib/services/org";
+import { roleCreateSchema } from "@/lib/validation/roles";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const limit = Math.max(1, Math.min(100, Number(searchParams.get("limit")) || 20));
-  const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePaginationParams(searchParams, {
+    defaultLimit: 20,
+    maxLimit: 100,
+  });
   const search = searchParams.get("q")?.trim() || undefined;
 
   try {
-    const { roles, count } = await listRoles({ limit, offset, search });
+    const { roles, count } = await getRoles({ limit, offset, search });
     return NextResponse.json({ roles, count, page, limit });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -19,21 +22,38 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
+    const rawBody = await req.json().catch(() => ({}));
+    const parsed = roleCreateSchema.safeParse(rawBody);
 
-    const roleId = body.role_id;
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const code = typeof body.code === "string" ? body.code.trim() : "";
-    const dataScope = typeof body.data_scope === "string" ? body.data_scope.trim() : "all";
-    const status = typeof body.status === "string" ? body.status.trim() : "active";
-    const description = typeof body.description === "string" ? body.description.trim() : null;
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid role payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const data = parsed.data;
+    const roleId = data.role_id;
+    const name = data.name.trim();
+    const code = data.code.trim();
+    const dataScope = (data.data_scope ?? "all").trim() || "all";
+    const status = (data.status ?? "active").trim() || "active";
+    const description = data.description ? data.description.trim() : null;
 
     if (!name || !code) {
       return NextResponse.json({ error: "Missing name or code" }, { status: 400 });
     }
 
-    const payload = await createRole({
-      role_id: Number.isFinite(Number(roleId)) ? Number(roleId) : null,
+    const payload = await createRoleService({
+      role_id:
+        typeof roleId === "number"
+          ? roleId
+          : Number.isFinite(Number(roleId))
+            ? Number(roleId)
+            : null,
       name,
       code,
       data_scope: dataScope || "all",

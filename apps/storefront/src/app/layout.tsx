@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactElement, ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,7 +7,11 @@ export const metadata: Metadata = {
   description: "Medusa を利用した社内向けストア",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+type RootLayoutProps = {
+  children: ReactNode;
+};
+
+export default function RootLayout({ children }: RootLayoutProps): ReactElement {
   return (
     <html lang="ja">
       <body>

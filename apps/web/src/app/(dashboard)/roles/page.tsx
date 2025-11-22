@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { listRoles } from "@enterprise/db";
 import { RolesClient } from "./roles-client";
 
@@ -20,7 +21,14 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
   const search = searchParams?.q?.trim();
   const offset = (page - 1) * limit;
 
-  const { roles, count } = await listRoles({ limit, offset, search });
+  const { roles, count } = await listRoles({ limit, offset, search }).catch((error) => {
+    console.error("Failed to load roles from Supabase on roles page", error);
+    return { roles: [], count: 0 };
+  });
 
-  return <RolesClient roles={roles} pagination={{ page, limit, count, search: search ?? "" }} />;
+  return (
+    <Suspense fallback={null}>
+      <RolesClient roles={roles} pagination={{ page, limit, count, search: search ?? "" }} />
+    </Suspense>
+  );
 }

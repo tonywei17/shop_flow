@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listDepartments } from "@enterprise/db";
+import { parsePaginationParams } from "@/lib/pagination";
+import { getDepartments } from "@/lib/services/org";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const limitParam = Number(searchParams.get("limit"));
-  const pageParam = Number(searchParams.get("page"));
-  const limit = Number.isFinite(limitParam) ? Math.min(Math.max(1, limitParam), 100) : 20;
-  const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePaginationParams(searchParams, {
+    defaultLimit: 20,
+    maxLimit: 100,
+  });
   const search = searchParams.get("q")?.trim() || undefined;
   const category = searchParams.get("category")?.trim() || undefined;
 
   try {
-    const { departments, count } = await listDepartments({ limit, offset, search, category });
+    const { departments, count } = await getDepartments({ limit, offset, search, category });
     return NextResponse.json({ departments, count, page, limit });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

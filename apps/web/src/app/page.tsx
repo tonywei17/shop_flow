@@ -1,14 +1,50 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const account = String(formData.get("account") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account, password }),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        const message = data?.error || "ログインに失敗しました";
+        setError(message);
+        return;
+      }
+
+      const redirect = searchParams.get("redirect");
+      const target = redirect && redirect.startsWith("/") ? redirect : "/account";
+      router.push(target);
+    } catch {
+      setError("ネットワークエラーが発生しました");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -51,11 +87,17 @@ export default function LoginPage() {
               パスワードを記憶する
             </label>
           </div>
+          {error && (
+            <p className="text-sm text-red-600 text-left">
+              {error}
+            </p>
+          )}
           <Button
             type="submit"
-            className="w-full h-11 rounded-md bg-[#0f9d58] text-white text-sm font-semibold hover:bg-[#0c7a45]"
+            className="w-full h-11 rounded-md bg-[#0f9d58] text-white text-sm font-semibold hover:bg-[#0c7a45] disabled:opacity-60"
+            disabled={loading}
           >
-            ログイン
+            {loading ? "ログイン中..." : "ログイン"}
           </Button>
         </form>
       </div>

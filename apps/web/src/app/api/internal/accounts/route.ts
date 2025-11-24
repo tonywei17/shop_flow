@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const { page, limit, offset } = parsePaginationParams(searchParams, {
     defaultLimit: 20,
-    maxLimit: 50,
+    maxLimit: 100,
   });
   const scope = searchParams.get("scope")?.trim() || undefined;
   const status = searchParams.get("status")?.trim() || undefined;

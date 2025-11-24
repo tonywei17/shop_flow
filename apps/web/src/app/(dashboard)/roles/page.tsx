@@ -9,16 +9,18 @@ type RolesPageSearchParams = {
 };
 
 type RolesPageProps = {
-  searchParams?: RolesPageSearchParams;
+  searchParams?: Promise<RolesPageSearchParams>;
 };
 
 export default async function RolesPage({ searchParams }: RolesPageProps) {
-  const pageParam = Number(searchParams?.page);
-  const limitParam = Number(searchParams?.limit);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
+  const pageParam = Number(resolvedSearchParams?.page);
+  const limitParam = Number(resolvedSearchParams?.limit);
 
   const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 50) : 10;
-  const search = searchParams?.q?.trim();
+  const search = resolvedSearchParams?.q?.trim();
   const offset = (page - 1) * limit;
 
   const { roles, count } = await listRoles({ limit, offset, search }).catch((error) => {

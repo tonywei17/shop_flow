@@ -10,16 +10,18 @@ type DepartmentsPageSearchParams = {
 };
 
 type DepartmentsPageProps = {
-  searchParams?: DepartmentsPageSearchParams;
+  searchParams?: Promise<DepartmentsPageSearchParams>;
 };
 
 export default async function DepartmentsPage({ searchParams }: DepartmentsPageProps) {
-  const pageParam = Number(searchParams?.page);
-  const limitParam = Number(searchParams?.limit);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
+  const pageParam = Number(resolvedSearchParams?.page);
+  const limitParam = Number(resolvedSearchParams?.limit);
 
   const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 50) : 20;
-  const search = searchParams?.q?.trim();
+  const search = resolvedSearchParams?.q?.trim();
   const offset = (page - 1) * limit;
 
   const { departments, count } = await listDepartments({ limit, offset, search }).catch((error) => {

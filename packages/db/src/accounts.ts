@@ -41,6 +41,7 @@ export type ListAdminAccountsParams = {
   search?: string;
   scope?: string;
   status?: string;
+  ids?: string[];
 };
 
 export async function listAdminAccounts(
@@ -85,7 +86,9 @@ export async function listAdminAccounts(
     query = query.eq("status", params.status);
   }
 
-  if (typeof params.limit === "number") {
+  if (params.ids && params.ids.length) {
+    query = query.in("id", params.ids);
+  } else if (typeof params.limit === "number") {
     const limit = Math.max(1, params.limit);
     const offset = Math.max(0, params.offset ?? 0);
     query = query.range(offset, offset + limit - 1);

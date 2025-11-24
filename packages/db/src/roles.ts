@@ -24,6 +24,7 @@ export type ListRolesParams = {
   limit?: number;
   offset?: number;
   search?: string;
+  ids?: string[];
 };
 
 export async function listRoles(params: ListRolesParams = {}): Promise<{ roles: RoleRecord[]; count: number }> {
@@ -38,7 +39,9 @@ export async function listRoles(params: ListRolesParams = {}): Promise<{ roles: 
     query = query.ilike("name", `%${params.search}%`);
   }
 
-  if (typeof params.limit === "number") {
+  if (params.ids && params.ids.length) {
+    query = query.in("id", params.ids);
+  } else if (typeof params.limit === "number") {
     const limit = Math.max(1, params.limit);
     const offset = Math.max(0, params.offset ?? 0);
     const to = offset + limit - 1;

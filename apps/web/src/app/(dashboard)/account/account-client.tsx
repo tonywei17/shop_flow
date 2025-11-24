@@ -8,6 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -24,6 +33,8 @@ import { Switch } from "@/components/ui/switch";
 import { Download, Edit, Plus } from "lucide-react";
 import { ManagementDrawer } from "@/components/dashboard/management-drawer";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+
+const ACCOUNTS_SELECTION_STORAGE_KEY = "accounts_selected_ids";
 
 export type AccountsPagination = {
   page: number;
@@ -108,14 +119,43 @@ export function AccountClient({
   const [formState, setFormState] = React.useState<AccountFormState>(() => createFormState());
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   const isEditing = drawerState.mode === "edit";
 
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
+  const pageSizeOptions = [20, 50, 100];
 
   React.useEffect(() => {
     setFormState(createFormState(drawerState.account ?? undefined));
   }, [drawerState.account, drawerState.mode]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.sessionStorage.getItem(ACCOUNTS_SELECTION_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        const safe = parsed
+          .map((value) => (typeof value === "string" ? value.trim() : ""))
+          .filter((value) => value.length > 0);
+        setSelectedIds(safe);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!selectedIds.length) {
+      window.sessionStorage.removeItem(ACCOUNTS_SELECTION_STORAGE_KEY);
+      return;
+    }
+    window.sessionStorage.setItem(ACCOUNTS_SELECTION_STORAGE_KEY, JSON.stringify(selectedIds));
+  }, [selectedIds]);
 
   const departmentOptions = React.useMemo(() => {
     const names = new Set<string>();
@@ -164,6 +204,30 @@ export function AccountClient({
     },
     [pagination.limit, pagination.page, pathname, router, searchParams, totalPages],
   );
+
+  const allCurrentPageIds = React.useMemo(() => accounts.map((account) => account.id), [accounts]);
+
+  const allSelectedOnPage =
+    allCurrentPageIds.length > 0 && allCurrentPageIds.every((id) => selectedIds.includes(id));
+  const someSelectedOnPage =
+    allCurrentPageIds.length > 0 && allCurrentPageIds.some((id) => selectedIds.includes(id));
+
+  const headerCheckboxChecked: boolean | "indeterminate" = allSelectedOnPage
+    ? true
+    : someSelectedOnPage
+      ? "indeterminate"
+      : false;
+
+  const handleToggleSelectAllCurrentPage = (checked: boolean) => {
+    if (checked) {
+      const next = new Set(selectedIds);
+      allCurrentPageIds.forEach((id) => next.add(id));
+      setSelectedIds(Array.from(next));
+    } else {
+      const remove = new Set(allCurrentPageIds);
+      setSelectedIds((prev) => prev.filter((id) => !remove.has(id)));
+    }
+  };
 
   const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -242,6 +306,59 @@ export function AccountClient({
     }
   };
 
+  const handleExport = async (mode: "all" | "selected") => {
+    if (isExporting) return;
+    if (mode === "selected" && !selectedIds.length) return;
+    setIsExporting(true);
+    try {
+      const body = mode === "selected" ? { ids: selectedIds } : {};
+      const response = await fetch("/api/internal/accounts/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await response.json().catch(() => null)) as
+        | { ok?: boolean; error?: string; rowCount?: number }
+        | null;
+      if (!response.ok || !data?.ok) {
+        const message =
+          data?.error || `エクスポートに失敗しました (status ${response.status})`;
+        alert(message);
+        return;
+      }
+      const rowCount = typeof data.rowCount === "number" ? data.rowCount : 0;
+      alert(`エクスポートが完了しました（${rowCount} 件）`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "エクスポートに失敗しました";
+      alert(message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportCsv = (mode: "all" | "selected") => {
+    if (mode === "selected" && !selectedIds.length) return;
+    const base = "/api/internal/accounts/export-csv";
+    const url = mode === "selected" && selectedIds.length
+      ? `${base}?ids=${encodeURIComponent(selectedIds.join(","))}`
+      : base;
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank");
+    }
+  };
+
+  const handlePageSizeChange = (nextLimit: number) => {
+    if (nextLimit === pagination.limit) return;
+    const newTotalPages = Math.max(1, Math.ceil(pagination.count / nextLimit));
+    const params = updatePaginationSearchParams(searchParams, {
+      currentPage: 1,
+      totalPages: newTotalPages,
+      limit: nextLimit,
+      nextPage: 1,
+    });
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const visiblePages = React.useMemo(
     () => buildVisiblePages(pagination.page, totalPages),
     [pagination.page, totalPages],
@@ -253,7 +370,12 @@ export function AccountClient({
         <CardContent className="p-0">
         <div className="flex flex-col gap-3 border-b border-[#11111114] px-6 py-3 text-sm text-[#111111] lg:flex-row lg:items-center lg:justify-between">
           <label htmlFor="accounts-select-all" className="flex items-center gap-3">
-            <Checkbox id="accounts-select-all" aria-label="全て選択" />
+            <Checkbox
+              id="accounts-select-all"
+              aria-label="全て選択"
+              checked={headerCheckboxChecked}
+              onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
+            />
             <span>全て選択</span>
           </label>
           <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
@@ -294,10 +416,52 @@ export function AccountClient({
                 <Download className="h-4 w-4" />
                 一括操作
               </Button>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                エクスポート
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2"
+                    disabled={isExporting}
+                  >
+                    <Download className="h-4 w-4" />
+                    エクスポート
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>CSV でエクスポート</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => handleExportCsv("all")}>
+                        全てのデータをエクスポート
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={!selectedIds.length}
+                        className={!selectedIds.length ? "text-[#9ca3af]" : undefined}
+                        onClick={() => handleExportCsv("selected")}
+                      >
+                        選択中のデータをエクスポート
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      {isExporting ? "Google Sheets にエクスポート中..." : "Google Sheets にエクスポート"}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => handleExport("all")} disabled={isExporting}>
+                        全てのデータをエクスポート
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={!selectedIds.length || isExporting}
+                        className={!selectedIds.length || isExporting ? "text-[#9ca3af]" : undefined}
+                        onClick={() => handleExport("selected")}
+                      >
+                        選択中のデータをエクスポート
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 className="flex items-center gap-2 bg-[#00ac4d] px-4 py-[6px] text-sm font-medium text-white hover:bg-[#00943f]"
                 onClick={() => handleDrawerOpen("create")}
@@ -313,7 +477,11 @@ export function AccountClient({
           <TableHeader>
             <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
               <TableHead className="w-[36px] pl-6 pr-3">
-                <Checkbox aria-label="行を選択" />
+                <Checkbox
+                  aria-label="行を選択"
+                  checked={headerCheckboxChecked}
+                  onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
+                />
               </TableHead>
               <TableHead className="w-[130px]">アカウントID</TableHead>
               <TableHead className="w-[160px]">氏名</TableHead>
@@ -330,7 +498,20 @@ export function AccountClient({
               return (
                 <TableRow key={account.id} className="border-b border-[#11111114] text-[14px]">
                   <TableCell className="pl-6 pr-3">
-                    <Checkbox aria-label={`${account.display_name} を選択`} />
+                    <Checkbox
+                      aria-label={`${account.display_name} を選択`}
+                      checked={selectedIds.includes(account.id)}
+                      onCheckedChange={(checked) => {
+                        const isChecked = checked === true;
+                        setSelectedIds((prev) => {
+                          if (isChecked) {
+                            if (prev.includes(account.id)) return prev;
+                            return [...prev, account.id];
+                          }
+                          return prev.filter((id) => id !== account.id);
+                        });
+                      }}
+                    />
                   </TableCell>
                   <TableCell className="font-mono text-xs text-[#555555]">
                     <div className="flex flex-col">
@@ -375,8 +556,26 @@ export function AccountClient({
           <p className="text-xs text-muted-foreground">
             全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
           </p>
-          <Pagination className="w-auto">
-            <PaginationContent>
+          <div className="flex flex-col items-start gap-3 text-xs text-muted-foreground md:flex-row md:items-center md:gap-4">
+            <div className="flex items-center gap-2">
+              <span>表示件数:</span>
+              <div className="flex items-center gap-1">
+                {pageSizeOptions.map((size) => (
+                  <Button
+                    key={size}
+                    type="button"
+                    size="sm"
+                    variant={pagination.limit === size ? "default" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handlePageSizeChange(size)}
+                  >
+                    {size}行
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <Pagination className="w-auto">
+              <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
@@ -434,6 +633,7 @@ export function AccountClient({
               </PaginationItem>
             </PaginationContent>
           </Pagination>
+          </div>
         </div>
         </CardContent>
       </Card>

@@ -7,6 +7,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -19,6 +28,8 @@ import {
 } from "@/components/ui/pagination";
 import { Building2, Download, FolderTree } from "lucide-react";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+
+const DEPARTMENTS_SELECTION_STORAGE_KEY = "departments_selected_ids";
 
 export type DepartmentsPagination = {
   page: number;
@@ -37,11 +48,14 @@ export function DepartmentsClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
+  const pageSizeOptions = [20, 50, 100];
 
   const updateQuery = React.useCallback(
-    (next: { page?: number; search?: string }) => {
+    (next: { page?: number; search?: string; limit?: number }) => {
       const params = updatePaginationSearchParams(searchParams, {
         currentPage: pagination.page,
         totalPages,
@@ -67,17 +81,125 @@ export function DepartmentsClient({
     updateQuery({ page: 1, search: query.trim() });
   };
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.sessionStorage.getItem(DEPARTMENTS_SELECTION_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        const safe = parsed
+          .map((value) => (typeof value === "string" ? value.trim() : ""))
+          .filter((value) => value.length > 0);
+        setSelectedIds(safe);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!selectedIds.length) {
+      window.sessionStorage.removeItem(DEPARTMENTS_SELECTION_STORAGE_KEY);
+      return;
+    }
+    window.sessionStorage.setItem(DEPARTMENTS_SELECTION_STORAGE_KEY, JSON.stringify(selectedIds));
+  }, [selectedIds]);
+
+  const allCurrentPageIds = React.useMemo(() => departments.map((dept) => dept.id), [departments]);
+
+  const allSelectedOnPage =
+    allCurrentPageIds.length > 0 && allCurrentPageIds.every((id) => selectedIds.includes(id));
+  const someSelectedOnPage =
+    allCurrentPageIds.length > 0 && allCurrentPageIds.some((id) => selectedIds.includes(id));
+
+  const headerCheckboxChecked: boolean | "indeterminate" = allSelectedOnPage
+    ? true
+    : someSelectedOnPage
+      ? "indeterminate"
+      : false;
+
+  const handleToggleSelectAllCurrentPage = (checked: boolean) => {
+    if (checked) {
+      const next = new Set(selectedIds);
+      allCurrentPageIds.forEach((id) => next.add(id));
+      setSelectedIds(Array.from(next));
+    } else {
+      const remove = new Set(allCurrentPageIds);
+      setSelectedIds((prev) => prev.filter((id) => !remove.has(id)));
+    }
+  };
+
   const visiblePages = React.useMemo(
     () => buildVisiblePages(pagination.page, totalPages),
     [pagination.page, totalPages],
   );
+
+  const handleExport = async (mode: "all" | "selected") => {
+    if (isExporting) return;
+    if (mode === "selected" && !selectedIds.length) return;
+    setIsExporting(true);
+    try {
+      const body = mode === "selected" ? { ids: selectedIds } : {};
+      const response = await fetch("/api/internal/departments/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await response.json().catch(() => null)) as
+        | { ok?: boolean; error?: string; rowCount?: number }
+        | null;
+      if (!response.ok || !data?.ok) {
+        const message =
+          data?.error || `エクスポートに失敗しました (status ${response.status})`;
+        alert(message);
+        return;
+      }
+      const rowCount = typeof data.rowCount === "number" ? data.rowCount : 0;
+      alert(`エクスポートが完了しました（${rowCount} 件）`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "エクスポートに失敗しました";
+      alert(message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handlePageSizeChange = (nextLimit: number) => {
+    if (nextLimit === pagination.limit) return;
+    const newTotalPages = Math.max(1, Math.ceil(pagination.count / nextLimit));
+    const params = updatePaginationSearchParams(searchParams, {
+      currentPage: 1,
+      totalPages: newTotalPages,
+      limit: nextLimit,
+      nextPage: 1,
+    });
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleExportCsv = (mode: "all" | "selected") => {
+    if (mode === "selected" && !selectedIds.length) return;
+    const base = "/api/internal/departments/export-csv";
+    const url = mode === "selected" && selectedIds.length
+      ? `${base}?ids=${encodeURIComponent(selectedIds.join(","))}`
+      : base;
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank");
+    }
+  };
 
   return (
     <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
       <CardContent className="p-0">
         <div className="flex flex-col gap-3 border-b border-[#11111114] px-6 py-3 text-sm text-[#111111] lg:flex-row lg:items-center lg:justify-between">
           <label htmlFor="dept-select-all" className="flex items-center gap-3">
-            <Checkbox id="dept-select-all" aria-label="全て選択" />
+            <Checkbox
+              id="dept-select-all"
+              aria-label="全て選択"
+              checked={headerCheckboxChecked}
+              onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
+            />
             <span>全て選択</span>
           </label>
           <form className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end" onSubmit={handleSearch}>
@@ -91,10 +213,52 @@ export function DepartmentsClient({
               検索
             </Button>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
-                <Download className="h-4 w-4" />
-                組織図エクスポート
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]"
+                    disabled={isExporting}
+                  >
+                    <Download className="h-4 w-4" />
+                    エクスポート
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>CSV でエクスポート</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => handleExportCsv("all")}>
+                        全てのデータをエクスポート
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={!selectedIds.length}
+                        className={!selectedIds.length ? "text-[#9ca3af]" : undefined}
+                        onClick={() => handleExportCsv("selected")}
+                      >
+                        選択中のデータをエクスポート
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      {isExporting ? "Google Sheets にエクスポート中..." : "Google Sheets にエクスポート"}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => handleExport("all")} disabled={isExporting}>
+                        全てのデータをエクスポート
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={!selectedIds.length || isExporting}
+                        className={!selectedIds.length || isExporting ? "text-[#9ca3af]" : undefined}
+                        onClick={() => handleExport("selected")}
+                      >
+                        選択中のデータをエクスポート
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" className="flex items-center gap-2">
                 <FolderTree className="h-4 w-4" />
                 組織構成を編集
@@ -107,7 +271,11 @@ export function DepartmentsClient({
           <TableHeader>
             <TableRow className="border-b border-[#11111114] text-[#111111]">
               <TableHead className="w-[36px] pl-6 pr-3">
-                <Checkbox aria-label="行を選択" />
+                <Checkbox
+                  aria-label="行を選択"
+                  checked={headerCheckboxChecked}
+                  onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
+                />
               </TableHead>
               <TableHead className="w-[100px]">部署ID</TableHead>
               <TableHead className="w-[200px]">部署名</TableHead>
@@ -123,7 +291,20 @@ export function DepartmentsClient({
             {departments.map((dept) => (
               <TableRow key={dept.id} className="border-b border-[#11111114]">
                 <TableCell className="pl-6 pr-3">
-                  <Checkbox aria-label={`${dept.name} を選択`} />
+                  <Checkbox
+                    aria-label={`${dept.name} を選択`}
+                    checked={selectedIds.includes(dept.id)}
+                    onCheckedChange={(checked) => {
+                      const isChecked = checked === true;
+                      setSelectedIds((prev) => {
+                        if (isChecked) {
+                          if (prev.includes(dept.id)) return prev;
+                          return [...prev, dept.id];
+                        }
+                        return prev.filter((id) => id !== dept.id);
+                      });
+                    }}
+                  />
                 </TableCell>
                 <TableCell className="font-mono text-xs text-[#555555]">
                   {dept.external_id ?? '--'}
@@ -167,8 +348,26 @@ export function DepartmentsClient({
           <p className="text-xs text-muted-foreground">
             全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
           </p>
-          <Pagination className="w-auto">
-            <PaginationContent>
+          <div className="flex flex-col items-start gap-3 text-xs text-muted-foreground md:flex-row md:items-center md:gap-4">
+            <div className="flex items-center gap-2">
+              <span>表示件数:</span>
+              <div className="flex items-center gap-1">
+                {pageSizeOptions.map((size) => (
+                  <Button
+                    key={size}
+                    type="button"
+                    size="sm"
+                    variant={pagination.limit === size ? "default" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handlePageSizeChange(size)}
+                  >
+                    {size}行
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <Pagination className="w-auto">
+              <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
@@ -226,6 +425,7 @@ export function DepartmentsClient({
               </PaginationItem>
             </PaginationContent>
           </Pagination>
+          </div>
         </div>
       </CardContent>
     </Card>

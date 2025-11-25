@@ -86,20 +86,20 @@ export default function NotificationsManagementPage() {
   );
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       <DashboardHeader
         title="通知管理"
         actions={
           <div className="flex gap-3">
             <Link
               href="/notifications/categories"
-              className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
             >
               分類を管理
             </Link>
             <Link
               href="/notifications/new"
-              className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
             >
               <Plus className="h-4 w-4" />
               新規通知を作成
@@ -109,7 +109,7 @@ export default function NotificationsManagementPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <StatCard title="総送信数" value="248" icon={<Send className="h-5 w-5" />} />
         <StatCard title="今月の送信" value="12" icon={<Clock className="h-5 w-5" />} />
         <StatCard title="平均開封率" value="68.4%" icon={<CheckCircle className="h-5 w-5" />} />
@@ -117,17 +117,17 @@ export default function NotificationsManagementPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="mb-4 rounded-lg border border-border bg-card p-6">
+        <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
             <input
               type="text"
               placeholder="通知を検索..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex h-9 w-full rounded-lg border border-input bg-background px-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
-          <select className="border rounded-lg px-4 py-2 text-gray-900">
+          <select className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             <option>全ての送信先</option>
             <option>全会員</option>
             <option>プレミアム会員</option>
@@ -136,7 +136,7 @@ export default function NotificationsManagementPage() {
             <option>個別送信</option>
           </select>
           <select
-            className="border rounded-lg px-4 py-2 text-gray-900"
+            className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             value={selectedCategoryId}
             onChange={(e) => setSelectedCategoryId(e.target.value)}
           >
@@ -147,12 +147,12 @@ export default function NotificationsManagementPage() {
               </option>
             ))}
           </select>
-          <select className="border rounded-lg px-4 py-2 text-gray-900">
+          <select className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             <option>全てのステータス</option>
             <option>送信済み</option>
             <option>下書き</option>
           </select>
-          <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50">
+          <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">
             <Filter className="h-4 w-4" />
             フィルター
           </button>
@@ -160,28 +160,28 @@ export default function NotificationsManagementPage() {
       </div>
 
       {/* Notifications Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="border-b border-border bg-muted/50">
             <tr>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">タイトル</th>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">送信先</th>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">分類</th>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">送信日時</th>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">送信者</th>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">開封状況</th>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">ステータス</th>
-              <th className="text-left p-4 font-medium text-sm text-gray-700">操作</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">タイトル</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">送信先</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">分類</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">送信日時</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">送信者</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">開封状況</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">ステータス</th>
+              <th className="p-4 text-left text-sm font-medium text-muted-foreground">操作</th>
             </tr>
           </thead>
           <tbody>
             {filteredNotifications.map((notification) => {
               const category = notificationCategories.find((c) => c.id === notification.categoryId);
               return (
-                <tr key={notification.id} className="border-b hover:bg-gray-50">
+                <tr key={notification.id} className="border-b border-border hover:bg-muted/60">
                   <td className="p-4">
-                    <div className="font-medium text-gray-900">{notification.title}</div>
-                    <div className="text-sm text-gray-500 line-clamp-1">
+                    <div className="font-medium text-foreground">{notification.title}</div>
+                    <div className="line-clamp-1 text-sm text-muted-foreground">
                       {notification.message}
                     </div>
                   </td>
@@ -190,60 +190,60 @@ export default function NotificationsManagementPage() {
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                           notification.targetType === "all"
-                            ? "bg-blue-100 text-blue-700"
+                            ? "bg-primary/10 text-primary"
                             : notification.targetType === "qualification"
-                              ? "bg-purple-100 text-purple-700"
+                              ? "bg-secondary/10 text-secondary-foreground"
                               : notification.targetType === "membership"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-100 text-gray-700"
+                                ? "bg-primary/10 text-primary"
+                                : "bg-muted text-muted-foreground"
                         }`}
                       >
                         {notification.targetLabel}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {notification.totalRecipients}名
                     </div>
                   </td>
                   <td className="p-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        category?.colorClass ?? "bg-gray-100 text-gray-700"
+                        category?.colorClass ?? "bg-muted text-muted-foreground"
                       }`}
                     >
                       {category?.name ?? "未分類"}
                     </span>
                   </td>
-                  <td className="p-4 text-sm text-gray-900">
+                  <td className="p-4 text-sm text-foreground">
                     {notification.sentAt || "-"}
                   </td>
-                  <td className="p-4 text-sm text-gray-900">
+                  <td className="p-4 text-sm text-foreground">
                     {notification.sentBy}
                   </td>
                   <td className="p-4">
                     {notification.status === "sent" ? (
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-foreground">
                           {notification.readCount}/{notification.totalRecipients}
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                        <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
                           <div
-                            className="bg-green-600 h-1.5 rounded-full"
+                            className="h-1.5 rounded-full bg-primary"
                             style={{ width: `${(notification.readCount / notification.totalRecipients) * 100}%` }}
                           />
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           {Math.round((notification.readCount / notification.totalRecipients) * 100)}%
                         </div>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">-</span>
+                      <span className="text-sm text-muted-foreground">-</span>
                     )}
                   </td>
                   <td className="p-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        notification.status === "sent" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                        notification.status === "sent" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {notification.status === "sent" ? "送信済み" : "下書き"}
@@ -252,14 +252,14 @@ export default function NotificationsManagementPage() {
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button
-                        className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-gray-900"
+                        className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
                         title="詳細"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       {notification.status === "draft" && (
                         <button
-                          className="p-2 hover:bg-gray-100 rounded-lg text-blue-600 hover:text-blue-700"
+                          className="rounded-lg p-2 text-primary hover:bg-primary/10 hover:text-primary"
                           title="送信"
                         >
                           <Send className="h-4 w-4" />
@@ -279,12 +279,12 @@ export default function NotificationsManagementPage() {
 
 function StatCard({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-lg border p-6">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-sm text-gray-600">{title}</div>
-        <div className="text-blue-600">{icon}</div>
+    <div className="rounded-lg border border-border bg-card p-6">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">{title}</div>
+        <div className="text-primary">{icon}</div>
       </div>
-      <div className="text-3xl font-bold text-gray-900">{value}</div>
+      <div className="text-3xl font-bold text-foreground">{value}</div>
     </div>
   );
 }

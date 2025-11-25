@@ -122,31 +122,31 @@ export default function ApplicationsPage() {
   }, [filteredApplications]);
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       <DashboardHeader title="申込一覧" />
-      <p className="mt-2 text-sm text-gray-500">研修・見学/体験・試験の申込を一元管理できます</p>
+      <p className="mt-2 text-sm text-muted-foreground">研修・見学/体験・試験の申込を一元管理できます</p>
 
-      <div className="grid gap-6 mb-8 md:grid-cols-4">
-        <StatCard title="総申込" value={`${stats.total}件`} accent="bg-emerald-50 text-emerald-700" />
-        <StatCard title="研修" value={`${stats.trainings}件`} accent="bg-blue-50 text-blue-700" />
-        <StatCard title="見学/体験" value={`${stats.experiences}件`} accent="bg-amber-50 text-amber-700" />
-        <StatCard title="試験" value={`${stats.exams}件`} accent="bg-purple-50 text-purple-700" subtitle={`見込み売上 ¥${stats.revenue.toLocaleString()}`} />
+      <div className="mb-4 grid gap-6 md:grid-cols-4">
+        <StatCard title="総申込" value={`${stats.total}件`} accent="text-primary" />
+        <StatCard title="研修" value={`${stats.trainings}件`} accent="text-primary" />
+        <StatCard title="見学/体験" value={`${stats.experiences}件`} accent="text-primary" />
+        <StatCard title="試験" value={`${stats.exams}件`} accent="text-primary" subtitle={`見込み売上 ¥${stats.revenue.toLocaleString()}`} />
       </div>
 
-      <div className="mb-6 rounded-2xl border bg-white p-6">
+      <div className="rounded-2xl border border-border bg-card p-6">
         <div className="flex flex-col gap-4 lg:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               type="text"
               placeholder="申込対象や申込者で検索..."
-              className="w-full rounded-lg border border-gray-300 px-10 py-2 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="flex h-9 w-full rounded-lg border border-input bg-background px-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <select
-            className="rounded-lg border px-4 py-2 text-gray-900"
+            className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             value={selectedType}
             onChange={(event) => setSelectedType(event.target.value)}
           >
@@ -157,7 +157,7 @@ export default function ApplicationsPage() {
             ))}
           </select>
           <select
-            className="rounded-lg border px-4 py-2 text-gray-900"
+            className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             value={selectedStatus}
             onChange={(event) => setSelectedStatus(event.target.value)}
           >
@@ -167,65 +167,65 @@ export default function ApplicationsPage() {
               </option>
             ))}
           </select>
-          <button className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50">
+          <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">
             <Filter className="h-4 w-4" />
             詳細フィルター
           </button>
-          <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <Download className="h-4 w-4" />
             エクスポート
           </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-white">
+      <div className="rounded-2xl border border-border bg-card">
         <table className="w-full">
-          <thead className="border-b bg-gray-50">
+          <thead className="border-b border-border bg-muted/50">
             <tr>
-              <th className="p-4 text-left text-xs font-semibold text-gray-600">申込対象</th>
-              <th className="p-4 text-left text-xs font-semibold text-gray-600">カテゴリ/種類</th>
-              <th className="p-4 text-left text-xs font-semibold text-gray-600">開催日時</th>
-              <th className="p-4 text-left text-xs font-semibold text-gray-600">申込者</th>
-              <th className="p-4 text-left text-xs font-semibold text-gray-600">支払ステータス</th>
-              <th className="p-4 text-left text-xs font-semibold text-gray-600">申込ステータス</th>
-              <th className="p-4 text-left text-xs font-semibold text-gray-600">操作</th>
+              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">申込対象</th>
+              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">カテゴリ/種類</th>
+              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">開催日時</th>
+              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">申込者</th>
+              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">支払ステータス</th>
+              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">申込ステータス</th>
+              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">操作</th>
             </tr>
           </thead>
           <tbody>
             {filteredApplications.map((application) => (
-              <tr key={application.id} className="border-b last:border-b-0 hover:bg-gray-50">
+              <tr key={application.id} className="border-b border-border last:border-b-0 hover:bg-muted/60">
                 <td className="p-4">
-                  <div className="font-semibold text-gray-900">{application.title}</div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                  <div className="font-semibold text-foreground">{application.title}</div>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                     {iconByType(application.eventType)}
                     {application.eventType}
                   </div>
                 </td>
-                <td className="p-4 text-sm text-gray-900">{application.category}</td>
-                <td className="p-4 text-sm text-gray-900">
+                <td className="p-4 text-sm text-foreground">{application.category}</td>
+                <td className="p-4 text-sm text-foreground">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
                     {application.schedule}
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5" />
                     {application.location}
                   </div>
                 </td>
-                <td className="p-4 text-sm text-gray-900">
-                  <div className="font-medium">{application.applicantName}</div>
-                  <p className="text-xs text-gray-500">{application.applicantEmail}</p>
+                <td className="p-4 text-sm text-foreground">
+                  <div className="font-medium text-foreground">{application.applicantName}</div>
+                  <p className="text-xs text-muted-foreground">{application.applicantEmail}</p>
                   <span
                     className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
                       application.membershipType === "premium"
-                        ? "bg-blue-50 text-blue-700"
-                        : "bg-amber-50 text-amber-700"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {application.membershipType === "premium" ? "プレミアム会員" : "仮会員"}
                   </span>
                 </td>
-                <td className="p-4 text-sm font-semibold text-gray-900">{application.paymentStatus}</td>
+                <td className="p-4 text-sm font-semibold text-foreground">{application.paymentStatus}</td>
                 <td className="p-4">
                   <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(application.status)}`}>
                     {application.status}
@@ -235,11 +235,11 @@ export default function ApplicationsPage() {
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/${application.eventType === "試験" ? "exams" : application.eventType === "研修" ? "trainings" : "experiences"}/${application.id}`}
-                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:bg-muted"
                     >
                       詳細
                     </Link>
-                    <button className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                    <button className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:bg-muted">
                       更新
                     </button>
                   </div>
@@ -270,10 +270,10 @@ type Application = {
 
 function StatCard({ title, value, subtitle, accent }: { title: string; value: string; subtitle?: string; accent?: string }) {
   return (
-    <div className="rounded-2xl border bg-white p-4">
-      <p className="text-xs font-semibold text-gray-500">{title}</p>
-      <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
-      {subtitle && <p className={`mt-1 text-xs font-medium ${accent ?? "text-gray-500"}`}>{subtitle}</p>}
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <p className="text-xs font-semibold text-muted-foreground">{title}</p>
+      <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
+      {subtitle && <p className={`mt-1 text-xs font-medium ${accent ?? "text-muted-foreground"}`}>{subtitle}</p>}
     </div>
   );
 }
@@ -281,27 +281,27 @@ function StatCard({ title, value, subtitle, accent }: { title: string; value: st
 function statusBadgeClass(status: Application["status"]) {
   switch (status) {
     case "申込済":
-      return "bg-emerald-50 text-emerald-700";
+      return "bg-primary/10 text-primary";
     case "承認待ち":
-      return "bg-blue-50 text-blue-700";
+      return "bg-secondary/10 text-secondary-foreground";
     case "支払待ち":
-      return "bg-amber-50 text-amber-700";
+      return "bg-muted text-muted-foreground";
     case "キャンセル":
     default:
-      return "bg-red-50 text-red-600";
+      return "bg-destructive/10 text-destructive";
   }
 }
 
 function iconByType(type: Application["eventType"]) {
   switch (type) {
     case "試験":
-      return <Award className="h-3.5 w-3.5 text-purple-600" />;
+      return <Award className="h-3.5 w-3.5 text-primary" />;
     case "研修":
-      return <Users className="h-3.5 w-3.5 text-emerald-600" />;
+      return <Users className="h-3.5 w-3.5 text-primary" />;
     case "体験":
-      return <Users className="h-3.5 w-3.5 text-amber-600" />;
+      return <Users className="h-3.5 w-3.5 text-secondary-foreground" />;
     case "見学":
     default:
-      return <Users className="h-3.5 w-3.5 text-blue-600" />;
+      return <Users className="h-3.5 w-3.5 text-muted-foreground" />;
   }
 }

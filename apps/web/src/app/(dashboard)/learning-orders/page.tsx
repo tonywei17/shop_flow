@@ -136,16 +136,16 @@ export default async function LearningOrdersListPage() {
   const { orders, error } = await fetchLearningOrders();
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6">
       <DashboardHeader title="学習プラットフォーム注文一覧" />
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-[#11111114] px-6 py-3 text-[14px] text-[#111111]">
+          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
             <label htmlFor="learning-orders-select-all" className="flex items-center gap-3">
               <Checkbox id="learning-orders-select-all" aria-label="全て選択" />
               <span>全て選択</span>
             </label>
-            <div className="flex flex-wrap items-center gap-2 text-[13px] text-[#6f6f6f]">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span>
                 合計 {orders.length} 件
               </span>
@@ -153,11 +153,11 @@ export default async function LearningOrdersListPage() {
           </div>
 
           {error ? (
-            <div className="px-6 py-10 text-sm text-red-600">{error}</div>
+            <div className="px-6 py-10 text-sm text-destructive">{error}</div>
           ) : (
             <Table className="[&_th]:py-3 [&_td]:py-3">
               <TableHeader>
-                <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+                <TableRow className="border-b border-border text-sm text-foreground">
                   <TableHead className="w-[36px] pl-6 pr-3">
                     <Checkbox aria-label="行を選択" />
                   </TableHead>
@@ -175,20 +175,20 @@ export default async function LearningOrdersListPage() {
               <TableBody>
                 {orders.length > 0 ? (
                   orders.map((o) => (
-                    <TableRow key={o.id} className="border-b border-[#11111114] text-[14px]">
+                    <TableRow key={o.id} className="border-b border-border text-sm hover:bg-muted/60">
                       <TableCell className="pl-6 pr-3">
                         <Checkbox aria-label={`${o.displayId || o.id} を選択`} />
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-[#555555]">{o.id}</TableCell>
-                      <TableCell className="text-[#111111]">{o.displayId || "-"}</TableCell>
-                      <TableCell className="text-[#555555]">{o.category || "-"}</TableCell>
-                      <TableCell className="text-[#555555]">{formatOrderStatus(o.status)}</TableCell>
-                      <TableCell className="text-[#555555]">{formatPaymentStatus(o.paymentStatus)}</TableCell>
-                      <TableCell className="text-[#555555]">{o.email || "-"}</TableCell>
-                      <TableCell className="text-[#111111]">
+                      <TableCell className="font-mono text-xs text-muted-foreground">{o.id}</TableCell>
+                      <TableCell className="text-foreground">{o.displayId || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{o.category || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatOrderStatus(o.status)}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatPaymentStatus(o.paymentStatus)}</TableCell>
+                      <TableCell className="text-muted-foreground">{o.email || "-"}</TableCell>
+                      <TableCell className="text-foreground">
                         {formatAmountYen(o.total)}
                       </TableCell>
-                      <TableCell className="text-xs text-[#555555]">
+                      <TableCell className="text-xs text-muted-foreground">
                         {o.createdAt
                           ? new Date(o.createdAt).toLocaleString("ja-JP")
                           : "-"}
@@ -198,7 +198,7 @@ export default async function LearningOrdersListPage() {
                           asChild
                           variant="ghost"
                           size="sm"
-                          className="gap-1 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]"
+                          className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
                         >
                           <Link href={`/learning-orders/${o.id}`}>
                             <Eye className="h-4 w-4" />
@@ -212,7 +212,7 @@ export default async function LearningOrdersListPage() {
                   <TableRow>
                     <TableCell
                       colSpan={10}
-                      className="border-b border-[#11111114] py-10 text-center text-sm text-[#6f6f6f]"
+                      className="border-b border-border py-10 text-center text-sm text-muted-foreground"
                     >
                       まだ学習プラットフォームに関連する注文データがありません。
                     </TableCell>

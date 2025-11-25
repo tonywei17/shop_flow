@@ -90,33 +90,33 @@ export default function VenuesManagementPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="space-y-6">
       <DashboardHeader title="会場管理" />
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">会場一覧</h2>
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="mb-4 text-lg font-bold text-foreground">会場一覧</h2>
 
             <div className="mb-6 space-y-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">会場名 *</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">会場名 *</label>
                   <input
                     type="text"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="例：青森市民ホール"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">会場コード *</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">会場コード *</label>
                   <input
                     type="text"
                     value={newCode}
                     onChange={(e) => setNewCode(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="例：2111"
                   />
                 </div>
@@ -124,25 +124,25 @@ export default function VenuesManagementPage() {
 
               <div className="grid gap-3 md:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">種別 *</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">種別 *</label>
                   <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value as "対面" | "オンライン")}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="対面">対面</option>
                     <option value="オンライン">オンライン</option>
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-foreground">
                     {newType === "対面" ? "住所 *" : "オンラインURL *"}
                   </label>
                   <input
                     type="text"
                     value={newAddress}
                     onChange={(e) => setNewAddress(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder={newType === "対面" ? "例：東京都千代田区..." : "例：https://zoom.us/j/..."}
                   />
                 </div>
@@ -150,13 +150,13 @@ export default function VenuesManagementPage() {
 
               <div className="flex items-end justify-between gap-4">
                 <div className="w-40">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">定員</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">定員</label>
                   <input
                     type="number"
                     min={0}
                     value={newCapacity}
                     onChange={(e) => setNewCapacity(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="例：80"
                   />
                 </div>
@@ -164,7 +164,7 @@ export default function VenuesManagementPage() {
                   type="button"
                   onClick={handleAdd}
                   disabled={!newName.trim() || !newCode.trim() || !newAddress.trim()}
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
                   会場を追加
@@ -172,51 +172,51 @@ export default function VenuesManagementPage() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-lg border">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="border-b border-border bg-muted/50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">会場名</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">コード</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">種別</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">住所 / URL</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">定員</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">ステータス</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">操作</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">会場名</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">コード</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">種別</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">住所 / URL</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">定員</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">ステータス</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedVenues.map((venue) => (
-                    <tr key={venue.id} className="border-t hover:bg-gray-50">
+                    <tr key={venue.id} className="border-t border-border hover:bg-muted/60">
                       <td className="px-4 py-2 align-top">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           <Link
                             href={`/venues/${venue.id}`}
-                            className="text-blue-600 hover:underline"
+                            className="text-primary hover:underline"
                           >
                             {venue.name}
                           </Link>
                         </div>
                       </td>
                       <td className="px-4 py-2 align-top">
-                        <span className="text-gray-900">{venue.code}</span>
+                        <span className="text-foreground">{venue.code}</span>
                       </td>
                       <td className="px-4 py-2 align-top">
-                        <span className="text-gray-900">{venue.type}</span>
+                        <span className="text-foreground">{venue.type}</span>
                       </td>
                       <td className="px-4 py-2 align-top">
-                        <div className="flex items-start gap-1 text-gray-900">
-                          <MapPin className="mt-0.5 h-3.5 w-3.5 text-gray-400" />
+                        <div className="flex items-start gap-1 text-foreground">
+                          <MapPin className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
                           <span>{venue.address}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2 align-top text-gray-900">
+                      <td className="px-4 py-2 align-top text-foreground">
                         <span>{venue.capacity || "-"}</span>
                       </td>
                       <td className="px-4 py-2 align-top">
                         <span
                           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                            venue.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"
+                            venue.isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                           }`}
                         >
                           {venue.isActive ? "有効" : "無効"}
@@ -226,21 +226,21 @@ export default function VenuesManagementPage() {
                         <div className="flex flex-wrap items-center gap-2 text-xs">
                           <Link
                             href={`/venues/${venue.id}/edit`}
-                            className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-2.5 py-1.5 font-medium text-gray-700 hover:bg-gray-50"
+                            className="inline-flex items-center justify-center rounded-lg border border-border px-2.5 py-1.5 font-medium text-foreground hover:bg-muted"
                           >
                             <Edit className="h-3.5 w-3.5" />
                           </Link>
                           <button
                             type="button"
                             onClick={() => handleToggleActive(venue.id)}
-                            className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-2.5 py-1.5 font-medium text-gray-700 hover:bg-gray-50"
+                            className="inline-flex items-center justify-center rounded-lg border border-border px-2.5 py-1.5 font-medium text-foreground hover:bg-muted"
                           >
                             {venue.isActive ? "無効にする" : "有効にする"}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(venue.id)}
-                            className="inline-flex items-center justify-center rounded-lg border border-red-200 px-2.5 py-1.5 font-medium text-red-600 hover:bg-red-50"
+                            className="inline-flex items-center justify-center rounded-lg border border-destructive/40 px-2.5 py-1.5 font-medium text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -255,9 +255,9 @@ export default function VenuesManagementPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border p-6">
-            <h3 className="mb-4 text-sm font-bold text-gray-900">使い方</h3>
-            <ul className="space-y-2 text-sm text-gray-700">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h3 className="mb-4 text-sm font-bold text-foreground">使い方</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>・ここで登録した会場情報は、試験や活動の作成画面で利用する想定です。</li>
               <li>・オンライン会場の場合は、Zoom等のURLを登録してください。</li>
               <li>・無効にした会場は新規作成画面では選択できない設計にする想定です。</li>

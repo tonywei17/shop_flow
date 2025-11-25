@@ -139,76 +139,76 @@ export default async function LearningOrderDetailPage({
   const { order, error } = await fetchLearningOrder(id);
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6">
       <DashboardHeader title="学習プラットフォーム注文詳細" />
 
       {error ? (
-        <Card className="rounded-xl border border-[#11111114] bg-white p-6 text-sm text-red-600">
+        <Card className="rounded-xl border border-border bg-card p-6 text-sm text-destructive">
           {error}
         </Card>
       ) : !order ? (
-        <Card className="rounded-xl border border-[#11111114] bg-white p-6 text-sm text-[#6f6f6f]">
+        <Card className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           注文が見つかりませんでした。
         </Card>
       ) : (
         <div className="grid gap-6 lg:grid-cols-3">
           {/* 左側：注文情報 + 支払い情報 */}
           <div className="space-y-6 lg:col-span-2">
-            <Card className="rounded-xl border border-[#11111114] bg-white p-6">
-              <h2 className="mb-4 text-lg font-semibold text-[#111111]">注文情報</h2>
+            <Card className="rounded-xl border border-border bg-card p-6">
+              <h2 className="mb-4 text-lg font-semibold text-foreground">注文情報</h2>
               <dl className="grid gap-3 text-sm md:grid-cols-2">
                 <div>
-                  <dt className="text-[#6f6f6f]">注文番号</dt>
-                  <dd className="font-mono text-xs text-[#111111]">
+                  <dt className="text-muted-foreground">注文番号</dt>
+                  <dd className="font-mono text-xs text-muted-foreground">
                     {order.displayId || order.id}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[#6f6f6f]">注文分類</dt>
-                  <dd className="text-[#111111]">{order.category || "-"}</dd>
+                  <dt className="text-muted-foreground">注文分類</dt>
+                  <dd className="text-foreground">{order.category || "-"}</dd>
                 </div>
                 <div>
-                  <dt className="text-[#6f6f6f]">ステータス</dt>
-                  <dd className="text-[#111111]">{formatOrderStatus(order.status)}</dd>
+                  <dt className="text-muted-foreground">ステータス</dt>
+                  <dd className="text-foreground">{formatOrderStatus(order.status)}</dd>
                 </div>
                 <div>
-                  <dt className="text-[#6f6f6f]">支払いステータス</dt>
-                  <dd className="text-[#111111]">{formatPaymentStatus(order.paymentStatus)}</dd>
+                  <dt className="text-muted-foreground">支払いステータス</dt>
+                  <dd className="text-foreground">{formatPaymentStatus(order.paymentStatus)}</dd>
                 </div>
                 <div>
-                  <dt className="text-[#6f6f6f]">顧客メール</dt>
-                  <dd className="text-[#111111]">{order.email || "-"}</dd>
+                  <dt className="text-muted-foreground">顧客メール</dt>
+                  <dd className="text-foreground">{order.email || "-"}</dd>
                 </div>
                 <div>
-                  <dt className="text-[#6f6f6f]">注文日時</dt>
-                  <dd className="text-[#111111]">
+                  <dt className="text-muted-foreground">注文日時</dt>
+                  <dd className="text-foreground">
                     {order.createdAt
                       ? new Date(order.createdAt).toLocaleString("ja-JP")
                       : "-"}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[#6f6f6f]">合計金額</dt>
-                  <dd className="text-[#111111]">
+                  <dt className="text-muted-foreground">合計金額</dt>
+                  <dd className="text-foreground">
                     {formatAmountYen(order.total)}
                   </dd>
                 </div>
               </dl>
-              <div className="mt-4 text-xs text-[#6f6f6f]">
-                <Link href="/learning-orders" className="text-[#00ac4d] hover:underline">
+              <div className="mt-4 text-xs text-muted-foreground">
+                <Link href="/learning-orders" className="text-primary hover:underline">
                   ← 学習プラットフォーム注文一覧に戻る
                 </Link>
               </div>
             </Card>
 
-            <Card className="rounded-xl border border-[#11111114] bg-white p-6">
-              <h2 className="mb-4 text-lg font-semibold text-[#111111]">注文内容</h2>
+            <Card className="rounded-xl border border-border bg-card p-6">
+              <h2 className="mb-4 text-lg font-semibold text-foreground">注文内容</h2>
               {order.items.length === 0 ? (
-                <p className="text-sm text-[#6f6f6f]">注文行がありません。</p>
+                <p className="text-sm text-muted-foreground">注文行がありません。</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
-                    <thead className="border-b bg-[#f9fafb] text-left text-xs font-medium text-[#6f6f6f]">
+                    <thead className="border-b border-border bg-muted/50 text-left text-xs font-medium text-muted-foreground">
                       <tr>
                         <th className="px-4 py-3">商品名</th>
                         <th className="px-4 py-3">数量</th>
@@ -220,18 +220,18 @@ export default async function LearningOrderDetailPage({
                       {order.items.map((item) => (
                         <tr
                           key={item.id}
-                          className="border-b last:border-b-0 hover:bg-[#fafafa]"
+                          className="border-b border-border last:border-b-0 hover:bg-muted/60"
                         >
-                          <td className="px-4 py-3 align-top text-[#111111]">
+                          <td className="px-4 py-3 align-top text-foreground">
                             {item.title || "-"}
                           </td>
-                          <td className="px-4 py-3 align-top text-[#111111]">
+                          <td className="px-4 py-3 align-top text-foreground">
                             {item.quantity}
                           </td>
-                          <td className="px-4 py-3 align-top text-[#111111]">
+                          <td className="px-4 py-3 align-top text-foreground">
                             {formatAmountYen(item.unitPrice)}
                           </td>
-                          <td className="px-4 py-3 align-top text-[#111111]">
+                          <td className="px-4 py-3 align-top text-foreground">
                             {formatAmountYen(item.subtotal)}
                           </td>
                         </tr>
@@ -245,41 +245,41 @@ export default async function LearningOrderDetailPage({
 
           {/* 右側：支払い情報（Stripe 等） */}
           <div className="space-y-6">
-            <Card className="rounded-xl border border-[#11111114] bg-white p-6">
-              <h2 className="mb-4 text-lg font-semibold text-[#111111]">支払い情報（Stripe 等）</h2>
+            <Card className="rounded-xl border border-border bg-card p-6">
+              <h2 className="mb-4 text-lg font-semibold text-foreground">支払い情報（Stripe 等）</h2>
               {order.payments.length === 0 ? (
-                <p className="text-sm text-[#6f6f6f]">支払い情報がありません。</p>
+                <p className="text-sm text-muted-foreground">支払い情報がありません。</p>
               ) : (
                 <div className="space-y-4 text-sm">
                   {order.payments.map((p) => (
                     <div
                       key={p.id}
-                      className="rounded-md border border-[#1111111A] px-4 py-3"
+                      className="rounded-md border border-border px-4 py-3"
                     >
                       <div className="mb-1 flex items-center justify-between">
-                        <span className="font-medium text-[#111111]">
+                        <span className="font-medium text-foreground">
                           {formatAmountYen(p.amount)}
                         </span>
-                        <span className="text-xs capitalize text-[#6f6f6f]">
+                        <span className="text-xs capitalize text-muted-foreground">
                           {formatPaymentStatus(p.status ?? "")}
                         </span>
                       </div>
                       <dl className="grid gap-2 text-xs md:grid-cols-2">
                         <div>
-                          <dt className="text-[#6f6f6f]">決済ID</dt>
-                          <dd className="font-mono text-[11px] text-[#111111]">
+                          <dt className="text-muted-foreground">決済ID</dt>
+                          <dd className="font-mono text-[11px] text-muted-foreground">
                             {p.id}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-[#6f6f6f]">プロバイダー</dt>
-                          <dd className="text-[#111111]">
+                          <dt className="text-muted-foreground">プロバイダー</dt>
+                          <dd className="text-foreground">
                             {p.providerId || "stripe"}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-[#6f6f6f]">キャプチャ日時</dt>
-                          <dd className="text-[#111111]">
+                          <dt className="text-muted-foreground">キャプチャ日時</dt>
+                          <dd className="text-foreground">
                             {p.capturedAt
                               ? new Date(p.capturedAt).toLocaleString("ja-JP")
                               : "-"}

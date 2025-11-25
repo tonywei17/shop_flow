@@ -36,12 +36,12 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
   return (
     <aside
       className={cn(
-        "flex w-[256px] min-w-[256px] flex-col border-r border-[#11111114] bg-white",
+        "flex w-[256px] min-w-[256px] flex-col border-r border-sidebar-border bg-sidebar",
         isMobile ? "" : "hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-screen",
         className,
       )}
     >
-      <div className="border-b border-[#1111111a] px-6 pb-5 pt-6">
+      <div className="border-b border-sidebar-border px-6 pb-5 pt-6">
         <Image
           src="/eu_logo.png"
           alt="リトミック研究センター ロゴ"
@@ -53,7 +53,7 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
       </div>
       <div className="flex flex-1 min-h-0 flex-col px-4 pb-5 pt-4">
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="h-full overflow-y-auto rounded-2xl border border-[#11111114] bg-white pb-3 pr-1">
+          <div className="h-full overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar pb-3 pr-1">
             {navSections.map((section, index) => (
               <Fragment key={section.label}>
                 <SidebarSection
@@ -62,7 +62,7 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
                   normalize={normalize}
                   onNavigate={onNavigate}
                 />
-                {index < navSections.length - 1 && <div className="mx-4 h-px bg-[#1111110d]" />}
+                {index < navSections.length - 1 && <div className="mx-4 h-px bg-sidebar-border/20" />}
               </Fragment>
             ))}
           </div>
@@ -72,7 +72,7 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
           target="_blank"
           rel="noreferrer"
           onClick={onNavigate}
-          className="mt-4 flex items-center justify-center gap-2 rounded-md border border-[#00ac4d26] bg-[#f2fbf5] px-4 py-3 text-sm font-semibold text-[#008a3e] transition-colors hover:bg-[#e6f6ec]"
+          className="mt-4 flex items-center justify-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent px-4 py-3 text-sm font-semibold text-sidebar-accent-foreground transition-colors hover:bg-sidebar-accent/80"
         >
           <GraduationCap className="h-4 w-4" />
           <span>学習プラットフォームへ</span>
@@ -80,7 +80,7 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
         <Link
           href="/storefront"
           onClick={onNavigate}
-          className="mt-3 flex items-center justify-center gap-2 rounded-md bg-[#00ac4d] px-4 py-3 text-sm font-semibold text-white shadow-[0px_4px_14px_rgba(0,0,0,0.15)] transition-colors hover:bg-[#009043]"
+          className="mt-3 flex items-center justify-center gap-2 rounded-md bg-sidebar-primary px-4 py-3 text-sm font-semibold text-sidebar-primary-foreground shadow-sm transition-colors hover:bg-sidebar-primary/90"
         >
           <ShoppingBag className="h-4 w-4" />
           <span>オンラインストアへ</span>
@@ -100,7 +100,7 @@ type SidebarSectionProps = {
 function SidebarSection({ section, activeHref, normalize, onNavigate }: SidebarSectionProps) {
   return (
     <div className="px-2 pb-3 pt-4">
-      <p className="px-3 text-[12px] font-medium tracking-wide text-[#9b9b9b]">{section.label}</p>
+      <p className="px-3 text-[12px] font-medium tracking-wide text-muted-foreground">{section.label}</p>
       <div className="mt-2 space-y-1">
         {section.items.map((item) => (
           <SidebarNavItem
@@ -130,11 +130,11 @@ function SidebarNavItem({ item, active, onNavigate }: SidebarNavItemProps) {
       className={cn(
         "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
         active
-          ? "bg-[rgba(0,172,75,0.12)] text-[#00ac4d]"
-          : "text-[#333333] hover:bg-[#f3f5f4]",
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "text-sidebar-foreground hover:bg-sidebar-accent/40",
       )}
     >
-      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-[#00ac4d]" : "text-[#4d4d4d]")} />
+      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-sidebar-primary" : "text-muted-foreground")} />
       <span className="truncate">{item.label}</span>
     </Link>
   );

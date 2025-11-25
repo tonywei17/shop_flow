@@ -42,23 +42,23 @@ import { Download, Edit, Plus } from "lucide-react";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
 
 const scopeBadgeMap: Record<string, { label: string; className: string }> = {
-  "すべてのデータ権限": { label: "全権限", className: "bg-[#e5f5ec] text-[#00ac4d]" },
-  "カスタムデータ権限": { label: "カスタム", className: "bg-[#fff5e6] text-[#d9822b]" },
+  "すべてのデータ権限": { label: "全権限", className: "bg-primary/10 text-primary" },
+  "カスタムデータ権限": { label: "カスタム", className: "bg-muted text-foreground" },
 };
 
 const statusBadgeMap: Record<string, { label: string; className: string }> = {
-  有効: { label: "有効", className: "bg-[#e5f5ec] text-[#00ac4d]" },
-  無効: { label: "無効", className: "bg-[#fff0f0] text-[#d82b2b]" },
+  有効: { label: "有効", className: "bg-primary/10 text-primary" },
+  無効: { label: "無効", className: "bg-destructive/10 text-destructive" },
 };
 
 function getScopeBadge(scope: string | null | undefined) {
-  if (!scope) return { label: "-", className: "bg-[#f4f4f5] text-[#6b7280]" };
-  return scopeBadgeMap[scope] ?? { label: scope, className: "bg-[#f4f4f5] text-[#6b7280]" };
+  if (!scope) return { label: "-", className: "bg-muted text-muted-foreground" };
+  return scopeBadgeMap[scope] ?? { label: scope, className: "bg-muted text-muted-foreground" };
 }
 
 function getStatusBadge(status: string | null | undefined) {
-  if (!status) return { label: "-", className: "bg-[#f4f4f5] text-[#6b7280]" };
-  return statusBadgeMap[status] ?? { label: status, className: "bg-[#f4f4f5] text-[#6b7280]" };
+  if (!status) return { label: "-", className: "bg-muted text-muted-foreground" };
+  return statusBadgeMap[status] ?? { label: status, className: "bg-muted text-muted-foreground" };
 }
 
 function formatPermissions(scope: string) {
@@ -265,9 +265,9 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
     <div className="space-y-6">
       <DashboardHeader title="ロール管理" />
 
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex flex-col gap-3 border-b border-[#11111114] px-6 py-3 text-[14px] text-[#111111] md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 border-b border-border px-6 py-3 text-sm text-foreground md:flex-row md:items-center md:justify-between">
             <label htmlFor="select-all" className="flex items-center gap-3">
               <Checkbox
                 id="select-all"
@@ -278,7 +278,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
               <span>全て選択</span>
             </label>
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10">
                 <Download className="h-4 w-4" />
                 一括操作
               </Button>
@@ -286,7 +286,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2 border-[#4190ff] text-[#4190ff] hover:bg-[#e7f0ff]"
+                    className="flex items-center gap-2 border-primary text-primary hover:bg-primary/10"
                     disabled={isExporting}
                   >
                     <Download className="h-4 w-4" />
@@ -302,7 +302,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         disabled={!selectedIds.length}
-                        className={!selectedIds.length ? "text-[#9ca3af]" : undefined}
+                        className={!selectedIds.length ? "text-muted-foreground opacity-50 cursor-not-allowed" : undefined}
                         onClick={() => handleExportCsv("selected")}
                       >
                         選択中のデータをエクスポート
@@ -319,7 +319,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         disabled={!selectedIds.length || isExporting}
-                        className={!selectedIds.length || isExporting ? "text-[#9ca3af]" : undefined}
+                        className={!selectedIds.length || isExporting ? "text-muted-foreground" : undefined}
                         onClick={() => handleExport("selected")}
                       >
                         選択中のデータをエクスポート
@@ -330,15 +330,15 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
               </DropdownMenu>
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button className="flex items-center gap-3 rounded-[4px] bg-[#00ac4d] px-4 py-[6px] text-sm font-medium text-white hover:bg-[#00943f]">
+                  <Button className="flex items-center gap-3 rounded-[4px] px-4 py-[6px] text-sm font-medium">
                     <Plus className="h-[14px] w-[14px]" />
                     <span className="text-[12px] font-medium">新規追加</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="fixed right-0 top-0 h-full max-h-full w-full max-w-[440px] translate-x-0 rounded-none border-l border-[#11111114] bg-white px-0 py-0 text-[#111111] shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
+                <DialogContent className="fixed right-0 top-0 h-full max-h-full w-full max-w-[440px] translate-x-0 rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
                   <div className="flex h-full flex-col">
-                    <DialogHeader className="border-b border-[#11111114] px-6 py-4">
-                      <DialogTitle className="text-[18px] font-semibold text-[#111111]">新規ロール作成</DialogTitle>
+                    <DialogHeader className="border-b border-border px-6 py-4">
+                      <DialogTitle className="text-[18px] font-semibold text-foreground">新規ロール作成</DialogTitle>
                     </DialogHeader>
                     <form className="flex flex-1 flex-col gap-5 overflow-auto px-6 py-6" onSubmit={handleSubmit}>
                       <div className="space-y-2">
@@ -366,12 +366,12 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                         <Textarea id="notes" name="notes" rows={3} placeholder="任意のメモ" />
                       </div>
                       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                      <DialogFooter className="mt-auto border-t border-[#11111114] px-0 pt-4">
+                      <DialogFooter className="mt-auto border-t border-border px-0 pt-4">
                         <div className="flex w-full justify-end gap-3">
                           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             キャンセル
                           </Button>
-                          <Button type="submit" className="bg-[#00ac4d] text-white hover:bg-[#00943f]" disabled={isSubmitting}>
+                          <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting ? "保存中..." : "作成する"}
                           </Button>
                         </div>
@@ -385,7 +385,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
 
           <Table className="[&_th]:py-3 [&_td]:py-3">
             <TableHeader>
-              <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+              <TableRow className="border-b border-border text-sm text-foreground">
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox
                     aria-label="行を選択"
@@ -408,7 +408,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                 const statusBadge = getStatusBadge(role.status);
                 const permissions = formatPermissions(role.data_scope);
                 return (
-                  <TableRow key={role.id} className="border-b border-[#11111114] text-[14px]">
+                  <TableRow key={role.id} className="border-b border-border text-sm">
                     <TableCell className="pl-6 pr-3">
                       <Checkbox
                         aria-label={`${role.name} を選択`}
@@ -425,10 +425,10 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                         }}
                       />
                     </TableCell>
-                    <TableCell className="font-medium text-[#111111]">{role.role_id ?? "-"}</TableCell>
-                    <TableCell className="font-mono text-[#555555]">{role.code}</TableCell>
+                    <TableCell className="font-medium text-foreground">{role.role_id ?? "-"}</TableCell>
+                    <TableCell className="font-mono text-muted-foreground">{role.code}</TableCell>
                     <TableCell>
-                      <Badge className="border-none px-3 py-1 text-[12px] bg-[#f4f4f5] text-[#111111]">{role.name}</Badge>
+                      <Badge className="border-none px-3 py-1 text-[12px] bg-muted text-foreground">{role.name}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge className={`border-none px-3 py-1 text-[12px] ${scopeBadge.className}`}>{scopeBadge.label}</Badge>
@@ -436,7 +436,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                     <TableCell>
                       <Badge className={`border-none px-3 py-1 text-[12px] ${statusBadge.className}`}>{statusBadge.label}</Badge>
                     </TableCell>
-                    <TableCell className="text-[#555555]">
+                    <TableCell className="text-muted-foreground">
                       {permissions.length === 1 ? (
                         <span>{permissions[0]}</span>
                       ) : (
@@ -448,7 +448,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                       )}
                     </TableCell>
                     <TableCell className="pr-6 text-right">
-                      <Button variant="ghost" size="sm" className="gap-1 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+                      <Button variant="ghost" size="sm" className="gap-1 px-2 py-1 text-primary hover:bg-primary/10">
                         <Edit className="h-4 w-4" />
                         編集
                       </Button>
@@ -466,7 +466,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
             </TableBody>
           </Table>
 
-          <div className="flex flex-col gap-4 border-t border-[#11111114] px-6 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between">
             <p className="text-xs text-muted-foreground">
               全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
             </p>

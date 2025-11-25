@@ -190,9 +190,9 @@ export function DepartmentsClient({
   };
 
   return (
-    <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+    <Card className="rounded-xl border bg-card shadow-sm">
       <CardContent className="p-0">
-        <div className="flex flex-col gap-3 border-b border-[#11111114] px-6 py-3 text-sm text-[#111111] lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 border-b border-border px-6 py-3 text-sm text-foreground lg:flex-row lg:items-center lg:justify-between">
           <label htmlFor="dept-select-all" className="flex items-center gap-3">
             <Checkbox
               id="dept-select-all"
@@ -217,7 +217,7 @@ export function DepartmentsClient({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]"
+                    className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10"
                     disabled={isExporting}
                   >
                     <Download className="h-4 w-4" />
@@ -233,7 +233,7 @@ export function DepartmentsClient({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         disabled={!selectedIds.length}
-                        className={!selectedIds.length ? "text-[#9ca3af]" : undefined}
+                        className={!selectedIds.length ? "text-muted-foreground" : undefined}
                         onClick={() => handleExportCsv("selected")}
                       >
                         選択中のデータをエクスポート
@@ -250,7 +250,7 @@ export function DepartmentsClient({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         disabled={!selectedIds.length || isExporting}
-                        className={!selectedIds.length || isExporting ? "text-[#9ca3af]" : undefined}
+                        className={!selectedIds.length || isExporting ? "text-muted-foreground" : undefined}
                         onClick={() => handleExport("selected")}
                       >
                         選択中のデータをエクスポート
@@ -269,7 +269,7 @@ export function DepartmentsClient({
 
         <Table className="[&_th]:py-3 [&_td]:py-3 text-sm">
           <TableHeader>
-            <TableRow className="border-b border-[#11111114] text-[#111111]">
+            <TableRow className="border-b border-border text-foreground">
               <TableHead className="w-[36px] pl-6 pr-3">
                 <Checkbox
                   aria-label="行を選択"
@@ -289,7 +289,7 @@ export function DepartmentsClient({
           </TableHeader>
           <TableBody>
             {departments.map((dept) => (
-              <TableRow key={dept.id} className="border-b border-[#11111114]">
+              <TableRow key={dept.id} className="border-b border-border">
                 <TableCell className="pl-6 pr-3">
                   <Checkbox
                     aria-label={`${dept.name} を選択`}
@@ -306,29 +306,29 @@ export function DepartmentsClient({
                     }}
                   />
                 </TableCell>
-                <TableCell className="font-mono text-xs text-[#555555]">
+                <TableCell className="font-mono text-xs text-muted-foreground">
                   {dept.external_id ?? '--'}
                 </TableCell>
-                <TableCell className="text-[#111111]">
+                <TableCell className="text-foreground">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-[#6b7280]" />
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
                     <div className="flex flex-col">
                       <span>{dept.name}</span>
                       <span className="text-xs text-muted-foreground">{dept.code || '未設定'}</span>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-[#555555]">{dept.category ?? '--'}</TableCell>
-                <TableCell className="text-[#555555]">{dept.parent_name ?? '—'}</TableCell>
-                <TableCell className="text-[#555555]">{dept.manager_name || '—'}</TableCell>
-                <TableCell className="text-[#555555]">{dept.phone_primary || '—'}</TableCell>
-                <TableCell className="text-[#555555]">
+                <TableCell className="text-muted-foreground">{dept.category ?? '--'}</TableCell>
+                <TableCell className="text-muted-foreground">{dept.parent_name ?? '—'}</TableCell>
+                <TableCell className="text-muted-foreground">{dept.manager_name || '—'}</TableCell>
+                <TableCell className="text-muted-foreground">{dept.phone_primary || '—'}</TableCell>
+                <TableCell className="text-muted-foreground">
                   {[dept.prefecture, dept.city, dept.address_line1, dept.address_line2]
                     .filter(Boolean)
                     .join(' ') || '—'}
                 </TableCell>
                 <TableCell className="pr-6 text-right">
-                  <Button variant="ghost" size="sm" className="text-[#00ac4d] hover:bg-[#00ac4d14]">
+                  <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
                     詳細
                   </Button>
                 </TableCell>
@@ -344,7 +344,7 @@ export function DepartmentsClient({
           </TableBody>
         </Table>
 
-        <div className="flex flex-col gap-4 border-t border-[#11111114] px-6 py-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between">
           <p className="text-xs text-muted-foreground">
             全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
           </p>

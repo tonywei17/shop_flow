@@ -366,9 +366,27 @@ export function AccountClient({
 
   return (
     <>
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-        <div className="flex flex-col gap-3 border-b border-[#11111114] px-6 py-3 text-sm text-[#111111] lg:flex-row lg:items-center lg:justify-between">
+        {/* Card header, similar to shadcn Payments card */}
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium leading-none text-foreground">アカウント一覧</h2>
+            <p className="text-xs text-muted-foreground">アカウントを検索・フィルタし、エクスポートできます。</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              className="flex items-center gap-2 px-4 py-[6px] text-sm font-medium"
+              onClick={() => handleDrawerOpen("create")}
+            >
+              <Plus className="h-[14px] w-[14px]" />
+              新規追加
+            </Button>
+          </div>
+        </div>
+
+        {/* Toolbar: select all, search and filters */}
+        <div className="flex flex-col gap-3 px-6 py-3 text-sm text-foreground lg:flex-row lg:items-center lg:justify-between">
           <label htmlFor="accounts-select-all" className="flex items-center gap-3">
             <Checkbox
               id="accounts-select-all"
@@ -412,7 +430,7 @@ export function AccountClient({
               有効のみ
             </Button>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10">
                 <Download className="h-4 w-4" />
                 一括操作
               </Button>
@@ -462,20 +480,13 @@ export function AccountClient({
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                className="flex items-center gap-2 bg-[#00ac4d] px-4 py-[6px] text-sm font-medium text-white hover:bg-[#00943f]"
-                onClick={() => handleDrawerOpen("create")}
-              >
-                <Plus className="h-[14px] w-[14px]" />
-                新規追加
-              </Button>
             </div>
           </div>
         </div>
 
         <Table className="[&_th]:py-3 [&_td]:py-3">
           <TableHeader>
-            <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+            <TableRow className="border-b border-border text-sm text-foreground">
               <TableHead className="w-[36px] pl-6 pr-3">
                 <Checkbox
                   aria-label="行を選択"
@@ -496,7 +507,7 @@ export function AccountClient({
             {accounts.map((account) => {
               const statusBadge = getStatusBadge(account.status);
               return (
-                <TableRow key={account.id} className="border-b border-[#11111114] text-[14px]">
+                <TableRow key={account.id} className="border-b border-border text-sm">
                   <TableCell className="pl-6 pr-3">
                     <Checkbox
                       aria-label={`${account.display_name} を選択`}
@@ -513,16 +524,16 @@ export function AccountClient({
                       }}
                     />
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-[#555555]">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     <div className="flex flex-col">
                       <span>{account.account_id}</span>
                       <span className="text-[10px] text-muted-foreground">#{account.external_id ?? '—'}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-[#111111]">{account.display_name}</TableCell>
-                  <TableCell className="text-[#555555]">{account.email ?? '—'}</TableCell>
-                  <TableCell className="text-[#555555]">{account.department_name ?? '—'}</TableCell>
-                  <TableCell className="text-[#555555]">
+                  <TableCell className="text-foreground">{account.display_name}</TableCell>
+                  <TableCell className="text-muted-foreground">{account.email ?? '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{account.department_name ?? '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">
                     {account.last_login_at ? new Date(account.last_login_at).toLocaleString('ja-JP') : '未ログイン'}
                   </TableCell>
                   <TableCell>
@@ -532,7 +543,7 @@ export function AccountClient({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="gap-1 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]"
+                      className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
                       onClick={() => handleDrawerOpen("edit", account)}
                     >
                       <Edit className="h-4 w-4" />
@@ -552,7 +563,7 @@ export function AccountClient({
           </TableBody>
         </Table>
 
-        <div className="flex flex-col gap-4 border-t border-[#11111114] px-6 py-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between">
           <p className="text-xs text-muted-foreground">
             全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
           </p>
@@ -655,7 +666,7 @@ export function AccountClient({
           <div className="space-y-5">
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="form-account-id" className="text-xs font-medium text-[#555555]">
+              <Label htmlFor="form-account-id" className="text-xs font-medium text-foreground">
                 アカウントID
               </Label>
               <Input
@@ -667,15 +678,15 @@ export function AccountClient({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-[#555555]">ステータス</Label>
-              <div className="flex items-center justify-between rounded-lg border border-[#e5e5e5] px-3 py-2">
-                <div className="text-xs text-[#6b7280]">利用可否を切り替え</div>
+              <Label className="text-xs font-medium text-foreground">ステータス</Label>
+              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                <div className="text-xs text-muted-foreground">利用可否を切り替え</div>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={formState.status}
                     onCheckedChange={(checked) => handleFormChange("status")(checked)}
                   />
-                  <span className="text-sm text-[#111111]">{formState.status ? "有効" : "無効"}</span>
+                  <span className="text-sm text-foreground">{formState.status ? "有効" : "無効"}</span>
                 </div>
               </div>
             </div>
@@ -683,7 +694,7 @@ export function AccountClient({
 
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="form-display-name" className="text-xs font-medium text-[#555555]">
+              <Label htmlFor="form-display-name" className="text-xs font-medium text-foreground">
                 アカウント名
               </Label>
               <Input
@@ -694,7 +705,7 @@ export function AccountClient({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="form-password" className="text-xs font-medium text-[#555555]">
+              <Label htmlFor="form-password" className="text-xs font-medium text-foreground">
                 パスワード
               </Label>
               <Input
@@ -709,7 +720,7 @@ export function AccountClient({
 
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="form-role" className="text-xs font-medium text-[#555555]">
+              <Label htmlFor="form-role" className="text-xs font-medium text-foreground">
                 ロール
               </Label>
               <Select value={formState.role} onValueChange={(value) => handleFormChange("role")(value)}>
@@ -726,7 +737,7 @@ export function AccountClient({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="form-department" className="text-xs font-medium text-[#555555]">
+              <Label htmlFor="form-department" className="text-xs font-medium text-foreground">
                 部署
               </Label>
               <Select
@@ -754,22 +765,22 @@ export function AccountClient({
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <div className="flex items-center justify-between rounded-lg border border-[#e5e5e5] px-3 py-2">
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
               <div>
-                <Label className="text-xs font-medium text-[#555555]">代行請求</Label>
-                <p className="text-xs text-[#6b7280]">代理店向け請求を許可</p>
+                <Label className="text-xs font-medium text-foreground">代行請求</Label>
+                <p className="text-xs text-muted-foreground">代理店向け請求を許可</p>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   checked={formState.delegateBilling}
                   onCheckedChange={(checked) => handleFormChange("delegateBilling")(checked)}
                 />
-                <span className="text-sm text-[#111111]">{formState.delegateBilling ? "有効" : "無効"}</span>
+                <span className="text-sm text-foreground">{formState.delegateBilling ? "有効" : "無効"}</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="form-price" className="text-xs font-medium text-[#555555]">
+              <Label htmlFor="form-price" className="text-xs font-medium text-foreground">
                 価格表示
               </Label>
               <Select
@@ -791,7 +802,7 @@ export function AccountClient({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="form-email" className="text-xs font-medium text-[#555555]">
+            <Label htmlFor="form-email" className="text-xs font-medium text-foreground">
               メールアドレス
             </Label>
             <Input
@@ -804,7 +815,7 @@ export function AccountClient({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="form-phone" className="text-xs font-medium text-[#555555]">
+            <Label htmlFor="form-phone" className="text-xs font-medium text-foreground">
               電話番号
             </Label>
             <Input
@@ -816,7 +827,7 @@ export function AccountClient({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="form-facility" className="text-xs font-medium text-[#555555]">
+            <Label htmlFor="form-facility" className="text-xs font-medium text-foreground">
               施設名・宛先
             </Label>
             <Input
@@ -828,7 +839,7 @@ export function AccountClient({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="form-representative" className="text-xs font-medium text-[#555555]">
+            <Label htmlFor="form-representative" className="text-xs font-medium text-foreground">
               代表者名
             </Label>
             <Input

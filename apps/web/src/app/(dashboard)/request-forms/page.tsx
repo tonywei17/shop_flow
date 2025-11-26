@@ -11,11 +11,11 @@ export default function RequestFormsPage() {
   return (
     <div className="space-y-6">
       <DashboardHeader title="申請書管理" actions={null} />
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
           <Table className="[&_th]:py-3 [&_td]:py-3">
             <TableHeader>
-              <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+              <TableRow className="border-b border-border text-sm text-foreground">
                 <TableHead className="w-[180px]">ID</TableHead>
                 <TableHead className="w-[180px]">対象期間</TableHead>
                 <TableHead className="w-[160px]">ステータス</TableHead>
@@ -24,15 +24,18 @@ export default function RequestFormsPage() {
             </TableHeader>
             <TableBody>
               {mockRequests.map((row) => (
-                <TableRow key={row.id} className="border-b border-[#11111114] text-[14px]">
-                  <TableCell className="font-mono text-xs text-[#555555]">{row.id}</TableCell>
-                  <TableCell className="text-[#111111]">{row.period}</TableCell>
-                  <TableCell className="text-[#555555]">{row.status}</TableCell>
-                  <TableCell className="text-[#555555]">{row.result}</TableCell>
+                <TableRow key={row.id} className="border-b border-border text-sm">
+                  <TableCell className="font-mono text-xs text-muted-foreground">{row.id}</TableCell>
+                  <TableCell className="text-foreground">{row.period}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.status}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.result}</TableCell>
                 </TableRow>
               ))}
               <TableRow>
-                <TableCell colSpan={4} className="border-b border-[#11111114] py-6 text-center text-sm text-[#6f6f6f]">
+                <TableCell
+                  colSpan={4}
+                  className="border-b border-border py-6 text-center text-sm text-muted-foreground"
+                >
                   CSV アップロード → Langflow API 推論 → 結果レビューの一連フローは近日公開予定です。
                 </TableCell>
               </TableRow>

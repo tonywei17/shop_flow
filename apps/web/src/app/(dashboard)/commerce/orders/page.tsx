@@ -29,9 +29,9 @@ export default async function OrdersListPage() {
   return (
     <div className="space-y-6">
       <DashboardHeader title="受注一覧" />
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-[#11111114] px-6 py-3 text-[14px] text-[#111111]">
+          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
             <label htmlFor="orders-select-all" className="flex items-center gap-3">
               <Checkbox id="orders-select-all" aria-label="全て選択" />
               <span>全て選択</span>
@@ -39,14 +39,14 @@ export default async function OrdersListPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]"
+                className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10"
               >
                 <Download className="h-4 w-4" />
                 一括操作
               </Button>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 border-[#4190ff] text-[#4190ff] hover:bg-[#e7f0ff]"
+                className="flex items-center gap-2 border-primary text-primary hover:bg-primary/10"
               >
                 <Download className="h-4 w-4" />
                 エクスポート
@@ -56,10 +56,9 @@ export default async function OrdersListPage() {
               </Button>
             </div>
           </div>
-
           <Table className="[&_th]:py-3 [&_td]:py-3">
             <TableHeader>
-              <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+              <TableRow className="border-b border-border text-sm text-foreground">
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox aria-label="行を選択" />
                 </TableHead>
@@ -73,16 +72,21 @@ export default async function OrdersListPage() {
             <TableBody>
               {rows.length > 0 ? (
                 rows.map((o) => (
-                  <TableRow key={o.id} className="border-b border-[#11111114] text-[14px]">
+                  <TableRow key={o.id} className="border-b border-border text-sm">
                     <TableCell className="pl-6 pr-3">
                       <Checkbox aria-label={`${o.display_id ?? o.id} を選択`} />
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-[#555555]">{o.id}</TableCell>
-                    <TableCell className="text-[#111111]">{o.display_id ?? "-"}</TableCell>
-                    <TableCell className="text-[#555555] capitalize">{o.status ?? "-"}</TableCell>
-                    <TableCell className="text-[#555555]">{o.email ?? "-"}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{o.id}</TableCell>
+                    <TableCell className="text-foreground">{o.display_id ?? "-"}</TableCell>
+                    <TableCell className="text-muted-foreground capitalize">{o.status ?? "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{o.email ?? "-"}</TableCell>
                     <TableCell className="pr-6 text-right">
-                      <Button asChild variant="ghost" size="sm" className="gap-1 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
+                      >
                         <Link href={`/commerce/orders/${o.id}`}>
                           <Eye className="h-4 w-4" />
                           詳細
@@ -93,7 +97,10 @@ export default async function OrdersListPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="border-b border-[#11111114] py-10 text-center text-sm text-[#6f6f6f]">
+                  <TableCell
+                    colSpan={6}
+                    className="border-b border-border py-10 text-center text-sm text-muted-foreground"
+                  >
                     {errorMsg || "受注データがありません。"}
                   </TableCell>
                 </TableRow>
@@ -101,7 +108,7 @@ export default async function OrdersListPage() {
             </TableBody>
           </Table>
 
-          <div className="flex justify-end border-t border-[#11111114] px-6 py-4">
+          <div className="flex justify-end border-t border-border px-6 py-4">
             <Pagination className="w-auto">
               <PaginationContent>
                 <PaginationItem>

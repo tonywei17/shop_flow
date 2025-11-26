@@ -16,21 +16,24 @@ export default function PermissionsPage() {
   return (
     <div className="space-y-6">
       <DashboardHeader title="権限管理" actions={null} />
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-[#11111114] px-6 py-3 text-[14px] text-[#111111]">
+          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
             <label htmlFor="permissions-select-all" className="flex items-center gap-3">
               <Checkbox id="permissions-select-all" aria-label="全て選択" />
               <span>全て選択</span>
             </label>
-            <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10"
+            >
               <Download className="h-4 w-4" />
               一括操作
             </Button>
           </div>
           <Table className="[&_th]:py-3 [&_td]:py-3">
             <TableHeader>
-              <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+              <TableRow className="border-b border-border text-sm text-foreground">
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox aria-label="行を選択" />
                 </TableHead>
@@ -43,16 +46,20 @@ export default function PermissionsPage() {
             </TableHeader>
             <TableBody>
               {rows.map((row) => (
-                <TableRow key={row.id} className="border-b border-[#11111114] text-[14px]">
+                <TableRow key={row.id} className="border-b border-border text-sm">
                   <TableCell className="pl-6 pr-3">
                     <Checkbox aria-label={`${row.name} を選択`} />
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-[#555555]">{row.id}</TableCell>
-                  <TableCell className="text-[#111111]">{row.name}</TableCell>
-                  <TableCell className="text-[#555555]">{row.type}</TableCell>
-                  <TableCell className="text-[#555555]">{row.detail}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{row.id}</TableCell>
+                  <TableCell className="text-foreground">{row.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.type}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.detail}</TableCell>
                   <TableCell className="pr-6 text-right">
-                    <Button variant="ghost" size="sm" className="gap-1 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
+                    >
                       <Edit className="h-4 w-4" />
                       編集
                     </Button>
@@ -60,7 +67,10 @@ export default function PermissionsPage() {
                 </TableRow>
               ))}
               <TableRow>
-                <TableCell colSpan={6} className="border-b border-[#11111114] py-6 text-center text-sm text-[#6f6f6f]">
+                <TableCell
+                  colSpan={6}
+                  className="border-b border-border py-6 text-center text-sm text-muted-foreground"
+                >
                   ロール・部門・アカウントの一括更新（CSV/Excel）と階層権限制御は今後実装予定です。
                 </TableCell>
               </TableRow>

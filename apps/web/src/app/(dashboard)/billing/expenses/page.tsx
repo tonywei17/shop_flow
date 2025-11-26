@@ -16,15 +16,18 @@ export default function ExpensesPage() {
     <div className="space-y-6">
       <DashboardHeader title="その他費用管理" />
 
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-[#11111114] px-6 py-3 text-sm text-[#111111]">
+          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
             <label htmlFor="expenses-select-all" className="flex items-center gap-3">
               <Checkbox id="expenses-select-all" aria-label="全て選択" />
               <span>全て選択</span>
             </label>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10"
+              >
                 <Download className="h-4 w-4" />
                 精算一覧を出力
               </Button>
@@ -34,10 +37,9 @@ export default function ExpensesPage() {
               </Button>
             </div>
           </div>
-
           <Table className="[&_th]:py-3 [&_td]:py-3 text-sm">
             <TableHeader>
-              <TableRow className="border-b border-[#11111114] text-[#111111]">
+              <TableRow className="border-b border-border text-foreground">
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox aria-label="行を選択" />
                 </TableHead>
@@ -51,24 +53,31 @@ export default function ExpensesPage() {
             </TableHeader>
             <TableBody>
               {expenses.map((exp) => (
-                <TableRow key={exp.id} className="border-b border-[#11111114]">
+                <TableRow key={exp.id} className="border-b border-border">
                   <TableCell className="pl-6 pr-3">
                     <Checkbox aria-label={`${exp.id} を選択`} />
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-[#555555]">{exp.id}</TableCell>
-                  <TableCell className="text-[#111111]">{exp.category}</TableCell>
-                  <TableCell className="text-[#111111]">{exp.amount}</TableCell>
-                  <TableCell className="text-[#555555]">{exp.requestedBy}</TableCell>
-                  <TableCell className="text-[#555555]">{exp.status}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{exp.id}</TableCell>
+                  <TableCell className="text-foreground">{exp.category}</TableCell>
+                  <TableCell className="text-foreground">{exp.amount}</TableCell>
+                  <TableCell className="text-muted-foreground">{exp.requestedBy}</TableCell>
+                  <TableCell className="text-muted-foreground">{exp.status}</TableCell>
                   <TableCell className="pr-6 text-right">
-                    <Button variant="ghost" size="sm" className="text-[#00ac4d] hover:bg-[#00ac4d14]">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary hover:bg-primary/10"
+                    >
                       詳細
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               <TableRow>
-                <TableCell colSpan={7} className="border-b border-[#11111114] py-6 text-center text-sm text-[#6f6f6f]">
+                <TableCell
+                  colSpan={7}
+                  className="border-b border-border py-6 text-center text-sm text-muted-foreground"
+                >
                   承認フローや領収書画像アップロードは次フェーズで実装予定です。
                 </TableCell>
               </TableRow>

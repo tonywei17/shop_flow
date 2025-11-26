@@ -41,9 +41,9 @@ export default async function CommerceListPage() {
   return (
     <div className="space-y-6">
       <DashboardHeader title="オンラインストア管理" />
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-[#11111114] px-6 py-3 text-[14px] text-[#111111]">
+          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
             <label htmlFor="products-select-all" className="flex items-center gap-3">
               <Checkbox id="products-select-all" aria-label="全て選択" />
               <span>全て選択</span>
@@ -51,19 +51,19 @@ export default async function CommerceListPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]"
+                className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10"
               >
                 <Download className="h-4 w-4" />
                 一括操作
               </Button>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 border-[#4190ff] text-[#4190ff] hover:bg-[#e7f0ff]"
+                className="flex items-center gap-2 border-primary text-primary hover:bg-primary/10"
               >
                 <Download className="h-4 w-4" />
                 エクスポート
               </Button>
-              <Button className="flex items-center gap-3 rounded-[4px] bg-[#00ac4d] px-4 py-[6px] text-sm font-medium text-white hover:bg-[#00943f]">
+              <Button className="flex items-center gap-3 rounded-[4px] bg-primary px-4 py-[6px] text-sm font-medium text-primary-foreground hover:bg-primary/90">
                 <Plus className="h-[14px] w-[14px]" />
                 <Link href="/commerce/new" className="text-[12px] font-medium">
                   商品を登録
@@ -74,10 +74,9 @@ export default async function CommerceListPage() {
               </Button>
             </div>
           </div>
-
           <Table className="[&_th]:py-3 [&_td]:py-3">
             <TableHeader>
-              <TableRow className="border-b border-[#11111114] text-[14px] text-[#111111]">
+              <TableRow className="border-b border-border text-sm text-foreground">
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox aria-label="行を選択" />
                 </TableHead>
@@ -92,19 +91,24 @@ export default async function CommerceListPage() {
             <TableBody>
               {hasRows ? (
                 rows.map((p) => (
-                  <TableRow key={p.id} className="border-b border-[#11111114] text-[14px]">
+                  <TableRow key={p.id} className="border-b border-border text-sm">
                     <TableCell className="pl-6 pr-3">
                       <Checkbox aria-label={`${p.title} を選択`} />
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-[#555555]">{p.sku}</TableCell>
-                    <TableCell className="text-[#111111]">{p.title}</TableCell>
-                    <TableCell className="text-[#555555]">{formatPrice(p.price_retail_cents ?? 0)}</TableCell>
-                    <TableCell className="text-[#555555]">{p.stock ?? 0}</TableCell>
-                    <TableCell className="text-[#555555] text-xs">
+                    <TableCell className="font-mono text-xs text-muted-foreground">{p.sku}</TableCell>
+                    <TableCell className="text-foreground">{p.title}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatPrice(p.price_retail_cents ?? 0)}</TableCell>
+                    <TableCell className="text-muted-foreground">{p.stock ?? 0}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
                       {new Date(p.created_at).toLocaleString("ja-JP")}
                     </TableCell>
                     <TableCell className="pr-6 text-right">
-                      <Button asChild variant="ghost" size="sm" className="gap-1 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
+                      >
                         <Link href={`/commerce/${p.id}`}>
                           <Eye className="h-4 w-4" />
                           詳細
@@ -115,7 +119,10 @@ export default async function CommerceListPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="border-b border-[#11111114] py-10 text-center text-sm text-[#6f6f6f]">
+                  <TableCell
+                    colSpan={7}
+                    className="border-b border-border py-10 text-center text-sm text-muted-foreground"
+                  >
                     Supabase 上に商品データがありません。「商品を登録」から追加してください。
                   </TableCell>
                 </TableRow>
@@ -123,7 +130,7 @@ export default async function CommerceListPage() {
             </TableBody>
           </Table>
 
-          <div className="flex justify-end border-t border-[#11111114] px-6 py-4">
+          <div className="flex justify-end border-t border-border px-6 py-4">
             <Pagination className="w-auto">
               <PaginationContent>
                 <PaginationItem>

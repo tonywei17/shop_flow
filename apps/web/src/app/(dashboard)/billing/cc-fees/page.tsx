@@ -15,15 +15,18 @@ export default function CcFeesPage() {
   return (
     <div className="space-y-6">
       <DashboardHeader title="CC会費管理" />
-      <Card className="rounded-xl border border-[#11111114] bg-white shadow-sm">
+      <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-[#11111114] px-6 py-3 text-sm text-[#111111]">
+          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
             <label htmlFor="cc-select-all" className="flex items-center gap-3">
               <Checkbox id="cc-select-all" aria-label="全て選択" />
               <span>全て選択</span>
             </label>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-[#00ac4d] hover:bg-[#00ac4d14]">
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10"
+              >
                 <Download className="h-4 w-4" />
                 CSV エクスポート
               </Button>
@@ -35,7 +38,7 @@ export default function CcFeesPage() {
           </div>
           <Table className="[&_th]:py-3 [&_td]:py-3 text-sm">
             <TableHeader>
-              <TableRow className="border-b border-[#11111114] text-[#111111]">
+              <TableRow className="border-b border-border text-foreground">
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox aria-label="行を選択" />
                 </TableHead>
@@ -49,24 +52,31 @@ export default function CcFeesPage() {
             </TableHeader>
             <TableBody>
               {memberships.map((item) => (
-                <TableRow key={item.id} className="border-b border-[#11111114]">
+                <TableRow key={item.id} className="border-b border-border">
                   <TableCell className="pl-6 pr-3">
                     <Checkbox aria-label={`${item.id} を選択`} />
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-[#555555]">{item.id}</TableCell>
-                  <TableCell className="text-[#111111]">{item.center}</TableCell>
-                  <TableCell className="text-[#555555]">{item.members}</TableCell>
-                  <TableCell className="text-[#111111]">{item.amount}</TableCell>
-                  <TableCell className="text-[#555555]">{item.period}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{item.id}</TableCell>
+                  <TableCell className="text-foreground">{item.center}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.members}</TableCell>
+                  <TableCell className="text-foreground">{item.amount}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.period}</TableCell>
                   <TableCell className="pr-6 text-right">
-                    <Button variant="ghost" size="sm" className="text-[#00ac4d] hover:bg-[#00ac4d14]">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary hover:bg-primary/10"
+                    >
                       詳細
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               <TableRow>
-                <TableCell colSpan={7} className="border-b border-[#11111114] py-6 text-center text-sm text-[#6f6f6f]">
+                <TableCell
+                  colSpan={7}
+                  className="border-b border-border py-6 text-center text-sm text-muted-foreground"
+                >
                   Stripe 連携による自動課金と会費差異アラートは次フェーズで実装予定です。
                 </TableCell>
               </TableRow>

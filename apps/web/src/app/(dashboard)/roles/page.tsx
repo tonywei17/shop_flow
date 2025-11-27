@@ -19,7 +19,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
   const limitParam = Number(resolvedSearchParams?.limit);
 
   const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
-  const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 50) : 10;
+  const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 100) : 10;
   const search = resolvedSearchParams?.q?.trim();
   const offset = (page - 1) * limit;
 

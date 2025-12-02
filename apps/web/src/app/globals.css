@@ -177,3 +177,15 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+[data-slot="checkbox"][data-state="checked"],
+[data-slot="checkbox"][data-state="indeterminate"] {
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+[data-slot="checkbox"][data-state="checked"] svg,
+[data-slot="checkbox"][data-state="indeterminate"] svg {
+  color: hsl(var(--primary-foreground));
+}

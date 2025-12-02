@@ -3,7 +3,7 @@
 import { Header } from "@/components/header";
 import Link from "next/link";
 import { Award, Calendar, CreditCard, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function DashboardPage() {
   const [user, setUser] = useState({
@@ -16,26 +16,6 @@ export default function DashboardPage() {
     completedCourses: 1,
     upcomingActivities: 2,
   });
-
-  useEffect(() => {
-    // 从 localStorage 读取演示账号信息
-    const demoUserStr = localStorage.getItem('demoUser');
-    if (demoUserStr) {
-      const demoUser = JSON.parse(demoUserStr);
-      setUser({
-        name: demoUser.name,
-        email: demoUser.email,
-        membershipType: demoUser.memberType,
-        membershipExpiry: demoUser.memberType === 'premium' ? "2026年1月15日" : "無料会員",
-        qualifications: demoUser.qualifications > 0 
-          ? Array(demoUser.qualifications).fill(0).map((_, i) => `資格${i + 1}`)
-          : [],
-        enrolledCourses: demoUser.coursesEnrolled,
-        completedCourses: Math.floor(demoUser.coursesEnrolled / 2),
-        upcomingActivities: 2,
-      });
-    }
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

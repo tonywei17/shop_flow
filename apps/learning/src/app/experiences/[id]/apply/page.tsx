@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Send } from "lucide-react";
@@ -77,10 +77,10 @@ export default function ExperienceApplyPage() {
     );
   }
 
-  const breadcrumbs = useMemo(() => [
+  const breadcrumbs = [
     { label: "ホーム", href: "/" },
     { label: "体験申し込みフォーム" },
-  ], []);
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">

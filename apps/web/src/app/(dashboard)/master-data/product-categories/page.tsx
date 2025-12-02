@@ -1,0 +1,50 @@
+import { Suspense } from "react";
+import { DashboardHeader } from "@/components/dashboard/header";
+import { listProductCategories } from "@enterprise/db";
+import { ProductCategoriesClient } from "./product-categories-client";
+import type { MasterPagination } from "../account-items/account-items-client";
+
+type ProductCategoriesSearchParams = {
+  page?: string;
+  limit?: string;
+  q?: string;
+};
+
+type ProductCategoriesPageProps = {
+  searchParams?: Promise<ProductCategoriesSearchParams>;
+};
+
+export default async function ProductCategoriesPage({
+  searchParams,
+}: ProductCategoriesPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
+  const pageParam = Number(resolvedSearchParams?.page);
+  const limitParam = Number(resolvedSearchParams?.limit);
+
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
+  const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 100) : 20;
+  const search = resolvedSearchParams?.q?.trim();
+  const offset = (page - 1) * limit;
+
+  const { items, count } = await listProductCategories({ limit, offset, search }).catch((error) => {
+    console.error("Failed to load product categories from Supabase on product categories page", error);
+    return { items: [], count: 0 };
+  });
+
+  const pagination: MasterPagination = {
+    page,
+    limit,
+    count,
+    search: search ?? "",
+  };
+
+  return (
+    <div className="space-y-6">
+      <DashboardHeader title="商品区分" />
+      <Suspense fallback={null}>
+        <ProductCategoriesClient items={items} pagination={pagination} />
+      </Suspense>
+    </div>
+  );
+}

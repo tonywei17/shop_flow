@@ -60,6 +60,7 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
                   section={section}
                   activeHref={activeHref}
                   normalize={normalize}
+                  currentPath={normalizedPath}
                   onNavigate={onNavigate}
                 />
                 {index < navSections.length - 1 && <div className="mx-4 h-px bg-sidebar-border/20" />}
@@ -94,10 +95,11 @@ type SidebarSectionProps = {
   section: (typeof navSections)[number];
   activeHref?: string;
   normalize: (value: string | null | undefined) => string;
+  currentPath: string;
   onNavigate?: () => void;
 };
 
-function SidebarSection({ section, activeHref, normalize, onNavigate }: SidebarSectionProps) {
+function SidebarSection({ section, activeHref, normalize, currentPath, onNavigate }: SidebarSectionProps) {
   return (
     <div className="px-2 pb-3 pt-4">
       <p className="px-3 text-[12px] font-medium tracking-wide text-muted-foreground">{section.label}</p>
@@ -107,6 +109,7 @@ function SidebarSection({ section, activeHref, normalize, onNavigate }: SidebarS
             key={item.href}
             item={item}
             active={normalize(item.href) === activeHref}
+            currentPath={currentPath}
             onNavigate={onNavigate}
           />
         ))}
@@ -118,11 +121,67 @@ function SidebarSection({ section, activeHref, normalize, onNavigate }: SidebarS
 type SidebarNavItemProps = {
   item: (typeof navSections)[number]["items"][number];
   active: boolean;
+  currentPath: string;
   onNavigate?: () => void;
 };
 
-function SidebarNavItem({ item, active, onNavigate }: SidebarNavItemProps) {
+function SidebarNavItem({ item, active, currentPath, onNavigate }: SidebarNavItemProps) {
   const Icon: ComponentType<{ className?: string }> = item.icon;
+
+  // Special expandable menu for マスター管理
+  if (item.href === "/master-data") {
+    const children = [
+      { label: "勘定項目", href: "/master-data/account-items" },
+      { label: "商品区分", href: "/master-data/product-categories" },
+      { label: "相手先", href: "/master-data/counterparties" },
+    ];
+
+    const isChildActive = children.some((child) => currentPath.startsWith(child.href));
+
+    return (
+      <div className="space-y-1">
+        <Link
+          href={children[0].href}
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
+            active || isChildActive
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/40",
+          )}
+        >
+          <Icon
+            className={cn(
+              "h-4 w-4 shrink-0",
+              active || isChildActive ? "text-sidebar-primary" : "text-muted-foreground",
+            )}
+          />
+          <span className="truncate">{item.label}</span>
+        </Link>
+        <div className="ml-8 space-y-0.5 text-[13px]">
+          {children.map((child) => {
+            const childActive = currentPath.startsWith(child.href);
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                onClick={onNavigate}
+                className={cn(
+                  "block rounded-md px-3 py-1.5 text-sm transition-colors",
+                  childActive
+                    ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                    : "text-muted-foreground hover:bg-sidebar-accent/40",
+                )}
+              >
+                {child.label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Link
       href={item.href}

@@ -177,3 +177,58 @@
 - 在列表页补充批量操作、导出等后端实现（当前按钮为 UI 占位）。
 - 将账户/部门/ロール操作接入 Supabase RLS 与审计日志表。
 - 在 CI 中加入 `npm run lint` / `npm run build` 检查，保证 Dashboard マスタ管理的回归质量。
+
+## 2025-12-02（JST）
+
+### 本次变更概览
+
+- **マスタ管理機能（勘定項目／商品区分／相手先）**
+  - Supabase 表：`account_items`、`product_categories`、`counterparties` 设计与落地，主键使用 UUID + 业务 ID 列（整数）。
+  - `@enterprise/db` 新增 CRUD 封装：`listAccountItems/createAccountItem/updateAccountItem/deleteAccountItem` 等，并从 `packages/db/src/index.ts` 导出对应类型。
+  - 内部 API：`apps/web/src/app/api/internal/{account-items,product-categories,counterparties}/route.ts`，统一支持分页（page/limit/offset）、搜索、状态筛选、Zod 校验，以及错误处理。
+  - Dashboard 页面：
+    - `/(dashboard)/master-data/account-items`
+    - `/(dashboard)/master-data/product-categories`
+    - `/(dashboard)/master-data/counterparties`
+    全部采用 shadcn green 主题，支持分页、总件数显示、页码切换、新规追加、編集、削除。
+
+- **搜索体验改进（ID + 名称）**
+  - 勘定項目：输入纯数字时，同时匹配 `account_item_id = 数字` 或 `name ILIKE '%数字%'`；否则按名称模糊匹配。
+  - 商品区分：对 `code`（商品区分ID）与 `name` 同时搜索。
+  - 相手先：输入纯数字时，对 `counterparty_id` 精确匹配 + `name` 模糊；否则按名称模糊匹配。
+  - 三个页面的搜索框占位文案统一为「ID・名称で検索」。
+
+- **Sidebar 菜单高亮修复**
+  - `apps/web/src/components/dashboard/sidebar.tsx`：
+    - 通过 `usePathname()` 计算 `normalizedPath`，并下传给 `SidebarSection`/`SidebarNavItem`。
+    - 「マスター管理」展开菜单下的子项（勘定項目／商品区分／相手先）根据当前 URL 精确高亮；解决在 `/master-data/product-categories` 时仍高亮「勘定項目」的问题。
+
+- **勘定項目 CSV 全量导入**
+  - 使用 `docs/data/勘定項目_*.csv` 作为来源，将 `account_items` 表从单条记录扩充为 153 条（业务 ID 从 11 到 999）。
+  - 通过 Supabase MCP 批量插入，保证与原始 Excel/CSV 一致，可在 Dashboard 勘定項目列表中分页浏览全部科目。
+
+- **Chrome MCP 端到端验证**
+  - 在 Chrome MCP 中逐页确认：
+    - 三个 master 页面均可正常加载 Supabase 数据。
+    - 搜索（ID/名称）、分页、件数显示、CRUD 操作工作正常；控制台无运行时错误。
+
+### 代码健康度检查
+
+- **ESLint**
+  - 命令：`pnpm lint`（根目录，经 `turbo run lint` 触发 `apps/web` 与 `apps/learning`）。
+  - 结果：
+    - `apps/web` 与 `apps/learning` 的 `eslint` 进程均抛出：
+      - `TypeError: Converting circular structure to JSON`
+      - 调用栈指向 `@eslint/eslintrc` 的 `config-validator`（plugins.react 配置存在循环引用）。
+    - 这是 ESLint 9 + 现有配置/插件组合的兼容性问题，属于 **配置级错误**，并非业务代码中的具体 lint 违规；暂未在本次会话中修改 ESLint 配置。
+
+- **TypeScript / Build**
+  - 本次会话未额外运行独立的 `tsc --noEmit` 或 `pnpm build`；构建状态沿用上一次通过记录。
+
+### 待办与下一步
+
+- [ ] 梳理 `apps/web` 与 `apps/learning` 的 ESLint 配置：
+  - 优先对齐 Next.js 16 官方 flat config 示例，或在短期内将 ESLint 锁定到 v8 稳定版本以避免插件循环引用问题。
+  - 对 `eslint-config-next`、`eslint-plugin-react` 等版本进行兼容性检查。
+- [ ] 为三张 master 表新增更细粒度的校验与错误提示（例如 ID 唯一性冲突时在表单中高亮展示）。
+- [ ] 将 master 数据操作接入审计日志（记录创建/更新/删除人和时间），并规划未来与 RLS 的结合方案。

@@ -232,3 +232,53 @@
   - 对 `eslint-config-next`、`eslint-plugin-react` 等版本进行兼容性检查。
 - [ ] 为三张 master 表新增更细粒度的校验与错误提示（例如 ID 唯一性冲突时在表单中高亮展示）。
 - [ ] 将 master 数据操作接入审计日志（记录创建/更新/删除人和时间），并规划未来与 RLS 的结合方案。
+
+## 2025-12-02（JST）晚间补充
+
+### ESLint 正式修复与 Warning 清理
+
+- **配置方式统一为 flat config**
+  - `apps/web/eslint.config.mjs` 与 `apps/learning/eslint.config.mjs` 均改用：
+    - `import nextConfig from "eslint-config-next";`
+    - `export default [...nextConfig, { ignores: [...] }]`。
+  - 不再依赖 `FlatCompat` 将旧配置转换，彻底规避 `plugins.react` 循环引用导致的 `Converting circular structure to JSON` 问题。
+  - `eslint` 版本与 `eslint-config-next@16` 的 peer 依赖对齐（^9），`pnpm lint` 可以稳定运行。
+
+- **修复真实 lint error**
+  - `apps/learning/src/app/dashboard/page.tsx`：移除在 `useEffect` 内同步 `setState` 的逻辑，保留静态 demo 用户 state，消除 `react-hooks/set-state-in-effect`。
+  - `apps/learning/src/app/experiences/[id]/apply/page.tsx`：去掉条件调用的 `useMemo`，改为普通常量 breadcrumbs，消除 `react-hooks/rules-of-hooks`。
+  - `apps/learning/postcss.config.mjs`：将匿名 default export 改为 `const config = {...}; export default config;`，修复 `import/no-anonymous-default-export`。
+
+- **替换所有 `<img>` 为 `next/image`**（满足 `@next/next/no-img-element`）
+  - Learning 应用：
+    - `apps/learning/src/app/courses/[id]/page.tsx`
+    - `apps/learning/src/app/courses/page.tsx`
+    - `apps/learning/src/app/experiences/[id]/page.tsx`
+    - `apps/learning/src/app/experiences/page.tsx`
+    - `apps/learning/src/app/trainings/[id]/page.tsx`
+  - Dashboard 应用：
+    - `apps/web/src/app/(dashboard)/activities/page.tsx`
+    - `apps/web/src/app/(dashboard)/experiences/page.tsx`
+    - `apps/web/src/app/(dashboard)/trainings/[id]/page.tsx`
+    - `apps/web/src/app/(dashboard)/trainings/page.tsx`
+  - 为所有替换的 `Image` 补充了合适的 `width/height`，保留原有 Tailwind 布局类，UI 外观与行为保持不变，仅获得 Next.js 的图片优化能力。
+
+- **移除多余的 `eslint-disable` 注释**
+  - 删除了 internal export 路由中不再需要的 `// eslint-disable-next-line no-constant-condition` 与 `@typescript-eslint/no-explicit-any` 注释：
+    - `apps/web/src/app/api/internal/accounts/{export,export-csv}/route.ts`
+    - `apps/web/src/app/api/internal/departments/{export,export-csv}/route.ts`
+    - `apps/web/src/app/api/internal/roles/{export,export-csv}/route.ts`
+  - 逻辑保持不变（`while (true)` 仍用于分页拉取全部记录），但配置层面已无“未使用的 eslint-disable 指令”警告。
+
+- **最终 lint 状态**
+  - 根目录执行 `pnpm lint`：
+    - 所有包的 lint 任务成功。
+    - 代码层面 **0 errors, 0 warnings**；仅保留 ESLint 自带的 `baseline-browser-mapping` 提示，不作用于具体文件。
+
+### Git 同步
+
+- 提交：`feat(master-data): add master data CRUD pages and fix ESLint config`
+  - 哈希：`6b4881c`
+  - 分支：`main`
+  - 内容：三张 master 数据表的 CRUD + 分页 + 搜索、Sidebar 高亮修复、ESLint flat config 改造、所有 warning 清零。
+- 已推送：`git push origin main`。

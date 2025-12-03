@@ -8,6 +8,7 @@ export type RoleRecord = {
   data_scope: string;
   status: string;
   description: string | null;
+  feature_permissions: string[] | null;
   created_at: string | null;
 };
 
@@ -18,6 +19,17 @@ export type CreateRoleInput = {
   data_scope: string;
   status: string;
   description?: string | null;
+  feature_permissions?: string[] | null;
+};
+
+export type UpdateRoleInput = {
+  role_id: number | null;
+  name: string;
+  code: string;
+  data_scope: string;
+  status: string;
+  description?: string | null;
+  feature_permissions?: string[] | null;
 };
 
 export type ListRolesParams = {
@@ -31,7 +43,7 @@ export async function listRoles(params: ListRolesParams = {}): Promise<{ roles: 
   const sb = getSupabaseAdmin();
   let query = sb
     .from("roles")
-    .select("id,role_id,name,code,data_scope,status,description,created_at", { count: "exact" })
+    .select("id,role_id,name,code,data_scope,status,description,feature_permissions,created_at", { count: "exact" })
     .order("role_id", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -67,9 +79,48 @@ export async function createRole(input: CreateRoleInput): Promise<RoleRecord> {
     data_scope: input.data_scope,
     status: input.status,
     description: input.description ?? null,
+    feature_permissions: input.feature_permissions ?? null,
   };
 
   const { data, error } = await sb.from("roles").insert([payload]).select().single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as RoleRecord;
+}
+
+export async function deleteRole(id: string): Promise<void> {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.from("roles").delete().eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function updateRole(
+  id: string,
+  input: UpdateRoleInput,
+): Promise<RoleRecord> {
+  const sb = getSupabaseAdmin();
+  const payload = {
+    role_id: input.role_id,
+    name: input.name,
+    code: input.code,
+    data_scope: input.data_scope,
+    status: input.status,
+    description: input.description ?? null,
+    feature_permissions: input.feature_permissions ?? null,
+  };
+
+  const { data, error } = await sb
+    .from("roles")
+    .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
 
   if (error) {
     throw error;

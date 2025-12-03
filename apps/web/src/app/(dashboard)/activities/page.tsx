@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, MapPin, Users } from "lucide-react";
 
 type TrainingCategory = {
@@ -50,7 +51,13 @@ type TrainingVideo = {
 const TrainingVideoCard = ({ video }: { video: TrainingVideo & { trainingTitle: string } }) => (
   <div className="rounded-xl border bg-white shadow-sm">
     <div className="relative h-40 overflow-hidden rounded-t-xl">
-      <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
+      <Image
+        src={video.thumbnail}
+        alt={video.title}
+        width={320}
+        height={180}
+        className="h-full w-full object-cover"
+      />
       <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white">{video.duration}</span>
     </div>
     <div className="space-y-2 p-4">

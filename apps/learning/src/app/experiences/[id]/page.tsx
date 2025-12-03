@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, Calendar, Clock, MapPin, Users, CheckCircle2 } from "lucide-react";
@@ -53,9 +54,11 @@ export default async function ExperienceDetailPage({ params }: { params: Promise
                 <p className="mt-2 text-gray-600">{experience.description}</p>
               </div>
 
-              <img
+              <Image
                 src={experience.heroImage}
                 alt={experience.title}
+                width={1200}
+                height={675}
                 className="h-80 w-full rounded-2xl object-cover"
               />
 

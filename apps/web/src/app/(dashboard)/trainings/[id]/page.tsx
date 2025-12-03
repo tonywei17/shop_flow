@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import {
   ArrowLeft,
   Calendar,
@@ -146,7 +147,13 @@ export default function TrainingDetailPage() {
                 {training.videos.map((video) => (
                   <div key={video.id} className="rounded-lg border border-border bg-muted/50">
                     <div className="relative h-32 overflow-hidden rounded-t-lg">
-                      <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
+                      <Image
+                        src={video.thumbnail}
+                        alt={video.title}
+                        width={320}
+                        height={180}
+                        className="h-full w-full object-cover"
+                      />
                       <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white">{video.duration}</span>
                     </div>
                     <div className="space-y-1 p-3 text-sm">

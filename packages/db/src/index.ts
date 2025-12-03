@@ -8,8 +8,8 @@ export {
   updateProduct,
   adjustStock,
 } from "./products";
-export { listRoles, createRole } from "./roles";
-export type { RoleRecord, CreateRoleInput, ListRolesParams } from "./roles";
+export { listRoles, createRole, updateRole, deleteRole } from "./roles";
+export type { RoleRecord, CreateRoleInput, UpdateRoleInput, ListRolesParams } from "./roles";
 export { listDepartments } from "./departments";
 export type { DepartmentWithParent, ListDepartmentsParams } from "./departments";
 export { listAdminAccounts, createAdminAccount, updateAdminAccount } from "./accounts";

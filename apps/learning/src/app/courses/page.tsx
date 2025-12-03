@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Header } from "@/components/header";
 import { Clock, Users, Star, Lock } from "lucide-react";
 import { getCourses, type Course } from '@/lib/mock-data';
@@ -110,9 +111,11 @@ function CourseCard({ course }: { course: Course }) {
     <Link href={`/courses/${course.id}`} className="group">
       <div className="bg-white rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
         <div className="relative">
-          <img
+          <Image
             src={course.thumbnail}
             alt={course.title}
+            width={640}
+            height={360}
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
           />
           {isPremium && (

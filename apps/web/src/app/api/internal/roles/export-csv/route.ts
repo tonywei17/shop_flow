@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
       let offset = 0;
 
       // paginate through all roles
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { roles, count } = await getRoles({ limit, offset });
         if (!roles.length) break;
@@ -56,7 +55,6 @@ export async function GET(req: NextRequest) {
       role.status ?? "",
       role.description ?? "",
       // created_at is string | null in the record type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (role as any).created_at ? new Date((role as any).created_at).toISOString() : "",
     ]);
 

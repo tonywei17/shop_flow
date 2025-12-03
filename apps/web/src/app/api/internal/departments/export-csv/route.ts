@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
       let offset = 0;
 
       // paginate through all departments
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { departments, count } = await getDepartments({ limit, offset });
         if (!departments.length) break;
@@ -80,7 +79,6 @@ export async function GET(req: NextRequest) {
       dept.is_independent ? "true" : "false",
       dept.status ?? "",
       // created_at is string | null in the record type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (dept as any).created_at ? new Date((dept as any).created_at).toISOString() : "",
     ]);
 

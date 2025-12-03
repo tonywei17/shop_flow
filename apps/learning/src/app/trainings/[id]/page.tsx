@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, Calendar, MapPin, Users, Award, CheckCircle2 } from "lucide-react";
@@ -54,7 +55,13 @@ export default async function TrainingDetailPage({ params }: { params: Promise<{
               <p className="mt-1 text-sm text-gray-500">{training.courseName}</p>
             </div>
 
-            <img src={training.heroImage} alt={training.title} className="h-80 w-full rounded-2xl object-cover" />
+            <Image
+              src={training.heroImage}
+              alt={training.title}
+              width={1200}
+              height={675}
+              className="h-80 w-full rounded-2xl object-cover"
+            />
 
             <div className="grid gap-4 rounded-2xl bg-gray-50 p-4 text-sm text-gray-700 sm:grid-cols-2">
               <InfoRow icon={<Calendar className="h-4 w-4 text-indigo-600" />} label="開催日時" value={training.schedule} />

@@ -5,6 +5,8 @@ import {
   listDepartments,
   listRoles,
   createRole,
+  updateRole,
+  deleteRole,
   type AdminAccount,
   type DepartmentWithParent,
   type RoleRecord,
@@ -14,6 +16,7 @@ import {
   type CreateAdminAccountInput,
   type UpdateAdminAccountInput,
   type CreateRoleInput,
+  type UpdateRoleInput,
 } from "@enterprise/db";
 
 export async function getAdminAccounts(
@@ -51,4 +54,15 @@ export async function createRoleService(
   input: CreateRoleInput,
 ): Promise<RoleRecord> {
   return createRole(input);
+}
+
+export async function updateRoleService(
+  id: string,
+  input: UpdateRoleInput,
+): Promise<RoleRecord> {
+  return updateRole(id, input);
+}
+
+export async function deleteRoleService(id: string): Promise<void> {
+  return deleteRole(id);
 }

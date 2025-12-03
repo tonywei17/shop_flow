@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment, type ComponentType } from "react";
+import React, { Fragment, type ComponentType } from "react";
 import { GraduationCap, ShoppingBag } from "lucide-react";
 
 import { navSections } from "./nav-items";
@@ -13,9 +13,10 @@ type SidebarProps = {
   isMobile?: boolean;
   onNavigate?: () => void;
   className?: string;
+  allowedFeatureIds?: string[];
 };
 
-export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProps) {
+export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatureIds }: SidebarProps) {
   const pathname = usePathname();
   const normalize = (value: string | null | undefined) => {
     if (!value) return "/";
@@ -32,6 +33,26 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
     if (!best) return normalizedHref;
     return normalizedHref.length > best.length ? normalizedHref : best;
   }, undefined);
+
+  const featureSet = React.useMemo(() => {
+    if (!Array.isArray(allowedFeatureIds)) return null;
+    return new Set(
+      allowedFeatureIds
+        .filter((id) => typeof id === "string" && id.length > 0)
+        .map((id) => normalize(id)),
+    );
+  }, [allowedFeatureIds]);
+
+  const filteredSections = React.useMemo(() => {
+    if (!Array.isArray(allowedFeatureIds)) return navSections;
+    const set = featureSet ?? new Set<string>();
+    return navSections
+      .map((section) => {
+        const items = section.items.filter((item) => set.has(normalize(item.href)));
+        return { ...section, items };
+      })
+      .filter((section) => section.items.length > 0);
+  }, [allowedFeatureIds, featureSet]);
 
   return (
     <aside
@@ -54,7 +75,7 @@ export function Sidebar({ isMobile = false, onNavigate, className }: SidebarProp
       <div className="flex flex-1 min-h-0 flex-col px-4 pb-5 pt-4">
         <div className="flex-1 min-h-0 overflow-hidden">
           <div className="h-full overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar pb-3 pr-1">
-            {navSections.map((section, index) => (
+            {filteredSections.map((section, index) => (
               <Fragment key={section.label}>
                 <SidebarSection
                   section={section}

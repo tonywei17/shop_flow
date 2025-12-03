@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RoleRecord } from "@enterprise/db";
 import { DashboardHeader } from "@/components/dashboard/header";
+import { navSections } from "@/components/dashboard/nav-items";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Pagination,
   PaginationContent,
@@ -71,6 +73,19 @@ function formatPermissions(scope: string) {
   return [scope];
 }
 
+const FEATURE_GROUPS = navSections.map((section) => ({
+  id: section.label,
+  label: section.label,
+  items: section.items.map((item) => ({
+    id: item.href,
+    label: item.label,
+  })),
+}));
+
+const ALL_FEATURE_IDS: string[] = FEATURE_GROUPS.flatMap((group) =>
+  group.items.map((item) => item.id),
+);
+
 const ROLES_SELECTION_STORAGE_KEY = "roles_selected_ids";
 
 type RolesPagination = {
@@ -89,6 +104,10 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
   const [error, setError] = React.useState<string | null>(null);
   const [isExporting, setIsExporting] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const [dialogMode, setDialogMode] = React.useState<"create" | "edit">("create");
+  const [editingRole, setEditingRole] = React.useState<RoleRecord | null>(null);
+  const [status, setStatus] = React.useState<string>("有効");
+  const [selectedFeatures, setSelectedFeatures] = React.useState<string[]>(ALL_FEATURE_IDS);
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const pageSizeOptions = [20, 50, 100];
 
@@ -172,7 +191,6 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
       code: form.get("roleKey"),
       name: form.get("roleName"),
       data_scope: form.get("dataScope") || "すべてのデータ権限",
-      status: form.get("status") || "有効",
       description: form.get("notes"),
     };
 
@@ -184,12 +202,15 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            mode: dialogMode,
+            id: editingRole?.id,
             role_id: payload.role_id ? Number(payload.role_id) : null,
             code: String(payload.code ?? "").trim(),
             name: String(payload.name ?? "").trim(),
             data_scope: String(payload.data_scope ?? "すべてのデータ権限"),
-            status: String(payload.status ?? "有効"),
+            status: status || "有効",
             description: payload.description ? String(payload.description) : null,
+            feature_permissions: selectedFeatures,
           }),
         });
 
@@ -204,6 +225,55 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     });
+  };
+
+  const handleOpenCreate = () => {
+    setDialogMode("create");
+    setEditingRole(null);
+    setError(null);
+    setStatus("有効");
+    setSelectedFeatures(ALL_FEATURE_IDS);
+    setOpen(true);
+  };
+
+  const handleOpenEdit = (role: RoleRecord) => {
+    setDialogMode("edit");
+    setEditingRole(role);
+    setError(null);
+    setStatus(role.status ?? "有効");
+    const fromRole = (role as any).feature_permissions as unknown;
+    if (Array.isArray(fromRole)) {
+      const safe = fromRole.filter((value) => typeof value === "string" && value.trim().length > 0);
+      setSelectedFeatures(safe.length ? safe : ALL_FEATURE_IDS);
+    } else {
+      setSelectedFeatures(ALL_FEATURE_IDS);
+    }
+    setOpen(true);
+  };
+
+  const handleDelete = async (role: RoleRecord) => {
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(`ロール「${role.name}」を削除しますか？`);
+      if (!confirmed) return;
+    }
+
+    try {
+      const response = await fetch(`/api/internal/roles?id=${encodeURIComponent(role.id)}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const { error: errMsg } = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errMsg || `Failed to delete role (status ${response.status})`);
+      }
+
+      router.refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "ロールの削除に失敗しました";
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+    }
   };
 
   const handleExport = async (mode: "all" | "selected") => {
@@ -330,40 +400,166 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
               </DropdownMenu>
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button className="flex items-center gap-3 rounded-[4px] px-4 py-[6px] text-sm font-medium">
+                  <Button
+                    className="flex items-center gap-3 rounded-[4px] px-4 py-[6px] text-sm font-medium"
+                    onClick={handleOpenCreate}
+                  >
                     <Plus className="h-[14px] w-[14px]" />
                     <span className="text-[12px] font-medium">新規追加</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="fixed right-0 top-0 h-full max-h-full w-full max-w-[440px] translate-x-0 rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
-                  <div className="flex h-full flex-col">
+                <DialogContent className="fixed right-0 top-0 flex h-full max-h-screen w-full max-w-[440px] translate-x-0 flex-col overflow-y-auto rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
+                  <div className="flex flex-1 flex-col">
                     <DialogHeader className="border-b border-border px-6 py-4">
-                      <DialogTitle className="text-[18px] font-semibold text-foreground">新規ロール作成</DialogTitle>
+                      <DialogTitle className="text-[18px] font-semibold text-foreground">
+                        {dialogMode === "edit" ? "ロールを編集" : "新規ロール作成"}
+                      </DialogTitle>
                     </DialogHeader>
-                    <form className="flex flex-1 flex-col gap-5 overflow-auto px-6 py-6" onSubmit={handleSubmit}>
+                    <form className="flex flex-col gap-5 px-6 py-6" onSubmit={handleSubmit}>
                       <div className="space-y-2">
                         <Label htmlFor="roleId">ロールID</Label>
-                        <Input id="roleId" name="roleId" placeholder="6" type="number" min={1} required />
+                        <Input
+                          id="roleId"
+                          name="roleId"
+                          placeholder="6"
+                          type="number"
+                          min={1}
+                          required
+                          defaultValue={editingRole?.role_id ?? ""}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="roleKey">ロールキー</Label>
-                        <Input id="roleKey" name="roleKey" placeholder="honbu-admin" required />
+                        <Input
+                          id="roleKey"
+                          name="roleKey"
+                          placeholder="honbu-admin"
+                          required
+                          defaultValue={editingRole?.code ?? ""}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="roleName">ロール名</Label>
-                        <Input id="roleName" name="roleName" placeholder="本社管理" required />
+                        <Input
+                          id="roleName"
+                          name="roleName"
+                          placeholder="本社管理"
+                          required
+                          defaultValue={editingRole?.name ?? ""}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="dataScope">データ範囲</Label>
-                        <Input id="dataScope" name="dataScope" placeholder="すべてのデータ権限" defaultValue="すべてのデータ権限" />
+                        <Input
+                          id="dataScope"
+                          name="dataScope"
+                          placeholder="すべてのデータ権限"
+                          defaultValue={editingRole?.data_scope ?? "すべてのデータ権限"}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="status">状態</Label>
-                        <Input id="status" name="status" placeholder="有効" defaultValue="有効" />
+                        <RadioGroup
+                          aria-label="状態"
+                          value={status}
+                          onValueChange={(value) => setStatus(value || "有効")}
+                          className="flex flex-row gap-6"
+                        >
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem id="status-active" value="有効" />
+                            <Label htmlFor="status-active" className="text-sm font-normal">
+                              有効
+                            </Label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem id="status-inactive" value="無効" />
+                            <Label htmlFor="status-inactive" className="text-sm font-normal">
+                              無効
+                            </Label>
+                          </div>
+                        </RadioGroup>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="notes">備考</Label>
-                        <Textarea id="notes" name="notes" rows={3} placeholder="任意のメモ" />
+                        <Textarea
+                          id="notes"
+                          name="notes"
+                          rows={3}
+                          placeholder="任意のメモ"
+                          defaultValue={editingRole?.description ?? ""}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>機能権限</Label>
+                        <div className="max-h-72 space-y-3 overflow-auto rounded-md border border-border bg-muted/30 px-3 py-3">
+                          {FEATURE_GROUPS.map((group) => {
+                            const itemIds = group.items.map((item) => item.id);
+                            const allChecked =
+                              itemIds.length > 0 && itemIds.every((id) => selectedFeatures.includes(id));
+                            const someChecked =
+                              !allChecked && itemIds.some((id) => selectedFeatures.includes(id));
+                            const groupChecked: boolean | "indeterminate" = allChecked
+                              ? true
+                              : someChecked
+                                ? "indeterminate"
+                                : false;
+
+                            return (
+                              <div key={group.id} className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    id={`feature-group-${group.id}`}
+                                    checked={groupChecked}
+                                    onCheckedChange={(checked) => {
+                                      const isChecked = checked === true;
+                                      setSelectedFeatures((prev) => {
+                                        if (isChecked) {
+                                          const next = new Set(prev);
+                                          itemIds.forEach((id) => next.add(id));
+                                          return Array.from(next);
+                                        }
+                                        const remove = new Set(itemIds);
+                                        return prev.filter((id) => !remove.has(id));
+                                      });
+                                    }}
+                                  />
+                                  <Label
+                                    htmlFor={`feature-group-${group.id}`}
+                                    className="text-sm font-medium"
+                                  >
+                                    {group.label}
+                                  </Label>
+                                </div>
+                                <div className="ml-6 space-y-1">
+                                  {group.items.map((item) => (
+                                    <div key={item.id} className="flex items-center gap-2">
+                                      <Checkbox
+                                        id={`feature-${item.id}`}
+                                        checked={selectedFeatures.includes(item.id)}
+                                        onCheckedChange={(checked) => {
+                                          const isChecked = checked === true;
+                                          setSelectedFeatures((prev) => {
+                                            if (isChecked) {
+                                              if (prev.includes(item.id)) return prev;
+                                              return [...prev, item.id];
+                                            }
+                                            return prev.filter((id) => id !== item.id);
+                                          });
+                                        }}
+                                      />
+                                      <Label
+                                        htmlFor={`feature-${item.id}`}
+                                        className="text-sm font-normal text-muted-foreground"
+                                      >
+                                        {item.label}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                       {error ? <p className="text-sm text-destructive">{error}</p> : null}
                       <DialogFooter className="mt-auto border-t border-border px-0 pt-4">
@@ -372,7 +568,11 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                             キャンセル
                           </Button>
                           <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? "保存中..." : "作成する"}
+                            {isSubmitting
+                              ? "保存中..."
+                              : dialogMode === "edit"
+                                ? "保存する"
+                                : "作成する"}
                           </Button>
                         </div>
                       </DialogFooter>
@@ -448,10 +648,25 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                       )}
                     </TableCell>
                     <TableCell className="pr-6 text-right">
-                      <Button variant="ghost" size="sm" className="gap-1 px-2 py-1 text-primary hover:bg-primary/10">
-                        <Edit className="h-4 w-4" />
-                        編集
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
+                          onClick={() => handleOpenEdit(role)}
+                        >
+                          <Edit className="h-4 w-4" />
+                          編集
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1 text-xs text-destructive border-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(role)}
+                        >
+                          削除
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

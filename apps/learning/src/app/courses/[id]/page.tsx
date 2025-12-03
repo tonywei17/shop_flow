@@ -1,5 +1,6 @@
 import { Header } from "@/components/header";
 import Link from "next/link";
+import Image from "next/image";
 import { Clock, Users, Star, Award, PlayCircle, Lock, CheckCircle } from "lucide-react";
 
 // Mock course data - 实际应该从数据库获取
@@ -113,9 +114,11 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
               </div>
 
               <div className="flex items-center gap-4 mb-6">
-                <img
+                <Image
                   src={course.instructor.avatar}
                   alt={course.instructor.name}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-full"
                 />
                 <div>
@@ -126,9 +129,11 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             </div>
 
             <div className="bg-white rounded-lg shadow-xl p-6 text-gray-900">
-              <img
+              <Image
                 src={course.thumbnail}
                 alt={course.title}
+                width={1200}
+                height={675}
                 className="w-full rounded-lg mb-6"
               />
               
@@ -245,9 +250,11 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
             <div className="bg-white rounded-lg border p-6">
               <h3 className="font-bold mb-4">講師について</h3>
               <div className="flex items-center gap-4 mb-4">
-                <img
+                <Image
                   src={course.instructor.avatar}
                   alt={course.instructor.name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full"
                 />
                 <div>

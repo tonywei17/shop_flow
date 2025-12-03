@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
       let offset = 0;
 
       // paginate through all accounts
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { accounts, count } = await getAdminAccounts({ limit, offset });
         if (!accounts.length) break;

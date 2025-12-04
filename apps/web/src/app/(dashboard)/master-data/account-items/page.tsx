@@ -7,6 +7,8 @@ type AccountItemsSearchParams = {
   page?: string;
   limit?: string;
   q?: string;
+  sort?: string;
+  order?: string;
 };
 
 type AccountItemsPageProps = {
@@ -22,9 +24,11 @@ export default async function AccountItemsPage({ searchParams }: AccountItemsPag
   const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 100) : 20;
   const search = resolvedSearchParams?.q?.trim();
+  const sortKey = resolvedSearchParams?.sort?.trim();
+  const sortOrder = resolvedSearchParams?.order === "desc" ? "desc" : resolvedSearchParams?.order === "asc" ? "asc" : undefined;
   const offset = (page - 1) * limit;
 
-  const { items, count } = await listAccountItems({ limit, offset, search }).catch((error) => {
+  const { items, count } = await listAccountItems({ limit, offset, search, sortKey, sortOrder }).catch((error) => {
     console.error("Failed to load account items from Supabase on account items page", error);
     return { items: [], count: 0 };
   });
@@ -34,6 +38,8 @@ export default async function AccountItemsPage({ searchParams }: AccountItemsPag
     limit,
     count,
     search: search ?? "",
+    sortKey: sortKey ?? null,
+    sortOrder: sortOrder ?? null,
   };
 
   return (

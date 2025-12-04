@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,12 +36,21 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+import {
+  SortableTableHead,
+  updateSortSearchParams,
+  type SortOrder as SortOrderType,
+} from "@/components/ui/sortable-table-head";
+
+export type SortOrder = "asc" | "desc" | null;
 
 export type MasterPagination = {
   page: number;
   limit: number;
   count: number;
   search: string;
+  sortKey: string | null;
+  sortOrder: SortOrder;
 };
 
 type FormMode = "create" | "edit";
@@ -124,6 +133,15 @@ export function AccountItemsClient({
     const formData = new FormData(event.currentTarget);
     const q = (formData.get("search") as string) ?? "";
     updateQuery({ page: 1, search: q.trim() });
+  };
+
+  const handleSort = (key: string, order: SortOrderType) => {
+    const params = updateSortSearchParams(searchParams, key, order);
+    // Preserve search query
+    if (pagination.search) {
+      params.set("q", pagination.search);
+    }
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const allCurrentPageIds = React.useMemo(() => items.map((item) => item.id), [items]);
@@ -416,9 +434,33 @@ export function AccountItemsClient({
                   onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
                 />
               </TableHead>
-              <TableHead className="w-[120px]">勘定項目ID</TableHead>
-              <TableHead className="w-[260px]">勘定項目名</TableHead>
-              <TableHead className="w-[120px]">ステータス</TableHead>
+              <SortableTableHead
+                sortKey="account_item_id"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[120px]"
+              >
+                勘定項目ID
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="name"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[260px]"
+              >
+                勘定項目名
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="status"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[120px]"
+              >
+                ステータス
+              </SortableTableHead>
               <TableHead className="w-[120px] text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
@@ -568,14 +610,14 @@ export function AccountItemsClient({
           </div>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sidebar-drawer fixed right-0 top-0 flex h-full max-h-screen w-full max-w-[440px] translate-x-0 flex-col overflow-y-auto rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
+        <Sheet open={dialogOpen} onOpenChange={setDialogOpen}>
+          <SheetContent className="flex w-full max-w-[440px] flex-col overflow-y-auto p-0 sm:w-[420px]">
             <div className="flex flex-1 flex-col">
-              <DialogHeader className="border-b border-border px-6 py-4">
-                <DialogTitle className="text-[18px] font-semibold text-foreground">
+              <SheetHeader className="border-b border-border px-6 py-4">
+                <SheetTitle className="text-[18px] font-semibold text-foreground">
                   {mode === "create" ? "勘定項目の新規追加" : "勘定項目の編集"}
-                </DialogTitle>
-              </DialogHeader>
+                </SheetTitle>
+              </SheetHeader>
               <form className="flex flex-col gap-5 px-6 py-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="account-item-id">勘定項目ID</Label>
@@ -615,7 +657,7 @@ export function AccountItemsClient({
                 {submitError ? (
                   <p className="text-sm text-destructive">{submitError}</p>
                 ) : null}
-                <DialogFooter className="mt-auto border-t border-border px-0 pt-4">
+                <SheetFooter className="mt-auto border-t border-border px-0 pt-4">
                   <div className="flex w-full justify-end gap-3">
                     <Button
                       type="button"
@@ -628,11 +670,11 @@ export function AccountItemsClient({
                       {isSubmitting ? "保存中..." : mode === "edit" ? "保存する" : "作成する"}
                     </Button>
                   </div>
-                </DialogFooter>
+                </SheetFooter>
               </form>
             </div>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </CardContent>
     </Card>
   );

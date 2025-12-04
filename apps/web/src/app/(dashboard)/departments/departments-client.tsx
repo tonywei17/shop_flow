@@ -28,14 +28,23 @@ import {
 } from "@/components/ui/pagination";
 import { Building2, Download, FolderTree } from "lucide-react";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+import {
+  SortableTableHead,
+  updateSortSearchParams,
+  type SortOrder as SortOrderType,
+} from "@/components/ui/sortable-table-head";
 
 const DEPARTMENTS_SELECTION_STORAGE_KEY = "departments_selected_ids";
+
+export type SortOrder = "asc" | "desc" | null;
 
 export type DepartmentsPagination = {
   page: number;
   limit: number;
   count: number;
   search: string;
+  sortKey: string | null;
+  sortOrder: SortOrder;
 };
 
 export function DepartmentsClient({
@@ -79,6 +88,14 @@ export function DepartmentsClient({
     const form = new FormData(event.currentTarget);
     const query = (form.get("search") as string) ?? "";
     updateQuery({ page: 1, search: query.trim() });
+  };
+
+  const handleSort = (key: string, order: SortOrderType) => {
+    const params = updateSortSearchParams(searchParams, key, order);
+    if (pagination.search) {
+      params.set("q", pagination.search);
+    }
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   React.useEffect(() => {
@@ -309,11 +326,43 @@ export function DepartmentsClient({
                   onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
                 />
               </TableHead>
-              <TableHead className="w-[100px]">部署ID</TableHead>
-              <TableHead className="w-[200px]">部署名</TableHead>
-              <TableHead className="w-[160px]">区分</TableHead>
+              <SortableTableHead
+                sortKey="external_id"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[100px]"
+              >
+                部署ID
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="name"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[200px]"
+              >
+                部署名
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="category"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[160px]"
+              >
+                区分
+              </SortableTableHead>
               <TableHead className="w-[160px]">上位部署</TableHead>
-              <TableHead className="w-[200px]">責任者</TableHead>
+              <SortableTableHead
+                sortKey="manager_name"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[200px]"
+              >
+                責任者
+              </SortableTableHead>
               <TableHead className="w-[160px]">電話番号</TableHead>
               <TableHead>所在地</TableHead>
               <TableHead className="w-[120px] pr-6 text-right">操作</TableHead>

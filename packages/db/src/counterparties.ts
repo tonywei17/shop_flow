@@ -8,13 +8,20 @@ export type Counterparty = {
   created_at: string | null;
 };
 
+export type SortOrder = "asc" | "desc";
+
 export type ListCounterpartiesParams = {
   limit?: number;
   offset?: number;
   search?: string;
   status?: string;
   ids?: string[];
+  sortKey?: string;
+  sortOrder?: SortOrder;
 };
+
+// Valid sort keys for counterparties table
+const VALID_SORT_KEYS = ["counterparty_id", "name", "status", "created_at"] as const;
 
 export async function listCounterparties(
   params: ListCounterpartiesParams = {},
@@ -22,8 +29,14 @@ export async function listCounterparties(
   const sb = getSupabaseAdmin();
   let query = sb
     .from("counterparties")
-    .select("id,counterparty_id,name,status,created_at", { count: "exact" })
-    .order("counterparty_id", { ascending: true });
+    .select("id,counterparty_id,name,status,created_at", { count: "exact" });
+
+  // Apply sorting
+  const sortKey = params.sortKey && VALID_SORT_KEYS.includes(params.sortKey as typeof VALID_SORT_KEYS[number])
+    ? params.sortKey
+    : "counterparty_id";
+  const ascending = params.sortOrder !== "desc";
+  query = query.order(sortKey, { ascending });
 
   if (params.search) {
     const search = params.search.trim();

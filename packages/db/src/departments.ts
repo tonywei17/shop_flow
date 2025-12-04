@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "./client";
+import { applyDataScopeFilter, type DataScopeContext } from "./data-scope";
 
 export type DepartmentRecord = {
   id: string;
@@ -26,13 +27,22 @@ export type DepartmentWithParent = DepartmentRecord & {
   parent_name: string | null;
 };
 
+export type SortOrder = "asc" | "desc";
+
 export type ListDepartmentsParams = {
   limit?: number;
   offset?: number;
   search?: string;
   category?: string;
   ids?: string[];
+  sortKey?: string;
+  sortOrder?: SortOrder;
+  /** 数据权限上下文，用于过滤可访问的部署 */
+  dataScopeContext?: DataScopeContext;
 };
+
+// Valid sort keys for departments table
+const VALID_SORT_KEYS = ["external_id", "name", "type", "category", "level", "manager_name", "status", "created_at"] as const;
 
 export async function listDepartments(
   params: ListDepartmentsParams = {},
@@ -63,10 +73,19 @@ export async function listDepartments(
         "created_at",
       ].join(","),
       { count: "exact" },
-    )
-    .order("level", { ascending: true })
-    .order("external_id", { ascending: true })
-    .order("name", { ascending: true });
+    );
+
+  // Apply sorting
+  if (params.sortKey && VALID_SORT_KEYS.includes(params.sortKey as typeof VALID_SORT_KEYS[number])) {
+    const ascending = params.sortOrder !== "desc";
+    query = query.order(params.sortKey, { ascending });
+  } else {
+    // Default sorting
+    query = query
+      .order("level", { ascending: true })
+      .order("external_id", { ascending: true })
+      .order("name", { ascending: true });
+  }
 
   if (params.search) {
     query = query.or(
@@ -76,6 +95,14 @@ export async function listDepartments(
 
   if (params.category) {
     query = query.eq("category", params.category);
+  }
+
+  // 应用数据权限过滤
+  if (params.dataScopeContext) {
+    const { shouldFilter, departmentIds } = await applyDataScopeFilter(params.dataScopeContext);
+    if (shouldFilter) {
+      query = query.in("id", departmentIds);
+    }
   }
 
   if (params.ids && params.ids.length) {

@@ -8,13 +8,20 @@ export type AccountItem = {
   created_at: string | null;
 };
 
+export type SortOrder = "asc" | "desc";
+
 export type ListAccountItemsParams = {
   limit?: number;
   offset?: number;
   search?: string;
   status?: string;
   ids?: string[];
+  sortKey?: string;
+  sortOrder?: SortOrder;
 };
+
+// Valid sort keys for account_items table
+const VALID_SORT_KEYS = ["account_item_id", "name", "status", "created_at"] as const;
 
 export async function listAccountItems(
   params: ListAccountItemsParams = {},
@@ -22,8 +29,14 @@ export async function listAccountItems(
   const sb = getSupabaseAdmin();
   let query = sb
     .from("account_items")
-    .select("id,account_item_id,name,status,created_at", { count: "exact" })
-    .order("account_item_id", { ascending: true });
+    .select("id,account_item_id,name,status,created_at", { count: "exact" });
+
+  // Apply sorting
+  const sortKey = params.sortKey && VALID_SORT_KEYS.includes(params.sortKey as typeof VALID_SORT_KEYS[number])
+    ? params.sortKey
+    : "account_item_id";
+  const ascending = params.sortOrder !== "desc";
+  query = query.order(sortKey, { ascending });
 
   if (params.search) {
     const search = params.search.trim();

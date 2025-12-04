@@ -9,6 +9,8 @@ type AccountPageSearchParams = {
   q?: string;
   scope?: string;
   status?: string;
+  sort?: string;
+  order?: string;
 };
 
 type AccountPageProps = {
@@ -26,10 +28,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const search = resolvedSearchParams?.q?.trim();
   const scope = resolvedSearchParams?.scope?.trim();
   const status = resolvedSearchParams?.status?.trim();
+  const sortKey = resolvedSearchParams?.sort?.trim();
+  const sortOrder = resolvedSearchParams?.order === "desc" ? "desc" : resolvedSearchParams?.order === "asc" ? "asc" : undefined;
   const offset = (page - 1) * limit;
 
   const [accountsResult, rolesResult, departmentsResult] = await Promise.all([
-    listAdminAccounts({ limit, offset, search, scope, status }).catch((error) => {
+    listAdminAccounts({ limit, offset, search, scope, status, sortKey, sortOrder }).catch((error) => {
       console.error("Failed to load admin accounts from Supabase on account page", error);
       return { accounts: [], count: 0 };
     }),
@@ -55,7 +59,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           accounts={accounts}
           roles={roles}
           departments={departments}
-          pagination={{ page, limit, count, search: search ?? "", scope: scope ?? "", status: status ?? "" }}
+          pagination={{ page, limit, count, search: search ?? "", scope: scope ?? "", status: status ?? "", sortKey: sortKey ?? null, sortOrder: sortOrder ?? null }}
         />
       </Suspense>
     </div>

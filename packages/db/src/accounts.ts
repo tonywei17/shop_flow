@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "./client";
+import { applyDataScopeFilter, type DataScopeContext } from "./data-scope";
 
 export type AdminAccount = {
   id: string;
@@ -35,6 +36,8 @@ type AdminAccountRecord = {
   account_scope: string;
 };
 
+export type SortOrder = "asc" | "desc";
+
 export type ListAdminAccountsParams = {
   limit?: number;
   offset?: number;
@@ -42,7 +45,14 @@ export type ListAdminAccountsParams = {
   scope?: string;
   status?: string;
   ids?: string[];
+  sortKey?: string;
+  sortOrder?: SortOrder;
+  /** 数据权限上下文，用于过滤可访问的账户（按部署） */
+  dataScopeContext?: DataScopeContext;
 };
+
+// Valid sort keys for admin_accounts table
+const VALID_SORT_KEYS = ["account_id", "display_name", "email", "status", "department_name", "role_code", "account_scope", "created_at", "last_login_at"] as const;
 
 export async function listAdminAccounts(
   params: ListAdminAccountsParams = {},
@@ -69,8 +79,14 @@ export async function listAdminAccounts(
         "account_scope",
       ].join(","),
       { count: "exact" },
-    )
-    .order("created_at", { ascending: false });
+    );
+
+  // Apply sorting
+  const sortKey = params.sortKey && VALID_SORT_KEYS.includes(params.sortKey as typeof VALID_SORT_KEYS[number])
+    ? params.sortKey
+    : "created_at";
+  const ascending = params.sortKey ? params.sortOrder !== "desc" : false; // Default to desc for created_at
+  query = query.order(sortKey, { ascending });
 
   if (params.search) {
     query = query.or(
@@ -84,6 +100,14 @@ export async function listAdminAccounts(
 
   if (params.status) {
     query = query.eq("status", params.status);
+  }
+
+  // 应用数据权限过滤（按账户所属部署过滤）
+  if (params.dataScopeContext) {
+    const { shouldFilter, departmentIds } = await applyDataScopeFilter(params.dataScopeContext);
+    if (shouldFilter) {
+      query = query.in("department_id", departmentIds);
+    }
   }
 
   if (params.ids && params.ids.length) {

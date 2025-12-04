@@ -8,13 +8,20 @@ export type ProductCategory = {
   created_at: string | null;
 };
 
+export type SortOrder = "asc" | "desc";
+
 export type ListProductCategoriesParams = {
   limit?: number;
   offset?: number;
   search?: string;
   status?: string;
   ids?: string[];
+  sortKey?: string;
+  sortOrder?: SortOrder;
 };
+
+// Valid sort keys for product_categories table
+const VALID_SORT_KEYS = ["code", "name", "status", "created_at"] as const;
 
 export async function listProductCategories(
   params: ListProductCategoriesParams = {},
@@ -22,8 +29,14 @@ export async function listProductCategories(
   const sb = getSupabaseAdmin();
   let query = sb
     .from("product_categories")
-    .select("id,code,name,status,created_at", { count: "exact" })
-    .order("code", { ascending: true });
+    .select("id,code,name,status,created_at", { count: "exact" });
+
+  // Apply sorting
+  const sortKey = params.sortKey && VALID_SORT_KEYS.includes(params.sortKey as typeof VALID_SORT_KEYS[number])
+    ? params.sortKey
+    : "code";
+  const ascending = params.sortOrder !== "desc";
+  query = query.order(sortKey, { ascending });
 
   if (params.search) {
     const search = params.search.trim();

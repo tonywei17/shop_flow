@@ -7,6 +7,8 @@ type DepartmentsPageSearchParams = {
   page?: string;
   limit?: string;
   q?: string;
+  sort?: string;
+  order?: string;
 };
 
 type DepartmentsPageProps = {
@@ -22,9 +24,11 @@ export default async function DepartmentsPage({ searchParams }: DepartmentsPageP
   const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.floor(limitParam), 100) : 20;
   const search = resolvedSearchParams?.q?.trim();
+  const sortKey = resolvedSearchParams?.sort?.trim();
+  const sortOrder = resolvedSearchParams?.order === "desc" ? "desc" : resolvedSearchParams?.order === "asc" ? "asc" : undefined;
   const offset = (page - 1) * limit;
 
-  const { departments, count } = await listDepartments({ limit, offset, search }).catch((error) => {
+  const { departments, count } = await listDepartments({ limit, offset, search, sortKey, sortOrder }).catch((error) => {
     console.error("Failed to load departments from Supabase on departments page", error);
     return { departments: [], count: 0 };
   });
@@ -35,7 +39,7 @@ export default async function DepartmentsPage({ searchParams }: DepartmentsPageP
       <Suspense fallback={null}>
         <DepartmentsClient
           departments={departments}
-          pagination={{ page, limit, count, search: search ?? "" }}
+          pagination={{ page, limit, count, search: search ?? "", sortKey: sortKey ?? null, sortOrder: sortOrder ?? null }}
         />
       </Suspense>
     </div>

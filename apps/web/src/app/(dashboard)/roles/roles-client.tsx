@@ -3,6 +3,8 @@
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RoleRecord } from "@enterprise/db";
+import type { DataScopeType } from "@/lib/validation/roles";
+import { DepartmentMultiSelect, type Department } from "@/components/department-multi-select";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { navSections } from "@/components/dashboard/nav-items";
 import { Button } from "@/components/ui/button";
@@ -20,13 +22,13 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,8 +44,32 @@ import {
 } from "@/components/ui/pagination";
 import { Download, Edit, Plus } from "lucide-react";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+import {
+  SortableTableHead,
+  updateSortSearchParams,
+  type SortOrder as SortOrderType,
+} from "@/components/ui/sortable-table-head";
+
+const DATA_SCOPE_OPTIONS: { value: DataScopeType; label: string; description: string }[] = [
+  { value: "all", label: "すべてのデータ", description: "全ての部署のデータにアクセス可能" },
+  { value: "self_and_descendants", label: "所属部署と下位部署", description: "所属部署とその下位部署のデータにアクセス可能" },
+  { value: "self_only", label: "所属部署のみ", description: "所属部署のデータのみアクセス可能" },
+  { value: "custom", label: "カスタム", description: "特定の部署を選択してアクセス範囲を設定" },
+];
+
+const DATA_SCOPE_LABELS: Record<DataScopeType, string> = {
+  all: "全データ",
+  self_and_descendants: "部署+下位",
+  self_only: "部署のみ",
+  custom: "カスタム",
+};
 
 const scopeBadgeMap: Record<string, { label: string; className: string }> = {
+  all: { label: "全データ", className: "bg-primary/10 text-primary" },
+  self_and_descendants: { label: "部署+下位", className: "bg-blue-500/10 text-blue-600" },
+  self_only: { label: "部署のみ", className: "bg-amber-500/10 text-amber-600" },
+  custom: { label: "カスタム", className: "bg-muted text-foreground" },
+  // Legacy values
   "すべてのデータ権限": { label: "全権限", className: "bg-primary/10 text-primary" },
   "カスタムデータ権限": { label: "カスタム", className: "bg-muted text-foreground" },
 };
@@ -53,24 +79,21 @@ const statusBadgeMap: Record<string, { label: string; className: string }> = {
   無効: { label: "無効", className: "bg-destructive/10 text-destructive" },
 };
 
-function getScopeBadge(scope: string | null | undefined) {
-  if (!scope) return { label: "-", className: "bg-muted text-muted-foreground" };
-  return scopeBadgeMap[scope] ?? { label: scope, className: "bg-muted text-muted-foreground" };
+function getScopeBadge(scopeType: string | null | undefined, legacyScope?: string | null) {
+  // First try scopeType (new field)
+  if (scopeType && scopeBadgeMap[scopeType]) {
+    return scopeBadgeMap[scopeType];
+  }
+  // Fallback to legacy scope
+  if (legacyScope && scopeBadgeMap[legacyScope]) {
+    return scopeBadgeMap[legacyScope];
+  }
+  return { label: "-", className: "bg-muted text-muted-foreground" };
 }
 
 function getStatusBadge(status: string | null | undefined) {
   if (!status) return { label: "-", className: "bg-muted text-muted-foreground" };
   return statusBadgeMap[status] ?? { label: status, className: "bg-muted text-muted-foreground" };
-}
-
-function formatPermissions(scope: string) {
-  if (scope === "すべてのデータ権限") {
-    return ["全機能アクセス"];
-  }
-  if (scope === "カスタムデータ権限") {
-    return ["カスタム設定"];
-  }
-  return [scope];
 }
 
 const FEATURE_GROUPS = navSections.map((section) => ({
@@ -86,16 +109,74 @@ const ALL_FEATURE_IDS: string[] = FEATURE_GROUPS.flatMap((group) =>
   group.items.map((item) => item.id),
 );
 
+/**
+ * 根据 feature_permissions 数组格式化显示功能权限
+ * - 如果勾选了某分组的所有功能，显示分组名
+ * - 如果只勾选了某分组的部分功能，显示"分组名（一部）"
+ * - 如果勾选了所有功能，显示"全機能アクセス"
+ */
+function formatFeaturePermissions(featurePermissions: string[] | null | undefined): string[] {
+  // 如果权限数据为 null 或 undefined，视为全权限（向后兼容旧数据）
+  if (featurePermissions === null || featurePermissions === undefined) {
+    return ["全機能アクセス"];
+  }
+  
+  // 如果是空数组，表示明确没有任何权限
+  if (featurePermissions.length === 0) {
+    return ["権限なし"];
+  }
+
+  const permissionSet = new Set(featurePermissions);
+
+  // 检查是否勾选了所有功能
+  const hasAllPermissions = ALL_FEATURE_IDS.every((id) => permissionSet.has(id));
+  if (hasAllPermissions) {
+    return ["全機能アクセス"];
+  }
+
+  const result: string[] = [];
+
+  for (const group of FEATURE_GROUPS) {
+    const groupItemIds = group.items.map((item) => item.id);
+    const checkedCount = groupItemIds.filter((id) => permissionSet.has(id)).length;
+
+    if (checkedCount === 0) {
+      // 该分组没有任何权限，跳过
+      continue;
+    }
+
+    if (checkedCount === groupItemIds.length) {
+      // 该分组所有功能都勾选了
+      result.push(group.label);
+    } else {
+      // 该分组只勾选了部分功能
+      result.push(`${group.label}（一部）`);
+    }
+  }
+
+  return result.length > 0 ? result : ["権限なし"];
+}
+
 const ROLES_SELECTION_STORAGE_KEY = "roles_selected_ids";
+
+type SortOrder = "asc" | "desc" | null;
 
 type RolesPagination = {
   page: number;
   limit: number;
   count: number;
   search: string;
+  sortKey: string | null;
+  sortOrder: SortOrder;
 };
 
-export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagination: RolesPagination }) {
+type RolesClientProps = {
+  roles: RoleRecord[];
+  departments: Department[];
+  pagination: RolesPagination;
+};
+
+export function RolesClient({ roles, departments, pagination }: RolesClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -108,6 +189,9 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
   const [editingRole, setEditingRole] = React.useState<RoleRecord | null>(null);
   const [status, setStatus] = React.useState<string>("有効");
   const [selectedFeatures, setSelectedFeatures] = React.useState<string[]>(ALL_FEATURE_IDS);
+  // Data scope state
+  const [dataScopeType, setDataScopeType] = React.useState<DataScopeType>("all");
+  const [allowedDepartmentIds, setAllowedDepartmentIds] = React.useState<string[]>([]);
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const pageSizeOptions = [20, 50, 100];
 
@@ -130,6 +214,12 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
     },
     [pagination.limit, pagination.page, pathname, router, searchParams, totalPages],
   );
+
+  const handleSort = (key: string, order: SortOrderType) => {
+    const params = updateSortSearchParams(searchParams, key, order);
+    if (pagination.search) params.set("q", pagination.search);
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -190,9 +280,11 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
       role_id: form.get("roleId"),
       code: form.get("roleKey"),
       name: form.get("roleName"),
-      data_scope: form.get("dataScope") || "すべてのデータ権限",
       description: form.get("notes"),
     };
+
+    // Generate display label for data_scope based on type
+    const dataScopeLabel = DATA_SCOPE_OPTIONS.find(opt => opt.value === dataScopeType)?.label ?? "すべてのデータ";
 
     startTransition(async () => {
       try {
@@ -207,7 +299,9 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
             role_id: payload.role_id ? Number(payload.role_id) : null,
             code: String(payload.code ?? "").trim(),
             name: String(payload.name ?? "").trim(),
-            data_scope: String(payload.data_scope ?? "すべてのデータ権限"),
+            data_scope: dataScopeLabel,
+            data_scope_type: dataScopeType,
+            allowed_department_ids: dataScopeType === "custom" ? allowedDepartmentIds : [],
             status: status || "有効",
             description: payload.description ? String(payload.description) : null,
             feature_permissions: selectedFeatures,
@@ -233,6 +327,8 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
     setError(null);
     setStatus("有効");
     setSelectedFeatures(ALL_FEATURE_IDS);
+    setDataScopeType("all");
+    setAllowedDepartmentIds([]);
     setOpen(true);
   };
 
@@ -248,6 +344,11 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
     } else {
       setSelectedFeatures(ALL_FEATURE_IDS);
     }
+    // Set data scope from role
+    const scopeType = (role as any).data_scope_type as DataScopeType | undefined;
+    setDataScopeType(scopeType ?? "all");
+    const deptIds = (role as any).allowed_department_ids as string[] | undefined;
+    setAllowedDepartmentIds(Array.isArray(deptIds) ? deptIds : []);
     setOpen(true);
   };
 
@@ -430,8 +531,8 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
                   <Button
                     className="flex items-center gap-3 rounded-[4px] px-4 py-[6px] text-sm font-medium"
                     onClick={handleOpenCreate}
@@ -439,14 +540,14 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                     <Plus className="h-[14px] w-[14px]" />
                     <span className="text-[12px] font-medium">新規追加</span>
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sidebar-drawer fixed right-0 top-0 flex h-full max-h-screen w-full max-w-[440px] translate-x-0 flex-col overflow-y-auto rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
+                </SheetTrigger>
+                <SheetContent className="flex w-full max-w-[440px] flex-col overflow-y-auto p-0 sm:w-[420px]">
                   <div className="flex flex-1 flex-col">
-                    <DialogHeader className="border-b border-border px-6 py-4">
-                      <DialogTitle className="text-[18px] font-semibold text-foreground">
+                    <SheetHeader className="border-b border-border px-6 py-4">
+                      <SheetTitle className="text-[18px] font-semibold text-foreground">
                         {dialogMode === "edit" ? "ロールを編集" : "新規ロール作成"}
-                      </DialogTitle>
-                    </DialogHeader>
+                      </SheetTitle>
+                    </SheetHeader>
                     <form className="flex flex-col gap-5 px-6 py-6" onSubmit={handleSubmit}>
                       <div className="space-y-2">
                         <Label htmlFor="roleId">ロールID</Label>
@@ -480,14 +581,50 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                           defaultValue={editingRole?.name ?? ""}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dataScope">データ範囲</Label>
-                        <Input
-                          id="dataScope"
-                          name="dataScope"
-                          placeholder="すべてのデータ権限"
-                          defaultValue={editingRole?.data_scope ?? "すべてのデータ権限"}
-                        />
+                      <div className="space-y-3">
+                        <Label>データ範囲</Label>
+                        <RadioGroup
+                          value={dataScopeType}
+                          onValueChange={(value) => setDataScopeType(value as DataScopeType)}
+                          className="space-y-2"
+                        >
+                          {DATA_SCOPE_OPTIONS.map((option) => (
+                            <div
+                              key={option.value}
+                              className="flex items-start gap-3 rounded-md border border-border p-3 hover:bg-muted/50"
+                            >
+                              <RadioGroupItem
+                                id={`scope-${option.value}`}
+                                value={option.value}
+                                className="mt-0.5"
+                              />
+                              <div className="flex-1">
+                                <Label
+                                  htmlFor={`scope-${option.value}`}
+                                  className="text-sm font-medium cursor-pointer"
+                                >
+                                  {option.label}
+                                </Label>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {option.description}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                        {dataScopeType === "custom" && (
+                          <div className="mt-3">
+                            <Label className="text-sm text-muted-foreground mb-2 block">
+                              アクセス可能な部署を選択
+                            </Label>
+                            <DepartmentMultiSelect
+                              departments={departments}
+                              selectedIds={allowedDepartmentIds}
+                              onSelectionChange={setAllowedDepartmentIds}
+                              placeholder="部署を検索して選択..."
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="status">状態</Label>
@@ -594,7 +731,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                         </div>
                       </div>
                       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                      <DialogFooter className="mt-auto border-t border-border px-0 pt-4">
+                      <SheetFooter className="mt-auto border-t border-border px-0 pt-4">
                         <div className="flex w-full justify-end gap-3">
                           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             キャンセル
@@ -607,11 +744,11 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                                 : "作成する"}
                           </Button>
                         </div>
-                      </DialogFooter>
+                      </SheetFooter>
                     </form>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
 
@@ -625,20 +762,61 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                     onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
                   />
                 </TableHead>
-                <TableHead className="w-[80px]">ロールID</TableHead>
-                <TableHead className="w-[100px]">ロールキー</TableHead>
-                <TableHead className="w-[160px]">ロール名</TableHead>
-                <TableHead className="w-[160px]">データ範囲</TableHead>
-                <TableHead className="w-[120px]">状態</TableHead>
+                <SortableTableHead
+                  sortKey="role_id"
+                  currentSortKey={pagination.sortKey}
+                  currentSortOrder={pagination.sortOrder}
+                  onSort={handleSort}
+                  className="w-[80px]"
+                >
+                  ロールID
+                </SortableTableHead>
+                <SortableTableHead
+                  sortKey="code"
+                  currentSortKey={pagination.sortKey}
+                  currentSortOrder={pagination.sortOrder}
+                  onSort={handleSort}
+                  className="w-[100px]"
+                >
+                  ロールキー
+                </SortableTableHead>
+                <SortableTableHead
+                  sortKey="name"
+                  currentSortKey={pagination.sortKey}
+                  currentSortOrder={pagination.sortOrder}
+                  onSort={handleSort}
+                  className="w-[160px]"
+                >
+                  ロール名
+                </SortableTableHead>
+                <SortableTableHead
+                  sortKey="data_scope"
+                  currentSortKey={pagination.sortKey}
+                  currentSortOrder={pagination.sortOrder}
+                  onSort={handleSort}
+                  className="w-[160px]"
+                >
+                  データ範囲
+                </SortableTableHead>
+                <SortableTableHead
+                  sortKey="status"
+                  currentSortKey={pagination.sortKey}
+                  currentSortOrder={pagination.sortOrder}
+                  onSort={handleSort}
+                  className="w-[120px]"
+                >
+                  状態
+                </SortableTableHead>
                 <TableHead className="w-[240px]">機能権限</TableHead>
                 <TableHead className="w-[120px] pr-6 text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {roles?.map((role) => {
-                const scopeBadge = getScopeBadge(role.data_scope);
+                const roleAny = role as any;
+                const scopeBadge = getScopeBadge(roleAny.data_scope_type, role.data_scope);
                 const statusBadge = getStatusBadge(role.status);
-                const permissions = formatPermissions(role.data_scope);
+                const permissions = formatFeaturePermissions(role.feature_permissions);
                 return (
                   <TableRow key={role.id} className="border-b border-border text-sm">
                     <TableCell className="pl-6 pr-3">

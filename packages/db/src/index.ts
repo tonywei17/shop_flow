@@ -9,7 +9,7 @@ export {
   adjustStock,
 } from "./products";
 export { listRoles, createRole, updateRole, deleteRole } from "./roles";
-export type { RoleRecord, CreateRoleInput, UpdateRoleInput, ListRolesParams } from "./roles";
+export type { RoleRecord, CreateRoleInput, UpdateRoleInput, ListRolesParams, DataScopeType } from "./roles";
 export { listDepartments, deleteDepartment } from "./departments";
 export type { DepartmentWithParent, ListDepartmentsParams } from "./departments";
 export { listAdminAccounts, createAdminAccount, updateAdminAccount, deleteAdminAccount } from "./accounts";
@@ -52,3 +52,13 @@ export type {
   ListCounterpartiesParams,
   UpsertCounterpartyInput,
 } from "./counterparties";
+
+// Data scope utilities
+export {
+  getAccessibleDepartmentIds,
+  canAccessDepartment,
+  getDataScopeFromRole,
+  getDataScopeContextForUser,
+  applyDataScopeFilter,
+} from "./data-scope";
+export type { DataScopeContext } from "./data-scope";

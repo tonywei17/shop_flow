@@ -42,7 +42,9 @@ export async function POST(req: NextRequest) {
     const roleId = data.role_id;
     const name = data.name.trim();
     const code = data.code.trim();
-    const dataScope = (data.data_scope ?? "all").trim() || "all";
+    const dataScope = (data.data_scope ?? "すべてのデータ").trim() || "すべてのデータ";
+    const dataScopeType = (data.data_scope_type ?? "all").trim() || "all";
+    const allowedDepartmentIds = Array.isArray(data.allowed_department_ids) ? data.allowed_department_ids : [];
     const status = (data.status ?? "active").trim() || "active";
     const description = data.description ? data.description.trim() : null;
     const featurePermissions = data.feature_permissions ?? [];
@@ -67,7 +69,9 @@ export async function POST(req: NextRequest) {
         role_id: numericRoleId,
         name,
         code,
-        data_scope: dataScope || "all",
+        data_scope: dataScope,
+        data_scope_type: dataScopeType as any,
+        allowed_department_ids: allowedDepartmentIds,
         status: status || "active",
         description,
         feature_permissions: featurePermissions,
@@ -80,7 +84,9 @@ export async function POST(req: NextRequest) {
       role_id: numericRoleId,
       name,
       code,
-      data_scope: dataScope || "all",
+      data_scope: dataScope,
+      data_scope_type: dataScopeType as any,
+      allowed_department_ids: allowedDepartmentIds,
       status: status || "active",
       description,
       feature_permissions: featurePermissions,

@@ -19,12 +19,27 @@ import {
   type UpdateAdminAccountInput,
   type CreateRoleInput,
   type UpdateRoleInput,
+  type DataScopeContext,
 } from "@enterprise/db";
+import { getCurrentUserDataScopeContext } from "@/lib/auth/data-scope-context";
+
+export type { DataScopeContext };
 
 export async function getAdminAccounts(
   params: ListAdminAccountsParams = {},
 ): Promise<{ accounts: AdminAccount[]; count: number }> {
   return listAdminAccounts(params);
+}
+
+/**
+ * 获取管理员账户列表（带数据权限过滤）
+ * 自动应用当前用户的数据权限
+ */
+export async function getAdminAccountsWithScope(
+  params: Omit<ListAdminAccountsParams, "dataScopeContext"> = {},
+): Promise<{ accounts: AdminAccount[]; count: number }> {
+  const dataScopeContext = await getCurrentUserDataScopeContext();
+  return listAdminAccounts({ ...params, dataScopeContext });
 }
 
 export async function createAdminAccountService(
@@ -44,6 +59,17 @@ export async function getDepartments(
   params: ListDepartmentsParams = {},
 ): Promise<{ departments: DepartmentWithParent[]; count: number }> {
   return listDepartments(params);
+}
+
+/**
+ * 获取部署列表（带数据权限过滤）
+ * 自动应用当前用户的数据权限
+ */
+export async function getDepartmentsWithScope(
+  params: Omit<ListDepartmentsParams, "dataScopeContext"> = {},
+): Promise<{ departments: DepartmentWithParent[]; count: number }> {
+  const dataScopeContext = await getCurrentUserDataScopeContext();
+  return listDepartments({ ...params, dataScopeContext });
 }
 
 export async function getRoles(

@@ -33,8 +33,15 @@ import { Switch } from "@/components/ui/switch";
 import { Download, Edit, Plus } from "lucide-react";
 import { ManagementDrawer } from "@/components/dashboard/management-drawer";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+import {
+  SortableTableHead,
+  updateSortSearchParams,
+  type SortOrder as SortOrderType,
+} from "@/components/ui/sortable-table-head";
 
 const ACCOUNTS_SELECTION_STORAGE_KEY = "accounts_selected_ids";
+
+export type SortOrder = "asc" | "desc" | null;
 
 export type AccountsPagination = {
   page: number;
@@ -43,6 +50,8 @@ export type AccountsPagination = {
   search: string;
   scope: string;
   status: string;
+  sortKey: string | null;
+  sortOrder: SortOrder;
 };
 
 const statusBadgeMap: Record<string, { label: string; className: string }> = {
@@ -223,6 +232,14 @@ export function AccountClient({
     const form = new FormData(event.currentTarget);
     const query = (form.get("search") as string) ?? "";
     updateQuery({ page: 1, search: query.trim() });
+  };
+
+  const handleSort = (key: string, order: SortOrderType) => {
+    const params = updateSortSearchParams(searchParams, key, order);
+    if (pagination.search) params.set("q", pagination.search);
+    if (pagination.scope) params.set("scope", pagination.scope);
+    if (pagination.status) params.set("status", pagination.status);
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleDrawerOpen = (mode: "create" | "edit", account?: AdminAccount) => {
@@ -515,12 +532,60 @@ export function AccountClient({
                   onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
                 />
               </TableHead>
-              <TableHead className="w-[130px]">アカウントID</TableHead>
-              <TableHead className="w-[160px]">氏名</TableHead>
-              <TableHead className="w-[240px]">メールアドレス</TableHead>
-              <TableHead className="w-[180px]">所属部署</TableHead>
-              <TableHead className="w-[140px]">最終ログイン</TableHead>
-              <TableHead className="w-[120px]">ステータス</TableHead>
+              <SortableTableHead
+                sortKey="account_id"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[130px]"
+              >
+                アカウントID
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="display_name"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[160px]"
+              >
+                氏名
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="email"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[240px]"
+              >
+                メールアドレス
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="department_name"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[180px]"
+              >
+                所属部署
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="last_login_at"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[140px]"
+              >
+                最終ログイン
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="status"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[120px]"
+              >
+                ステータス
+              </SortableTableHead>
               <TableHead className="w-[120px] pr-6 text-right">操作</TableHead>
             </TableRow>
           </TableHeader>

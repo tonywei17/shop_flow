@@ -111,3 +111,12 @@ export async function listDepartments(
 
   return { departments, count: typeof count === "number" ? count : departments.length };
 }
+
+export async function deleteDepartment(id: string): Promise<void> {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.from("departments").delete().eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}

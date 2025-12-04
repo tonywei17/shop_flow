@@ -8,6 +8,7 @@ export function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const effectiveTheme = theme === "system" ? resolvedTheme : theme;
   const isDark = effectiveTheme === "dark";
+  const accessibleLabel = "テーマを切り替え";
 
   const handleToggle = () => {
     setTheme(isDark ? "light" : "dark");
@@ -18,7 +19,7 @@ export function ThemeToggle() {
       type="button"
       variant="ghost"
       size="icon"
-      aria-label={isDark ? "ライトモードに切り替え" : "ダークモードに切り替え"}
+      aria-label={accessibleLabel}
       onClick={handleToggle}
       className="relative shrink-0"
     >

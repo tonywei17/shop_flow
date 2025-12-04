@@ -189,3 +189,39 @@ body {
 [data-slot="checkbox"][data-state="indeterminate"] svg {
   color: hsl(var(--primary-foreground));
 }
+
+/* Sidebar slide-in animation with spring-like easing */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-to-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.sidebar-drawer {
+  --sidebar-drawer-duration: 300ms;
+  --sidebar-drawer-easing: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.sidebar-drawer[data-state="open"] {
+  animation: slide-in-from-right var(--sidebar-drawer-duration) var(--sidebar-drawer-easing);
+}
+
+.sidebar-drawer[data-state="closed"] {
+  animation: slide-out-to-right var(--sidebar-drawer-duration) var(--sidebar-drawer-easing);
+}

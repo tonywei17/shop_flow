@@ -1,12 +1,20 @@
 # 文档索引与状态说明
 
 > 目标：为 `docs/` 目录提供一个简洁的索引，并标注各文档与当前项目状态的关系（主线文档 / 历史方案 / 子系统专用）。
+> 
+> **最后更新：2025-12-04**
+>
+> 💡 快速导航请查看 [README.md](README.md)
 
 ## 1. 主线架构与实现文档
 
+- **SYSTEM_ARCHITECTURE.md** ⭐ NEW
+  - 角色：系统架构总览文档，包含架构图、技术栈、数据流、部署架构等。
+  - 状态：**主线设计文档**，2025-12-04 新增。
+
 - **TECHNICAL_ARCHITECTURE.md**  
   - 角色：整体技术架构蓝图（Next.js + Supabase + Stripe + Langflow + Turborepo）。
-  - 状态：**主线设计文档**，部分内容是中长期规划（如 Stripe/Langflow 尚未完全落地）。
+  - 状态：**主线设计文档**，2025-12-04 更新，部分内容是中长期规划（如 Stripe/Langflow 尚未完全落地）。
 
 - **SUPABASE-SCHEMA-STRATEGY.md**  
   - 角色：Supabase schema 回归仓库的策略说明（如何从自托管实例导出迁移、如何组织 `supabase/migrations`）。
@@ -54,45 +62,47 @@
 
 - **PRD.md**  
   - 角色：产品需求文档，描述系统目标与业务场景。
-  - 状态：**主线业务来源**，与当前实现方向保持一致。
+  - 状态：**主线业务来源**，2025-12-04 更新，新增里程碑记录。
+
+- **PRD-DETAILED.md** ⭐ NEW
+  - 角色：详细版产品需求文档，包含功能模块、UI 规范、数据模型、API 设计等。
+  - 状态：**主线业务来源**，2025-12-04 新增。
 
 - **new-features-summary.md**  
   - 角色：新增功能的汇总与变更说明。
   - 状态：**用于沟通变更**，建议与 DEVLOG 一起维护。
 
-## 6. 开发日志与变更记录
+## 6. 开发日志（devlogs/）
 
-- **DEVLOG.md**（根）  
-  - 角色：早期整合式开发日志，涵盖 UI 重构、Medusa 接入/回退、Supabase 集成等历史过程。
-  - 状态：**历史日志**。自 2025-11-23 起，新的开发日志建议写入 `docs/devlogs/` 目录下的独立文件（如 `DEVLOG-YYYY-MM-DD.md`）。
+所有开发日志已统一整理到 `devlogs/` 目录：
 
-- **DAILY-LOG-2025-11-10.md**  
-  - 角色：Learning 平台优化当日工作记录。
-  - 状态：**历史日志**，可与 `docs/devlogs/*` 共同视为时间线记录。
+| 文件 | 说明 |
+|------|------|
+| `DEVLOG-2025-12-04.md` | shadcn/ui 导入、Select 修复 |
+| `DEVLOG-2025-12-03.md` | 角色权限系统、功能级访问控制 |
+| `DEVLOG-2025-11-24.md` | Supabase 迁移相关 |
+| `DEVLOG-2025-11-23.md` | 早期开发记录 |
+| `DAILY-LOG-2025-11-10.md` | Learning 平台优化 |
+| `DEVLOG-LEGACY.md` | 早期整合日志（历史） |
 
-- **docs/devlogs/**  
-  - 角色：**新的开发日志目录**。每次较大的迭代建议在此新增一份独立的 `DEVLOG-YYYY-MM-DD.md`，并在其中记录：
-    - 本次改动概览
-    - 构建/运行状态
-    - 风险与 TODO
+## 7. 开发指南（guides/）
 
-## 7. Supabase 自托管相关文档
-
-- **MY_SUPABASE_COMPLETE_GUIDE.md**  
-  - 角色：当前自托管 Supabase 实例的完整说明（访问方式、API Key、MCP 配置等）。
-  - 状态：**基础设施文档**，与本项目使用的远程数据库强相关，需注意其中敏感信息只应在私有环境使用。
-
-- **docs/Supabase/**  
-  - 角色：Supabase MCP 镜像与相关资源。
-  - 状态：**工具与资产**，可按需使用，不直接影响应用代码。
+| 文件 | 说明 | 状态 |
+|------|------|------|
+| `MY_SUPABASE_COMPLETE_GUIDE.md` | Supabase 完整指南 | ⭐ 主线 |
+| `PACKAGE-MANAGER-GUIDE.md` | pnpm 包管理规范 | ✅ 有效 |
+| `QUICK-START.md` | 快速开始指南 | ✅ 有效 |
+| `READINESS-CHECKLIST.md` | 准备清单 | ✅ 有效 |
+| `implementation-guide.md` | 实施指南 | ✅ 有效 |
 
 ## 8. 其他目录
 
-- **ADRs/**  
-  - 角色：架构决策记录（当前为空，可在未来重大决策时补充）。
-
-- **data/**  
-  - 角色：从 Supabase 导出的参考数据（如账户/角色/部门的 Excel），可作为手工导入或编写 seeds 的依据。
+| 目录 | 说明 |
+|------|------|
+| `ADRs/` | 架构决策记录（待补充） |
+| `data/` | 导出的参考数据（Excel/CSV） |
+| `quality/` | 代码质量分析与优化记录 |
+| `platforms/Supabase/` | Supabase MCP 等工具资源 |
 
 ---
 

@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Counterparty } from "@enterprise/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Download } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -57,6 +68,8 @@ export function CounterpartiesClient({
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const pageSizeOptions = [20, 50, 100];
@@ -107,6 +120,30 @@ export function CounterpartiesClient({
     updateQuery({ page: 1, search: q.trim() });
   };
 
+  const allCurrentPageIds = React.useMemo(() => items.map((item) => item.id), [items]);
+
+  const allSelectedOnPage =
+    allCurrentPageIds.length > 0 && allCurrentPageIds.every((id) => selectedIds.includes(id));
+  const someSelectedOnPage =
+    allCurrentPageIds.length > 0 && allCurrentPageIds.some((id) => selectedIds.includes(id));
+
+  const headerCheckboxChecked: boolean | "indeterminate" = allSelectedOnPage
+    ? true
+    : someSelectedOnPage
+      ? "indeterminate"
+      : false;
+
+  const handleToggleSelectAllCurrentPage = (checked: boolean) => {
+    if (checked) {
+      const next = new Set(selectedIds);
+      allCurrentPageIds.forEach((id) => next.add(id));
+      setSelectedIds(Array.from(next));
+    } else {
+      const remove = new Set(allCurrentPageIds);
+      setSelectedIds((prev) => prev.filter((id) => !remove.has(id)));
+    }
+  };
+
   const openCreate = () => {
     setMode("create");
     setFormState({ id: null, counterpartyId: "", name: "", status: "有効" });
@@ -144,6 +181,93 @@ export function CounterpartiesClient({
     } catch (error) {
       const message = error instanceof Error ? error.message : "削除に失敗しました";
       alert(message);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(`選択中の相手先（${selectedIds.length}件）を削除しますか？`);
+      if (!confirmed) return;
+    }
+
+    try {
+      const response = await fetch("/api/internal/counterparties", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+        const message = data?.error || `一括削除に失敗しました (status ${response.status})`;
+        if (typeof window !== "undefined") {
+          window.alert(message);
+        }
+        return;
+      }
+
+      const params = new URLSearchParams(searchParams?.toString());
+      router.replace(`${pathname}?${params.toString()}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "一括削除に失敗しました";
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+    }
+  };
+
+  const handleExportCsv = (mode: "all" | "selected") => {
+    if (mode === "selected" && !selectedIds.length) return;
+    const base = "/api/internal/counterparties/export-csv";
+    const url =
+      mode === "selected" && selectedIds.length
+        ? `${base}?ids=${encodeURIComponent(selectedIds.join(","))}`
+        : base;
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank");
+    }
+  };
+
+  const handleExportSheets = async (mode: "all" | "selected") => {
+    if (isExporting) return;
+    if (mode === "selected" && !selectedIds.length) return;
+
+    setIsExporting(true);
+    try {
+      const body = mode === "selected" ? { ids: selectedIds } : {};
+      const response = await fetch("/api/internal/counterparties/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = (await response.json().catch(() => null)) as
+        | { ok?: boolean; error?: string; rowCount?: number }
+        | null;
+
+      if (!response.ok || !data?.ok) {
+        const message =
+          data?.error || `Google Sheets へのエクスポートに失敗しました (status ${response.status})`;
+        if (typeof window !== "undefined") {
+          window.alert(message);
+        }
+        return;
+      }
+
+      const rowCount = typeof data.rowCount === "number" ? data.rowCount : 0;
+      if (typeof window !== "undefined") {
+        window.alert(`Google Sheets へのエクスポートが完了しました（${rowCount} 件）`);
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Google Sheets へのエクスポートに失敗しました";
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -200,25 +324,92 @@ export function CounterpartiesClient({
         </div>
 
         <div className="flex flex-col gap-3 border-b border-border px-6 py-3 text-sm text-foreground md:flex-row md:items-center md:justify-between">
-          <form className="flex items-center gap-2" onSubmit={handleSearch}>
-            <Input
-              name="search"
-              defaultValue={pagination.search}
-              placeholder="相手先ID・名称で検索"
-              className="h-9 w-[220px]"
+          <label htmlFor="counterparties-select-all" className="flex items-center gap-3">
+            <Checkbox
+              id="counterparties-select-all"
+              aria-label="全て選択"
+              checked={headerCheckboxChecked}
+              onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
             />
-            <Button type="submit" variant="outline" className="h-9 px-4 text-xs">
-              検索
-            </Button>
-          </form>
-          <p className="text-xs text-muted-foreground">
-            全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
-          </p>
+            <span>全て選択</span>
+          </label>
+          <div className="flex flex-col gap-2 text-xs text-muted-foreground md:flex-row md:items-center md:gap-4">
+            <form className="flex items-center gap-2" onSubmit={handleSearch}>
+              <Input
+                name="search"
+                defaultValue={pagination.search}
+                placeholder="相手先ID・名称で検索"
+                className="h-9 w-[220px]"
+              />
+              <Button type="submit" variant="outline" className="h-9 px-4 text-xs">
+                検索
+              </Button>
+            </form>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10">
+                <Download className="h-4 w-4" />
+                一括操作
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-primary text-primary hover:bg-primary/10"
+                    disabled={isExporting}
+                  >
+                    <Download className="h-4 w-4" />
+                    エクスポート
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>CSV でエクスポート</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => handleExportCsv("all")}>
+                        全てのデータをエクスポート
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={!selectedIds.length}
+                        className={!selectedIds.length ? "text-muted-foreground opacity-50 cursor-not-allowed" : undefined}
+                        onClick={() => handleExportCsv("selected")}
+                      >
+                        選択中のデータをエクスポート
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      {isExporting ? "Google Sheets にエクスポート中..." : "Google Sheets にエクスポート"}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => handleExportSheets("all")} disabled={isExporting}>
+                        全てのデータをエクスポート
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        disabled={!selectedIds.length || isExporting}
+                        className={!selectedIds.length || isExporting ? "text-muted-foreground" : undefined}
+                        onClick={() => handleExportSheets("selected")}
+                      >
+                        選択中のデータをエクスポート
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
 
         <Table className="[&_th]:py-3 [&_td]:py-3">
           <TableHeader>
             <TableRow className="border-b border-border text-sm text-foreground">
+              <TableHead className="w-[36px] pl-6 pr-3">
+                <Checkbox
+                  aria-label="行を選択"
+                  checked={headerCheckboxChecked}
+                  onCheckedChange={(checked) => handleToggleSelectAllCurrentPage(checked === true)}
+                />
+              </TableHead>
               <TableHead className="w-[120px]">相手先ID</TableHead>
               <TableHead className="w-[260px]">相手先名</TableHead>
               <TableHead className="w-[120px]">ステータス</TableHead>
@@ -228,6 +419,22 @@ export function CounterpartiesClient({
           <TableBody>
             {items.map((item: Counterparty) => (
               <TableRow key={item.id} className="border-b border-border text-sm">
+                <TableCell className="pl-6 pr-3">
+                  <Checkbox
+                    aria-label={`${item.name ?? "(名称未設定)"} を選択`}
+                    checked={selectedIds.includes(item.id)}
+                    onCheckedChange={(checked) => {
+                      const isChecked = checked === true;
+                      setSelectedIds((prev) => {
+                        if (isChecked) {
+                          if (prev.includes(item.id)) return prev;
+                          return [...prev, item.id];
+                        }
+                        return prev.filter((id) => id !== item.id);
+                      });
+                    }}
+                  />
+                </TableCell>
                 <TableCell className="font-mono text-xs text-muted-foreground">
                   {item.counterparty_id}
                 </TableCell>
@@ -255,7 +462,7 @@ export function CounterpartiesClient({
             ))}
             {!items.length ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-12 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
                   相手先データがありません。
                 </TableCell>
               </TableRow>
@@ -264,24 +471,38 @@ export function CounterpartiesClient({
         </Table>
 
         <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>表示件数:</span>
-            <div className="flex items-center gap-1">
-              {pageSizeOptions.map((size) => (
-                <Button
-                  key={size}
-                  type="button"
-                  size="sm"
-                  variant={pagination.limit === size ? "default" : "outline"}
-                  className="h-7 px-2 text-xs"
-                  onClick={() => handlePageSizeChange(size)}
-                >
-                  {size}行
-                </Button>
-              ))}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 text-xs text-destructive border-destructive/40"
+            disabled={!selectedIds.length}
+            onClick={handleBulkDelete}
+          >
+            一括削除
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
+          </p>
+          <div className="flex flex-col items-start gap-3 text-xs text-muted-foreground md:flex-row md:items-center md:gap-4">
+            <div className="flex items-center gap-2">
+              <span>表示件数:</span>
+              <div className="flex items-center gap-1">
+                {pageSizeOptions.map((size) => (
+                  <Button
+                    key={size}
+                    type="button"
+                    size="sm"
+                    variant={pagination.limit === size ? "default" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handlePageSizeChange(size)}
+                  >
+                    {size}行
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
-          <Pagination className="w-auto">
+            <Pagination className="w-auto">
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
@@ -337,68 +558,72 @@ export function CounterpartiesClient({
                 />
               </PaginationItem>
             </PaginationContent>
-          </Pagination>
+            </Pagination>
+          </div>
         </div>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-[420px]">
-            <DialogHeader>
-              <DialogTitle className="text-base font-semibold text-foreground">
-                {mode === "create" ? "相手先の新規追加" : "相手先の編集"}
-              </DialogTitle>
-            </DialogHeader>
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="counterparty-id">相手先ID</Label>
-                <Input
-                  id="counterparty-id"
-                  value={formState.counterpartyId}
-                  onChange={(event) =>
-                    setFormState((prev) => ({ ...prev, counterpartyId: event.target.value }))
-                  }
-                  placeholder="311"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="counterparty-name">相手先名</Label>
-                <Input
-                  id="counterparty-name"
-                  value={formState.name}
-                  onChange={(event) =>
-                    setFormState((prev) => ({ ...prev, name: event.target.value }))
-                  }
-                  placeholder="栃木第一支局"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="counterparty-status">ステータス</Label>
-                <Input
-                  id="counterparty-status"
-                  value={formState.status}
-                  onChange={(event) =>
-                    setFormState((prev) => ({ ...prev, status: event.target.value }))
-                  }
-                  placeholder="有効"
-                />
-              </div>
-              {submitError ? (
-                <p className="text-xs text-destructive">{submitError}</p>
-              ) : null}
-              <DialogFooter className="mt-2 flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                  className="px-4"
-                >
-                  キャンセル
-                </Button>
-                <Button type="submit" disabled={isSubmitting} className="px-4">
-                  {isSubmitting ? "保存中..." : "保存"}
-                </Button>
-              </DialogFooter>
-            </form>
+          <DialogContent className="sidebar-drawer fixed right-0 top-0 flex h-full max-h-screen w-full max-w-[440px] translate-x-0 flex-col overflow-y-auto rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
+            <div className="flex flex-1 flex-col">
+              <DialogHeader className="border-b border-border px-6 py-4">
+                <DialogTitle className="text-[18px] font-semibold text-foreground">
+                  {mode === "create" ? "相手先の新規追加" : "相手先の編集"}
+                </DialogTitle>
+              </DialogHeader>
+              <form className="flex flex-col gap-5 px-6 py-6" onSubmit={handleSubmit}>
+                <div className="space-y-2">
+                  <Label htmlFor="counterparty-id">相手先ID</Label>
+                  <Input
+                    id="counterparty-id"
+                    value={formState.counterpartyId}
+                    onChange={(event) =>
+                      setFormState((prev) => ({ ...prev, counterpartyId: event.target.value }))
+                    }
+                    placeholder="311"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="counterparty-name">相手先名</Label>
+                  <Input
+                    id="counterparty-name"
+                    value={formState.name}
+                    onChange={(event) =>
+                      setFormState((prev) => ({ ...prev, name: event.target.value }))
+                    }
+                    placeholder="栃木第一支局"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="counterparty-status">ステータス</Label>
+                  <Input
+                    id="counterparty-status"
+                    value={formState.status}
+                    onChange={(event) =>
+                      setFormState((prev) => ({ ...prev, status: event.target.value }))
+                    }
+                    placeholder="有効"
+                  />
+                </div>
+                {submitError ? (
+                  <p className="text-sm text-destructive">{submitError}</p>
+                ) : null}
+                <DialogFooter className="mt-auto border-t border-border px-0 pt-4">
+                  <div className="flex w-full justify-end gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setDialogOpen(false)}
+                    >
+                      キャンセル
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? "保存中..." : mode === "edit" ? "保存する" : "作成する"}
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </form>
+            </div>
           </DialogContent>
         </Dialog>
       </CardContent>

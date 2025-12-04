@@ -227,3 +227,12 @@ export async function updateAdminAccount(
     throw error;
   }
 }
+
+export async function deleteAdminAccount(id: string): Promise<void> {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb.from("admin_accounts").delete().eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}

@@ -2,7 +2,9 @@ import {
   listAdminAccounts,
   createAdminAccount,
   updateAdminAccount,
+  deleteAdminAccount,
   listDepartments,
+  deleteDepartment,
   listRoles,
   createRole,
   updateRole,
@@ -65,4 +67,12 @@ export async function updateRoleService(
 
 export async function deleteRoleService(id: string): Promise<void> {
   return deleteRole(id);
+}
+
+export async function deleteAdminAccountService(id: string): Promise<void> {
+  return deleteAdminAccount(id);
+}
+
+export async function deleteDepartmentService(id: string): Promise<void> {
+  return deleteDepartment(id);
 }

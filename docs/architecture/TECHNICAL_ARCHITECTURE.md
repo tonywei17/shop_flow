@@ -3,9 +3,10 @@
 > 基座：Next.js + Supabase + Stripe + Langflow（AI 引擎）  
 > 目标：模块化、可扩展、多租户、安全合规、可观测。
 >
-> **当前状态说明（2025-11-23）**：
+> **当前状态说明（2025-12-04 更新）**：
 > - 已落地：Turborepo + pnpm、`apps/web` / `apps/storefront` / `apps/learning`、`@enterprise/db` 访问 Supabase、部分 `@enterprise/domain-*` 包。  
-> - UI 层：本仓库已采用 shadcn/ui + `src/components/ui/*`，不再使用独立的 `packages/ui` 包（文中如有提及，可视为早期方案）。  
+> - UI 层：`apps/web` 已通过官方 CLI 导入 shadcn/ui 组件库（new-york 风格），组件位于 `apps/web/src/components/ui/`。共享组件仍保留在 `/src/components/ui/`，但 apps/web 内的组件优先级更高。
+> - 权限系统：已实现基于角色的功能权限控制（feature_permissions），支持菜单过滤与路由级访问控制。
 > - 外部服务：Stripe / Langflow 等仍处于规划或 PoC 阶段，尚未成为强依赖；Supabase 是当前唯一落地的数据基座。
 
 ## 1. 架构概览

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { AdminAccount } from "@enterprise/db";
+import type { AdminAccount, RoleRecord, DepartmentWithParent } from "@enterprise/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,12 +71,6 @@ type AccountFormState = {
   representative: string;
 };
 
-const roleOptions = [
-  { value: "hq", label: "本部" },
-  { value: "branch", label: "支局" },
-  { value: "classroom", label: "教室" },
-  { value: "merchant", label: "加盟店" },
-];
 
 const priceDisplayOptions = [
   { value: "hq", label: "本部価格" },
@@ -92,7 +86,7 @@ function createFormState(account?: AdminAccount): AccountFormState {
     email: account?.email ?? "",
     phone: account?.phone ?? "",
     password: "",
-    role: account?.role_code ?? roleOptions[0]!.value,
+    role: account?.role_code ?? "",
     department: account?.department_name ?? "",
     delegateBilling: account?.account_scope === "storefront" ? true : true,
     priceDisplay: priceDisplayOptions[0]!.value,
@@ -103,9 +97,13 @@ function createFormState(account?: AdminAccount): AccountFormState {
 
 export function AccountClient({
   accounts,
+  roles,
+  departments,
   pagination,
 }: {
   accounts: AdminAccount[];
+  roles: RoleRecord[];
+  departments: DepartmentWithParent[];
   pagination: AccountsPagination;
 }) {
   const router = useRouter();
@@ -157,15 +155,6 @@ export function AccountClient({
     window.sessionStorage.setItem(ACCOUNTS_SELECTION_STORAGE_KEY, JSON.stringify(selectedIds));
   }, [selectedIds]);
 
-  const departmentOptions = React.useMemo(() => {
-    const names = new Set<string>();
-    accounts.forEach((account) => {
-      if (account.department_name) {
-        names.add(account.department_name);
-      }
-    });
-    return Array.from(names.values());
-  }, [accounts]);
 
   const updateQuery = React.useCallback(
     (next: { page?: number; search?: string; scope?: string; status?: string }) => {
@@ -344,6 +333,38 @@ export function AccountClient({
       : base;
     if (typeof window !== "undefined") {
       window.open(url, "_blank");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(`選択中のアカウント（${selectedIds.length}件）を削除しますか？`);
+      if (!confirmed) return;
+    }
+
+    try {
+      for (const id of selectedIds) {
+        const response = await fetch(`/api/internal/accounts?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => null)) as { error?: string } | null;
+          const message = data?.error || `削除に失敗しました (status ${response.status})`;
+          if (typeof window !== "undefined") {
+            window.alert(message);
+          }
+          return;
+        }
+      }
+      setSelectedIds([]);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "一括削除に失敗しました";
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
     }
   };
 
@@ -564,6 +585,16 @@ export function AccountClient({
         </Table>
 
         <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 text-xs text-destructive border-destructive/40"
+            disabled={!selectedIds.length}
+            onClick={handleBulkDelete}
+          >
+            一括削除
+          </Button>
           <p className="text-xs text-muted-foreground">
             全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
           </p>
@@ -723,14 +754,15 @@ export function AccountClient({
               <Label htmlFor="form-role" className="text-xs font-medium text-foreground">
                 ロール
               </Label>
-              <Select value={formState.role} onValueChange={(value) => handleFormChange("role")(value)}>
+              <Select value={formState.role || "__none__"} onValueChange={(value) => handleFormChange("role")(value === "__none__" ? "" : value)}>
                 <SelectTrigger id="form-role">
                   <SelectValue placeholder="ロールを選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  {roleOptions.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
+                  <SelectItem value="__none__">未設定</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.code}>
+                      {role.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -741,24 +773,19 @@ export function AccountClient({
                 部署
               </Label>
               <Select
-                value={formState.department}
-                onValueChange={(value) => handleFormChange("department")(value)}
+                value={formState.department || "__none__"}
+                onValueChange={(value) => handleFormChange("department")(value === "__none__" ? "" : value)}
               >
                 <SelectTrigger id="form-department">
                   <SelectValue placeholder="部署を選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departmentOptions.length === 0 ? (
-                    <SelectItem value="">
-                      未設定
+                  <SelectItem value="__none__">未設定</SelectItem>
+                  {Array.from(new Set(departments.map((d) => d.name))).map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
                     </SelectItem>
-                  ) : (
-                    departmentOptions.map((department) => (
-                      <SelectItem key={department} value={department}>
-                        {department}
-                      </SelectItem>
-                    ))
-                  )}
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -221,6 +221,45 @@
 
 ## 10. 开发里程碑与变更记录
 
+### 2025-12-04 里程碑：shadcn/ui 组件库正式导入
+
+- **UI 组件标准化**：
+  - 正式导入 shadcn/ui 组件库到 `apps/web`，使用 new-york 风格
+  - 通过官方 CLI 安装 27+ 个标准组件（button, dialog, select, form, table 等）
+  - 配置 `components.json` 统一管理组件安装与更新
+  - 创建 `@/lib/utils` 工具函数（cn 函数用于 className 合并）
+
+- **Select 组件修复**：
+  - 解决 Dialog 内 Select 下拉菜单被遮挡的 z-index 问题
+  - 修复下拉菜单选项缺少内边距的样式问题
+  - 统一 hover/focus 状态的视觉效果
+
+- **开发体验提升**：
+  - 今后添加新组件只需运行 `pnpm dlx shadcn@latest add [组件名]`
+  - 组件样式与官方 shadcn/ui 完全一致，减少手动调整
+  - tsconfig 路径别名确保 apps/web 组件优先于共享组件
+
+### 2025-12-03 里程碑：角色权限系统与功能级访问控制
+
+- **功能权限（feature_permissions）**：
+  - 数据库 `roles` 表新增 `feature_permissions text[]` 字段
+  - 角色编辑 UI 支持功能权限树的选择与保存
+  - 支持按功能模块（nav href）进行细粒度权限控制
+
+- **侧边栏权限过滤**：
+  - Sidebar 组件支持 `allowedFeatureIds` 属性
+  - 根据当前用户角色动态显示/隐藏菜单项
+  - 实现白名单型的菜单权限控制
+
+- **路由级访问控制（FeatureGuard）**：
+  - 新增 `FeatureGuard` 组件包裹 Dashboard 子页面
+  - 无权限时显示 403 提示，阻止页面内容渲染
+  - 支持 URL 路径到功能 ID 的自动解析
+
+- **超级管理员**：
+  - `admin` 账号或匹配 `ADMIN_LOGIN_ID` 的账号自动获得全部权限
+  - 跳过菜单过滤与路由守卫
+
 ### 2025-11-20 里程碑：后台 Sidebar 改造 & Supabase 迁移
 
 - **UI 改造**：

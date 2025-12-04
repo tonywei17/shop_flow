@@ -90,6 +90,30 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id")?.trim();
+  let ids: string[] = [];
+
+  try {
+    const body = (await req.json().catch(() => null)) as { ids?: unknown } | null;
+    if (Array.isArray(body?.ids)) {
+      ids = (body.ids as unknown[])
+        .map((value) => (typeof value === "string" ? value.trim() : ""))
+        .filter((value) => value.length > 0);
+    }
+  } catch {
+    // ignore body parse errors and fall back to query param path
+  }
+
+  if (ids.length) {
+    try {
+      for (const targetId of ids) {
+        await deleteAccountItem(targetId);
+      }
+      return NextResponse.json({ ok: true, deleted: ids.length }, { status: 200 });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  }
 
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });

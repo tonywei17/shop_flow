@@ -10,9 +10,9 @@ export {
 } from "./products";
 export { listRoles, createRole, updateRole, deleteRole } from "./roles";
 export type { RoleRecord, CreateRoleInput, UpdateRoleInput, ListRolesParams } from "./roles";
-export { listDepartments } from "./departments";
+export { listDepartments, deleteDepartment } from "./departments";
 export type { DepartmentWithParent, ListDepartmentsParams } from "./departments";
-export { listAdminAccounts, createAdminAccount, updateAdminAccount } from "./accounts";
+export { listAdminAccounts, createAdminAccount, updateAdminAccount, deleteAdminAccount } from "./accounts";
 export type {
   AdminAccount,
   ListAdminAccountsParams,

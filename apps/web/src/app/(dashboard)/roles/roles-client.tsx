@@ -317,6 +317,38 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(`選択中のロール（${selectedIds.length}件）を削除しますか？`);
+      if (!confirmed) return;
+    }
+
+    try {
+      for (const id of selectedIds) {
+        const response = await fetch(`/api/internal/roles?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => null)) as { error?: string } | null;
+          const message = data?.error || `削除に失敗しました (status ${response.status})`;
+          if (typeof window !== "undefined") {
+            window.alert(message);
+          }
+          return;
+        }
+      }
+      setSelectedIds([]);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "一括削除に失敗しました";
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+    }
+  };
+
   const handlePageSizeChange = (nextLimit: number) => {
     if (nextLimit === pagination.limit) return;
     const newTotalPages = Math.max(1, Math.ceil(pagination.count / nextLimit));
@@ -408,7 +440,7 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
                     <span className="text-[12px] font-medium">新規追加</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="fixed right-0 top-0 flex h-full max-h-screen w-full max-w-[440px] translate-x-0 flex-col overflow-y-auto rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
+                <DialogContent className="sidebar-drawer fixed right-0 top-0 flex h-full max-h-screen w-full max-w-[440px] translate-x-0 flex-col overflow-y-auto rounded-none border-l border-border bg-card px-0 py-0 text-foreground shadow-[0_0_24px_rgba(17,17,17,0.08)] sm:w-[420px]">
                   <div className="flex flex-1 flex-col">
                     <DialogHeader className="border-b border-border px-6 py-4">
                       <DialogTitle className="text-[18px] font-semibold text-foreground">
@@ -682,6 +714,16 @@ export function RolesClient({ roles, pagination }: { roles: RoleRecord[]; pagina
           </Table>
 
           <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 px-3 text-xs text-destructive border-destructive/40"
+              disabled={!selectedIds.length}
+              onClick={handleBulkDelete}
+            >
+              一括削除
+            </Button>
             <p className="text-xs text-muted-foreground">
               全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
             </p>

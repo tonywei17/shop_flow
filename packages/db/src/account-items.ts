@@ -13,6 +13,7 @@ export type ListAccountItemsParams = {
   offset?: number;
   search?: string;
   status?: string;
+  ids?: string[];
 };
 
 export async function listAccountItems(
@@ -42,7 +43,9 @@ export async function listAccountItems(
     query = query.eq("status", params.status);
   }
 
-  if (typeof params.limit === "number") {
+  if (params.ids && params.ids.length) {
+    query = query.in("id", params.ids);
+  } else if (typeof params.limit === "number") {
     const limit = Math.max(1, params.limit);
     const offset = Math.max(0, params.offset ?? 0);
     query = query.range(offset, offset + limit - 1);

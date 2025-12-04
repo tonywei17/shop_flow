@@ -189,6 +189,38 @@ export function DepartmentsClient({
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(`選択中の部署（${selectedIds.length}件）を削除しますか？`);
+      if (!confirmed) return;
+    }
+
+    try {
+      for (const id of selectedIds) {
+        const response = await fetch(`/api/internal/departments?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => null)) as { error?: string } | null;
+          const message = data?.error || `削除に失敗しました (status ${response.status})`;
+          if (typeof window !== "undefined") {
+            window.alert(message);
+          }
+          return;
+        }
+      }
+      setSelectedIds([]);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "一括削除に失敗しました";
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+    }
+  };
+
   return (
     <Card className="rounded-xl border bg-card shadow-sm">
       <CardContent className="p-0">
@@ -345,6 +377,16 @@ export function DepartmentsClient({
         </Table>
 
         <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 text-xs text-destructive border-destructive/40"
+            disabled={!selectedIds.length}
+            onClick={handleBulkDelete}
+          >
+            一括削除
+          </Button>
           <p className="text-xs text-muted-foreground">
             全 {pagination.count} 件（{pagination.page} / {totalPages} ページ）
           </p>

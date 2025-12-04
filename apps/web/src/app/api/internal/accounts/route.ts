@@ -4,6 +4,7 @@ import {
   getAdminAccounts,
   createAdminAccountService,
   updateAdminAccountService,
+  deleteAdminAccountService,
 } from "@/lib/services/org";
 import { accountUpsertSchema } from "@/lib/validation/accounts";
 
@@ -93,6 +94,23 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ ok: true, mode: "create", id: newId }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id")?.trim();
+
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  try {
+    await deleteAdminAccountService(id);
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

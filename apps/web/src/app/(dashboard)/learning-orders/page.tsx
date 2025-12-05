@@ -1,10 +1,13 @@
 import { DashboardHeader } from "@/components/dashboard/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { Eye, Download } from "lucide-react";
 
 // Medusa Admin Order レスポンスのうち、必要なフィールドだけを表現した最小限の型
 type MedusaOrderDTO = {
@@ -140,15 +143,36 @@ export default async function LearningOrdersListPage() {
       <DashboardHeader title="学習プラットフォーム注文一覧" />
       <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
-            <label htmlFor="learning-orders-select-all" className="flex items-center gap-3">
+          {/* テーブルヘッダー */}
+          <div className="flex items-center justify-between border-b border-border px-6 py-3">
+            <div className="flex items-center gap-2">
               <Checkbox id="learning-orders-select-all" aria-label="全て選択" />
-              <span>全て選択</span>
-            </label>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span>
-                合計 {orders.length} 件
-              </span>
+              <span className="text-sm text-muted-foreground">全て選択</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input placeholder="注文番号・メールで検索" className="w-[200px]" />
+              <Select defaultValue="__all__">
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="ステータス" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">すべて</SelectItem>
+                  <SelectItem value="completed">完了</SelectItem>
+                  <SelectItem value="pending">保留</SelectItem>
+                  <SelectItem value="canceled">キャンセル</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm">検索</Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                一括操作
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                エクスポート
+              </Button>
             </div>
           </div>
 
@@ -158,18 +182,36 @@ export default async function LearningOrdersListPage() {
             <Table className="[&_th]:py-3 [&_td]:py-3">
               <TableHeader>
                 <TableRow className="border-b border-border text-sm text-foreground">
-                  <TableHead className="w-[36px] pl-6 pr-3">
+                  <SortableTableHead sortKey="" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[36px] pl-6 pr-3 cursor-default hover:bg-transparent">
                     <Checkbox aria-label="行を選択" />
-                  </TableHead>
-                  <TableHead className="w-[180px]">ID</TableHead>
-                  <TableHead className="w-[140px]">注文番号</TableHead>
-                  <TableHead className="w-[140px]">注文分類</TableHead>
-                  <TableHead className="w-[140px]">ステータス</TableHead>
-                  <TableHead className="w-[160px]">支払いステータス</TableHead>
-                  <TableHead className="w-[180px]">顧客メール</TableHead>
-                  <TableHead className="w-[140px]">金額</TableHead>
-                  <TableHead className="w-[180px]">注文日時</TableHead>
-                  <TableHead className="w-[120px] pr-6 text-right">操作</TableHead>
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="id" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[180px]">
+                    ID
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="displayId" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
+                    注文番号
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="category" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
+                    注文分類
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="status" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
+                    ステータス
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="paymentStatus" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[160px]">
+                    支払いステータス
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="email" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[180px]">
+                    顧客メール
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="total" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
+                    金額
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="createdAt" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[180px]">
+                    注文日時
+                  </SortableTableHead>
+                  <SortableTableHead sortKey="" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[120px] pr-6 text-right cursor-default hover:bg-transparent">
+                    操作
+                  </SortableTableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -221,6 +263,33 @@ export default async function LearningOrdersListPage() {
               </TableBody>
             </Table>
           )}
+
+          {/* フッター */}
+          <div className="flex items-center justify-between border-t border-border px-6 py-3">
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" disabled>
+              一括削除
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              全 {orders.length} 件 (1/1ページ)
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">表示件数:</span>
+                <div className="flex gap-1">
+                  {[20, 50, 100].map((size) => (
+                    <Button key={size} variant={size === 20 ? "default" : "outline"} size="sm" className="h-7 px-2 text-xs">
+                      {size}件
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" disabled>前へ</Button>
+                <span className="px-2 text-sm">1</span>
+                <Button variant="ghost" size="sm" disabled>次へ</Button>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

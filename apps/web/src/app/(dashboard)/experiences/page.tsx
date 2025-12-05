@@ -1,7 +1,17 @@
+"use client";
+
+import { useState, useMemo } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Search, Filter, Eye, Edit, Trash2, Calendar, MapPin, Users } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Calendar, MapPin, Users, Download } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTableHead, type SortOrder } from "@/components/ui/sortable-table-head";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ExperienceVideo = {
   id: string;
@@ -99,20 +109,30 @@ const monthlyRevenue = experiences.reduce((sum, exp) => sum + exp.price * exp.en
 const allVideos = experiences.flatMap((exp) => exp.videos.map((video) => ({ ...video, experienceTitle: exp.title })));
 
 export default function ExperiencesManagementPage() {
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+
+  const handleSort = (key: string, order: SortOrder) => {
+    setSortKey(order ? key : null);
+    setSortOrder(order);
+  };
+
+  const sortedExperiences = useMemo(() => {
+    if (!sortKey || !sortOrder) return experiences;
+    return [...experiences].sort((a, b) => {
+      const aVal = a[sortKey as keyof Experience];
+      const bVal = b[sortKey as keyof Experience];
+      if (aVal === bVal) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      const cmp = aVal < bVal ? -1 : 1;
+      return sortOrder === "asc" ? cmp : -cmp;
+    });
+  }, [sortKey, sortOrder]);
+
   return (
     <div className="space-y-6">
-      <DashboardHeader
-        title="見学・体験管理"
-        actions={
-          <Link
-            href="/experiences/new"
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            新規体験を作成
-          </Link>
-        }
-      />
+      <DashboardHeader title="見学・体験管理" />
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
@@ -122,134 +142,183 @@ export default function ExperiencesManagementPage() {
         <StatCard title="今月の収入" value={`¥${monthlyRevenue.toLocaleString()}`} />
       </div>
 
-      {/* Filters */}
-      <div className="rounded-lg border border-border bg-card p-6">
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="体験・見学を検索..."
-              className="flex h-9 w-full rounded-lg border border-input bg-background px-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-          <select className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <option>イベント種類</option>
-            <option>体験</option>
-            <option>見学</option>
-          </select>
-          <select className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <option>全てのステータス</option>
-            <option>公開中</option>
-            <option>下書き</option>
-            <option>終了</option>
-          </select>
-          <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">
-            <Filter className="h-4 w-4" />
-            フィルター
-          </button>
-        </div>
-      </div>
-
       {/* Experiences Table */}
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <table className="w-full">
-          <thead className="border-b border-border bg-muted/50">
-            <tr>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">イベント名</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">種類</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">日時</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">場所</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">参加状況</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">価格</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">ステータス</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {experiences.map((experience) => (
-              <tr key={experience.id} className="border-b border-border hover:bg-muted/60">
-                <td className="p-4">
-                  <div className="font-medium text-foreground">{experience.title}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {experience.requiredMembership === "premium" ? "プレミアム会員限定" : "全会員"}
+      <Card className="rounded-xl border bg-card shadow-sm">
+        <CardContent className="p-0">
+          {/* テーブルヘッダー */}
+          <div className="flex items-center justify-between border-b border-border px-6 py-3">
+            <div className="flex items-center gap-2">
+              <Checkbox aria-label="全て選択" />
+              <span className="text-sm text-muted-foreground">全て選択</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input placeholder="イベント名で検索" className="w-[180px]" />
+              <Select defaultValue="__all__">
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue placeholder="種類" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">すべて</SelectItem>
+                  <SelectItem value="体験">体験</SelectItem>
+                  <SelectItem value="見学">見学</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select defaultValue="__all__">
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="ステータス" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">すべて</SelectItem>
+                  <SelectItem value="公開中">公開中</SelectItem>
+                  <SelectItem value="下書き">下書き</SelectItem>
+                  <SelectItem value="終了">終了</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm">検索</Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                一括操作
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                エクスポート
+              </Button>
+              <Button asChild size="sm" className="gap-1">
+                <Link href="/experiences/new">
+                  <Plus className="h-4 w-4" />
+                  新規作成
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border">
+                <SortableTableHead sortKey="" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={() => {}} className="w-[40px] pl-6 cursor-default hover:bg-transparent">
+                  <span className="sr-only">選択</span>
+                </SortableTableHead>
+                <SortableTableHead sortKey="title" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort}>
+                  イベント名
+                </SortableTableHead>
+                <SortableTableHead sortKey="type" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[80px]">
+                  種類
+                </SortableTableHead>
+                <SortableTableHead sortKey="date" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[140px]">
+                  日時
+                </SortableTableHead>
+                <SortableTableHead sortKey="location" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[100px]">
+                  場所
+                </SortableTableHead>
+                <SortableTableHead sortKey="enrolled" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[120px]">
+                  参加状況
+                </SortableTableHead>
+                <SortableTableHead sortKey="price" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[80px]">
+                  価格
+                </SortableTableHead>
+                <SortableTableHead sortKey="status" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[80px]">
+                  ステータス
+                </SortableTableHead>
+                <SortableTableHead sortKey="" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={() => {}} className="w-[100px] text-right cursor-default hover:bg-transparent">
+                  操作
+                </SortableTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+            {sortedExperiences.map((experience) => (
+              <TableRow key={experience.id} className="border-b border-border">
+                <TableCell className="pl-6">
+                  <Checkbox aria-label={`${experience.title} を選択`} />
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium">{experience.title}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {experience.requiredMembership === "premium" ? "プレミアム限定" : "全会員"}
                   </div>
                   {experience.videos.length > 0 && (
-                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                       動画 {experience.videos.length}件
-                    </div>
+                    </span>
                   )}
-                </td>
-                <td className="p-4">
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                      experience.type === "体験" ? "bg-primary/10 text-primary" : "bg-secondary/10 text-secondary-foreground"
-                    }`}
-                  >
+                </TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${experience.type === "体験" ? "bg-primary/10 text-primary" : "bg-secondary/10 text-secondary-foreground"}`}>
                     {experience.type}
                   </span>
-                </td>
-                <td className="p-4 text-sm text-foreground">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 text-sm">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     {experience.date}
                   </div>
-                </td>
-                <td className="p-4 text-sm text-foreground">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 text-sm">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                     {experience.location}
                   </div>
-                </td>
-                <td className="p-4 text-sm text-foreground">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 text-sm">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
                     {experience.enrolled}/{experience.capacity}名
                   </div>
-                  <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
-                    <div
-                      className="h-1.5 rounded-full bg-primary"
-                      style={{ width: `${(experience.enrolled / experience.capacity) * 100}%` }}
-                    />
+                  <div className="mt-1 h-1 w-full rounded-full bg-muted">
+                    <div className="h-1 rounded-full bg-primary" style={{ width: `${(experience.enrolled / experience.capacity) * 100}%` }} />
                   </div>
-                </td>
-                <td className="p-4 text-sm font-medium text-foreground">
+                </TableCell>
+                <TableCell className="font-medium">
                   {experience.price === 0 ? "無料" : `¥${experience.price.toLocaleString()}`}
-                </td>
-                <td className="p-4">
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                      experience.status === "公開中" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
+                </TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${experience.status === "公開中" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                     {experience.status}
                   </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/experiences/${experience.id}`}
-                      className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      title="詳細を表示"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                    <button className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground" title="編集">
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="rounded-lg p-2 text-destructive hover:bg-destructive/10 hover:text-destructive" title="削除">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Link href={`/experiences/${experience.id}`}><Eye className="h-4 w-4" /></Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
+            </TableBody>
+          </Table>
+
+          {/* フッター */}
+          <div className="flex items-center justify-between border-t border-border px-6 py-3">
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" disabled>
+              一括削除
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              全 {experiences.length} 件 (1/1ページ)
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">表示件数:</span>
+                <div className="flex gap-1">
+                  {[20, 50, 100].map((size) => (
+                    <Button key={size} variant={size === 20 ? "default" : "outline"} size="sm" className="h-7 px-2 text-xs">
+                      {size}件
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" disabled>前へ</Button>
+                <span className="px-2 text-sm">1</span>
+                <Button variant="ghost" size="sm" disabled>次へ</Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {allVideos.length > 0 && (
         <div className="mt-8 rounded-lg border border-border bg-card p-6">

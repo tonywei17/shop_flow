@@ -329,3 +329,21 @@ WHERE d.id IN (
 | 2025-12-05 | 更新 departments.ts 和 accounts.ts 支持 dataScopeContext 参数 |
 | 2025-12-05 | 改进机能权限列表显示：按分组显示，支持"（一部）"标记 |
 | 2025-12-05 | 修复 null/undefined feature_permissions 的向后兼容性处理 |
+| 2025-12-05 | **权限过滤生效修复**：页面和 API 路由现在正确应用数据权限过滤 |
+| 2025-12-05 | 更新 getCurrentUser 从 cookie 获取真实用户信息 |
+| 2025-12-05 | 创建测试账户：test_shikyoku（支局）、test_classroom（教室）|
+
+## 测试账户
+
+用于验证权限系统的测试账户：
+
+| 账户ID | 显示名 | 角色 | 数据权限 | 所属部署 |
+|--------|--------|------|----------|----------|
+| test_shikyoku | テスト支局管理者 | 支局 | self_and_descendants | リトミック研究センター北海道第一支局 |
+| test_classroom | テスト教室管理者 | 教室 | self_only | きよ音楽教室 |
+
+### 验证步骤
+
+1. 设置 cookie `admin_account_id` 为测试账户的 UUID
+2. 访问部署管理页面，确认只能看到权限范围内的部署
+3. 访问账户管理页面，确认只能看到权限范围内的账户

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
-import { listAdminAccounts, listRoles, listDepartments } from "@enterprise/db";
+import { listRoles } from "@enterprise/db";
+import { getAdminAccountsWithScope, getDepartmentsWithScope } from "@/lib/services/org";
 import { AccountClient } from "./account-client";
 
 type AccountPageSearchParams = {
@@ -33,15 +34,17 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const offset = (page - 1) * limit;
 
   const [accountsResult, rolesResult, departmentsResult] = await Promise.all([
-    listAdminAccounts({ limit, offset, search, scope, status, sortKey, sortOrder }).catch((error) => {
+    // 账户列表：应用数据权限过滤（只能看到可访问部署下的账户）
+    getAdminAccountsWithScope({ limit, offset, search, scope, status, sortKey, sortOrder }).catch((error: unknown) => {
       console.error("Failed to load admin accounts from Supabase on account page", error);
       return { accounts: [], count: 0 };
     }),
-    listRoles({ limit: 1000 }).catch((error) => {
+    listRoles({ limit: 1000 }).catch((error: unknown) => {
       console.error("Failed to load roles from Supabase on account page", error);
       return { roles: [], count: 0 };
     }),
-    listDepartments({ limit: 1000 }).catch((error) => {
+    // 部署列表：应用数据权限过滤（只能看到可访问的部署）
+    getDepartmentsWithScope({ limit: 1000 }).catch((error: unknown) => {
       console.error("Failed to load departments from Supabase on account page", error);
       return { departments: [], count: 0 };
     }),

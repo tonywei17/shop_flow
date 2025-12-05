@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
 import {
-  getAdminAccounts,
+  getAdminAccountsWithScope,
   createAdminAccountService,
   updateAdminAccountService,
   deleteAdminAccountService,
@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("q")?.trim() || undefined;
 
   try {
-    const { accounts, count } = await getAdminAccounts({ limit, offset, search, scope, status });
+    // 应用数据权限过滤
+    const { accounts, count } = await getAdminAccountsWithScope({ limit, offset, search, scope, status });
     return NextResponse.json({ accounts, count, page, limit });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -55,8 +56,10 @@ export async function POST(req: NextRequest) {
     const status =
       statusRaw === true || statusRaw === "有効" || statusRaw === "active" ? "有効" : "無効";
 
-    const roleCode = (data.role_code ?? "").trim();
+    const departmentId = data.department_id ?? null;
     const departmentName = (data.department_name ?? "").trim();
+    const roleId = data.role_id ?? null;
+    const roleCode = (data.role_code ?? "").trim();
     const accountScopeRaw = (data.account_scope ?? "").trim();
     const accountScope = accountScopeRaw || "admin_portal";
 
@@ -74,8 +77,10 @@ export async function POST(req: NextRequest) {
         email: email || null,
         phone: phone || null,
         status,
-        role_code: roleCode || null,
+        department_id: departmentId,
         department_name: departmentName || null,
+        role_id: roleId,
+        role_code: roleCode || null,
         account_scope: accountScope,
       });
 
@@ -88,8 +93,10 @@ export async function POST(req: NextRequest) {
       email: email || null,
       phone: phone || null,
       status,
-      role_code: roleCode || null,
+      department_id: departmentId,
       department_name: departmentName || null,
+      role_id: roleId,
+      role_code: roleCode || null,
       account_scope: accountScope,
     });
 

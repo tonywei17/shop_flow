@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import {
   getDataScopeContextForUser,
   getDataScopeFromRole,
+  getSupabaseAdmin,
   type DataScopeContext,
   type DataScopeType,
 } from "@enterprise/db";
@@ -8,8 +10,7 @@ import {
 export type { DataScopeContext, DataScopeType };
 
 /**
- * 模拟当前用户信息
- * TODO: 替换为实际的认证系统获取用户信息
+ * 当前用户信息
  */
 export type CurrentUser = {
   id: string;
@@ -22,21 +23,44 @@ export type CurrentUser = {
 };
 
 /**
- * 获取当前用户（模拟）
- * TODO: 替换为实际的认证逻辑
+ * 获取当前用户
+ * 从 cookie 中获取 admin_account_id，然后查询数据库获取完整信息
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  // 模拟用户 - 实际应从 session/cookie/token 获取
-  // 这里返回一个默认的管理员用户
-  return {
-    id: "mock-user-id",
-    accountId: "admin",
-    displayName: "管理者",
-    departmentId: null, // null 表示本部/全局
-    departmentName: "本部",
-    roleId: null, // null 表示超级管理员
-    roleCode: "admin",
-  };
+  try {
+    const cookieStore = await cookies();
+    const adminAccountId = cookieStore.get("admin_account_id")?.value;
+
+    if (!adminAccountId) {
+      return null;
+    }
+
+    const sb = getSupabaseAdmin();
+    const { data: account, error } = await sb
+      .from("admin_accounts")
+      .select("id, account_id, display_name, department_id, department_name, role_code, role_id")
+      .eq("id", adminAccountId)
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !account) {
+      console.error("[getCurrentUser] Failed to fetch account:", error);
+      return null;
+    }
+
+    return {
+      id: account.id as string,
+      accountId: account.account_id as string,
+      displayName: account.display_name as string,
+      departmentId: account.department_id as string | null,
+      departmentName: account.department_name as string | null,
+      roleId: account.role_id as string | null,
+      roleCode: account.role_code as string | null,
+    };
+  } catch (error) {
+    console.error("[getCurrentUser] Error:", error);
+    return null;
+  }
 }
 
 /**

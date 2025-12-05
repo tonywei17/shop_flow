@@ -255,7 +255,7 @@ export function DepartmentsClient({
             <Input
               name="search"
               defaultValue={pagination.search}
-              placeholder="部署名・責任者・地域で検索"
+              placeholder="店番・部署名・責任者・地域で検索"
               className="w-full max-w-xs"
             />
             <Button type="submit" variant="outline">
@@ -327,13 +327,13 @@ export function DepartmentsClient({
                 />
               </TableHead>
               <SortableTableHead
-                sortKey="external_id"
+                sortKey="code"
                 currentSortKey={pagination.sortKey}
                 currentSortOrder={pagination.sortOrder}
                 onSort={handleSort}
                 className="w-[100px]"
               >
-                部署ID
+                店番
               </SortableTableHead>
               <SortableTableHead
                 sortKey="name"
@@ -388,15 +388,12 @@ export function DepartmentsClient({
                   />
                 </TableCell>
                 <TableCell className="font-mono text-xs text-muted-foreground">
-                  {dept.external_id ?? '--'}
+                  {dept.code ?? '--'}
                 </TableCell>
                 <TableCell className="text-foreground">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <span>{dept.name}</span>
-                      <span className="text-xs text-muted-foreground">{dept.code || '未設定'}</span>
-                    </div>
+                    <span>{dept.name}</span>
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{dept.category ?? '--'}</TableCell>
@@ -452,7 +449,7 @@ export function DepartmentsClient({
                     className="h-7 px-2 text-xs"
                     onClick={() => handlePageSizeChange(size)}
                   >
-                    {size}行
+                    {size}件
                   </Button>
                 ))}
               </div>

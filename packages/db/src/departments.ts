@@ -20,6 +20,7 @@ export type DepartmentRecord = {
   address_line1: string | null;
   address_line2: string | null;
   is_independent: boolean;
+  allow_proxy_billing: boolean;
   created_at: string | null;
 };
 
@@ -42,7 +43,7 @@ export type ListDepartmentsParams = {
 };
 
 // Valid sort keys for departments table
-const VALID_SORT_KEYS = ["external_id", "name", "type", "category", "level", "manager_name", "status", "created_at"] as const;
+const VALID_SORT_KEYS = ["external_id", "name", "type", "category", "level", "manager_name", "status", "created_at", "code"] as const;
 
 export async function listDepartments(
   params: ListDepartmentsParams = {},
@@ -70,6 +71,7 @@ export async function listDepartments(
         "address_line2",
         "code",
         "is_independent",
+        "allow_proxy_billing",
         "created_at",
       ].join(","),
       { count: "exact" },
@@ -88,8 +90,9 @@ export async function listDepartments(
   }
 
   if (params.search) {
+    // 支持通过店番（code）、部署名、责任者、地域搜索
     query = query.or(
-      `name.ilike.%${params.search}%,manager_name.ilike.%${params.search}%,city.ilike.%${params.search}%`,
+      `code.ilike.%${params.search}%,name.ilike.%${params.search}%,manager_name.ilike.%${params.search}%,city.ilike.%${params.search}%`,
     );
   }
 
@@ -142,6 +145,21 @@ export async function listDepartments(
 export async function deleteDepartment(id: string): Promise<void> {
   const sb = getSupabaseAdmin();
   const { error } = await sb.from("departments").delete().eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function updateDepartmentProxyBilling(
+  id: string,
+  allowProxyBilling: boolean
+): Promise<void> {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb
+    .from("departments")
+    .update({ allow_proxy_billing: allowProxyBilling })
+    .eq("id", id);
 
   if (error) {
     throw error;

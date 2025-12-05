@@ -8,8 +8,10 @@ export const accountUpsertSchema = z.object({
   email: z.string().optional(),
   phone: z.string().optional(),
   status: z.union([z.boolean(), z.string()]).optional(),
-  role_code: z.string().optional(),
+  department_id: z.string().nullable().optional(),
   department_name: z.string().optional(),
+  role_id: z.string().nullable().optional(),
+  role_code: z.string().optional(),
   account_scope: z.string().optional(),
 });
 

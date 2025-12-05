@@ -14,6 +14,7 @@ export type AdminAccount = {
   department_id: string | null;
   department_external_id: number | null;
   department_name: string | null;
+  role_id: string | null;
   role_code: string | null;
   role_name: string | null;
   account_scope: string;
@@ -32,6 +33,7 @@ type AdminAccountRecord = {
   department_id: string | null;
   department_external_id: number | null;
   department_name: string | null;
+  role_id: string | null;
   role_code: string | null;
   account_scope: string;
 };
@@ -75,6 +77,7 @@ export async function listAdminAccounts(
         "department_id",
         "department_external_id",
         "department_name",
+        "role_id",
         "role_code",
         "account_scope",
       ].join(","),
@@ -152,6 +155,7 @@ export async function listAdminAccounts(
     department_id: record.department_id ?? null,
     department_external_id: record.department_external_id ?? null,
     department_name: record.department_name ?? null,
+    role_id: record.role_id ?? null,
     role_code: record.role_code ?? null,
     role_name: record.role_code ? roleMap.get(record.role_code) ?? null : null,
     account_scope: record.account_scope ?? "admin_portal",
@@ -166,7 +170,9 @@ export type CreateAdminAccountInput = {
   email?: string | null;
   phone?: string | null;
   status?: string;
+  department_id?: string | null;
   department_name?: string | null;
+  role_id?: string | null;
   role_code?: string | null;
   account_scope?: string;
 };
@@ -176,7 +182,9 @@ export type UpdateAdminAccountInput = {
   email?: string | null;
   phone?: string | null;
   status?: string;
+  department_id?: string | null;
   department_name?: string | null;
+  role_id?: string | null;
   role_code?: string | null;
   account_scope?: string;
 };
@@ -192,7 +200,9 @@ export async function createAdminAccount(
     email: input.email ?? null,
     phone: input.phone ?? null,
     status: input.status ?? "有効",
+    department_id: input.department_id ?? null,
     department_name: input.department_name ?? null,
+    role_id: input.role_id ?? null,
     role_code: input.role_code ?? null,
     account_scope: input.account_scope ?? "admin_portal",
   };
@@ -231,8 +241,14 @@ export async function updateAdminAccount(
   if (typeof input.status === "string") {
     payload.status = input.status;
   }
+  if (input.department_id !== undefined) {
+    payload.department_id = input.department_id ?? null;
+  }
   if (input.department_name !== undefined) {
     payload.department_name = input.department_name ?? null;
+  }
+  if (input.role_id !== undefined) {
+    payload.role_id = input.role_id ?? null;
   }
   if (input.role_code !== undefined) {
     payload.role_code = input.role_code ?? null;

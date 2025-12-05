@@ -1,6 +1,16 @@
+"use client";
+
+import { useState, useMemo } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
-import { Search, Filter, Download, Eye, Mail } from "lucide-react";
+import { Download, Eye, Mail, Users, UserCheck, UserPlus, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SortableTableHead, type SortOrder } from "@/components/ui/sortable-table-head";
 
 type Member = {
   id: string;
@@ -63,126 +73,225 @@ const members: Member[] = [
 ];
 
 export default function MembersPage() {
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+
+  const handleSort = (key: string, order: SortOrder) => {
+    setSortKey(order ? key : null);
+    setSortOrder(order);
+  };
+
+  const sortedMembers = useMemo(() => {
+    if (!sortKey || !sortOrder) return members;
+    return [...members].sort((a, b) => {
+      const aVal = a[sortKey as keyof Member];
+      const bVal = b[sortKey as keyof Member];
+      if (aVal === bVal) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      const cmp = aVal < bVal ? -1 : 1;
+      return sortOrder === "asc" ? cmp : -cmp;
+    });
+  }, [sortKey, sortOrder]);
+
   const totalMembers = members.length;
   const premiumMembers = members.filter((member) => member.membershipType === "premium").length;
   const trialMembers = members.filter((member) => member.membershipType === "trial").length;
+  const pagination = { page: 1, limit: 20, count: 1234 };
+  const totalPages = Math.ceil(pagination.count / pagination.limit);
 
   return (
     <div className="space-y-6">
       <DashboardHeader title="会員管理" />
 
-      {/* Stats Cards */}
-      <div className="mb-4 grid grid-cols-1 gap-6 md:grid-cols-4">
-        <StatCard title="総会員数" value={`${totalMembers.toLocaleString()}名`} change="+12%" />
-        <StatCard title="プレミアム会員" value={`${premiumMembers}名`} change="+8%" />
-        <StatCard title="仮会員" value={`${trialMembers}名`} change="+15%" />
-        <StatCard title="今月の新規" value="89名" change="+23%" />
-      </div>
-
-      {/* Filters and Actions */}
-      <div className="mb-4 rounded-lg border border-border bg-card p-6">
-        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <div className="flex w-full flex-1 gap-4 md:w-auto">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="会員を検索..."
-                className="flex h-9 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-              />
+      {/* 統計カード */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="rounded-xl border bg-card shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">総会員数</p>
+                <p className="text-3xl font-bold">{totalMembers.toLocaleString()}名</p>
+              </div>
+              <div className="rounded-full bg-primary/10 p-3">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
             </div>
-            <select className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-              <option>全ての会員タイプ</option>
-              <option>プレミアム会員</option>
-              <option>仮会員</option>
-            </select>
-            <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">
-              <Filter className="h-4 w-4" />
-              フィルター
-            </button>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border bg-card shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">プレミアム会員</p>
+                <p className="text-3xl font-bold">{premiumMembers}名</p>
+              </div>
+              <div className="rounded-full bg-green-500/10 p-3">
+                <UserCheck className="h-6 w-6 text-green-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border bg-card shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">仮会員</p>
+                <p className="text-3xl font-bold">{trialMembers}名</p>
+              </div>
+              <div className="rounded-full bg-orange-500/10 p-3">
+                <UserPlus className="h-6 w-6 text-orange-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border bg-card shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">今月の新規</p>
+                <p className="text-3xl font-bold">89名</p>
+              </div>
+              <div className="rounded-full bg-blue-500/10 p-3">
+                <TrendingUp className="h-6 w-6 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* テーブル */}
+      <Card className="rounded-xl border bg-card shadow-sm">
+        <CardContent className="p-0">
+          {/* テーブルヘッダー */}
+          <div className="flex items-center justify-between border-b border-border px-6 py-3">
+            <div className="flex items-center gap-2">
+              <Checkbox aria-label="全て選択" />
+              <span className="text-sm text-muted-foreground">全て選択</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input placeholder="会員名・メールで検索" className="w-[200px]" />
+              <Select defaultValue="__all__">
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="会員タイプ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">すべて</SelectItem>
+                  <SelectItem value="premium">プレミアム</SelectItem>
+                  <SelectItem value="trial">仮会員</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm">検索</Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                一括操作
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                エクスポート
+              </Button>
+            </div>
           </div>
-          <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90">
-            <Download className="h-4 w-4" />
-            エクスポート
-          </button>
-        </div>
-      </div>
 
-      {/* Members Table */}
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-muted/50">
-            <tr>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">会員名</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">メールアドレス</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">会員タイプ</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">登録日</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">受講コース</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">取得資格</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">総支払額</th>
-              <th className="p-4 text-left text-sm font-medium text-muted-foreground">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((member) => (
-              <tr key={member.id} className="border-b border-border text-sm hover:bg-muted/60">
-                <td className="p-4">
-                  <div>
-                    <div className="font-medium text-foreground">{member.name}</div>
-                    <div className="text-sm text-muted-foreground">最終アクティブ: {member.lastActive}</div>
-                  </div>
-                </td>
-                <td className="p-4 text-sm text-foreground">{member.email}</td>
-                <td className="p-4">
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                      member.membershipType === "premium"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {member.membershipType === "premium" ? "プレミアム" : "仮会員"}
-                  </span>
-                </td>
-                <td className="p-4 text-sm text-foreground">{member.joinDate}</td>
-                <td className="p-4 text-center text-sm text-foreground">{member.coursesEnrolled}</td>
-                <td className="p-4 text-center text-sm text-foreground">{member.qualifications}</td>
-                <td className="p-4 text-sm font-medium text-foreground">¥{member.totalSpent.toLocaleString()}</td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/members/${member.id}`}
-                      className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      title="詳細"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                    <button className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground" title="メール送信">
-                      <Mail className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border">
+                <SortableTableHead sortKey="" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={() => {}} className="w-[40px] pl-6 cursor-default hover:bg-transparent">
+                  <span className="sr-only">選択</span>
+                </SortableTableHead>
+                <SortableTableHead sortKey="name" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort}>
+                  会員名
+                </SortableTableHead>
+                <SortableTableHead sortKey="email" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort}>
+                  メールアドレス
+                </SortableTableHead>
+                <SortableTableHead sortKey="membershipType" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[120px]">
+                  会員タイプ
+                </SortableTableHead>
+                <SortableTableHead sortKey="joinDate" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[100px]">
+                  登録日
+                </SortableTableHead>
+                <SortableTableHead sortKey="coursesEnrolled" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[80px] text-center">
+                  受講
+                </SortableTableHead>
+                <SortableTableHead sortKey="qualifications" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[80px] text-center">
+                  資格
+                </SortableTableHead>
+                <SortableTableHead sortKey="totalSpent" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[100px] text-right">
+                  総支払額
+                </SortableTableHead>
+                <SortableTableHead sortKey="" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={() => {}} className="w-[100px] text-right cursor-default hover:bg-transparent">
+                  操作
+                </SortableTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedMembers.map((member) => (
+                <TableRow key={member.id} className="border-b border-border">
+                  <TableCell className="pl-6">
+                    <Checkbox aria-label={`${member.name} を選択`} />
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{member.name}</div>
+                      <div className="text-xs text-muted-foreground">最終: {member.lastActive}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{member.email}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${member.membershipType === "premium" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      {member.membershipType === "premium" ? "プレミアム" : "仮会員"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{member.joinDate}</TableCell>
+                  <TableCell className="text-center">{member.coursesEnrolled}</TableCell>
+                  <TableCell className="text-center">{member.qualifications}</TableCell>
+                  <TableCell className="text-right font-medium">¥{member.totalSpent.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Link href={`/members/${member.id}`}><Eye className="h-4 w-4" /></Link>
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-      {/* Pagination */}
-      <div className="mt-6 flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          1-{members.length} / 1,234件を表示
-        </div>
-        <div className="flex gap-2">
-          <button className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50" disabled>
-            前へ
-          </button>
-          <button className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm">1</button>
-          <button className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">2</button>
-          <button className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">3</button>
-          <button className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">次へ</button>
-        </div>
-      </div>
+          {/* フッター */}
+          <div className="flex items-center justify-between border-t border-border px-6 py-3">
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" disabled>
+              一括削除
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              全 {pagination.count} 件 ({pagination.page}/{totalPages}ページ)
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">表示件数:</span>
+                <div className="flex gap-1">
+                  {[20, 50, 100].map((size) => (
+                    <Button key={size} variant={pagination.limit === size ? "default" : "outline"} size="sm" className="h-7 px-2 text-xs">
+                      {size}件
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" disabled>前へ</Button>
+                <span className="px-2 text-sm">{pagination.page}</span>
+                <Button variant="ghost" size="sm">次へ</Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

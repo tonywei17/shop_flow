@@ -6,11 +6,18 @@ export {
   getProduct,
   createProduct,
   updateProduct,
+  deleteProduct,
   adjustStock,
+} from "./products";
+export type {
+  Product,
+  CreateProductInput,
+  UpdateProductInput,
+  ListProductsParams,
 } from "./products";
 export { listRoles, createRole, updateRole, deleteRole } from "./roles";
 export type { RoleRecord, CreateRoleInput, UpdateRoleInput, ListRolesParams, DataScopeType } from "./roles";
-export { listDepartments, deleteDepartment } from "./departments";
+export { listDepartments, deleteDepartment, updateDepartmentProxyBilling } from "./departments";
 export type { DepartmentWithParent, ListDepartmentsParams } from "./departments";
 export { listAdminAccounts, createAdminAccount, updateAdminAccount, deleteAdminAccount } from "./accounts";
 export type {
@@ -52,6 +59,20 @@ export type {
   ListCounterpartiesParams,
   UpsertCounterpartyInput,
 } from "./counterparties";
+export {
+  listProductImages,
+  getProductImage,
+  createProductImage,
+  updateProductImage,
+  deleteProductImage,
+  updateProductImagesOrder,
+  setProductImageAsPrimary,
+} from "./product-images";
+export type {
+  ProductImage,
+  CreateProductImageInput,
+  UpdateProductImageInput,
+} from "./product-images";
 
 // Data scope utilities
 export {

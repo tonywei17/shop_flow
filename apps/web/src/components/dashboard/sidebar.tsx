@@ -70,6 +70,7 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
           height={120}
           className="h-auto w-full"
           priority
+          unoptimized
         />
       </div>
       <div className="flex flex-1 min-h-0 flex-col px-4 pb-5 pt-4">

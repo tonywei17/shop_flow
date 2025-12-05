@@ -918,7 +918,7 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
                       className="h-7 px-2 text-xs"
                       onClick={() => handlePageSizeChange(size)}
                     >
-                      {size}行
+                      {size}件
                     </Button>
                   ))}
                 </div>

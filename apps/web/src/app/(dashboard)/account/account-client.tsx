@@ -32,6 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Download, Edit, Plus } from "lucide-react";
 import { ManagementDrawer } from "@/components/dashboard/management-drawer";
+import { DepartmentTreeSelect } from "@/components/department-tree-select";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
 import {
   SortableTableHead,
@@ -72,9 +73,10 @@ type AccountFormState = {
   email: string;
   phone: string;
   password: string;
+  roleId: string | null;
   role: string;
+  departmentId: string | null;
   department: string;
-  delegateBilling: boolean;
   priceDisplay: string;
   facility: string;
   representative: string;
@@ -95,9 +97,10 @@ function createFormState(account?: AdminAccount): AccountFormState {
     email: account?.email ?? "",
     phone: account?.phone ?? "",
     password: "",
+    roleId: account?.role_id ?? null,
     role: account?.role_code ?? "",
+    departmentId: account?.department_id ?? null,
     department: account?.department_name ?? "",
-    delegateBilling: account?.account_scope === "storefront" ? true : true,
     priceDisplay: priceDisplayOptions[0]!.value,
     facility: account?.department_name ?? "",
     representative: account?.display_name ?? "",
@@ -164,6 +167,22 @@ export function AccountClient({
     window.sessionStorage.setItem(ACCOUNTS_SELECTION_STORAGE_KEY, JSON.stringify(selectedIds));
   }, [selectedIds]);
 
+  // 创建部署ID到部署信息的映射
+  const departmentMap = React.useMemo(() => {
+    const map = new Map<string, { name: string; parentName: string | null }>();
+    for (const dept of departments) {
+      map.set(dept.id, { name: dept.name, parentName: dept.parent_name });
+    }
+    return map;
+  }, [departments]);
+
+  // 获取部署的显示文本（包含上级部署）
+  const getDepartmentDisplay = React.useCallback((departmentId: string | null, departmentName: string | null) => {
+    if (!departmentId || !departmentName) return null;
+    const dept = departmentMap.get(departmentId);
+    if (!dept) return { name: departmentName, parentName: null };
+    return { name: dept.name, parentName: dept.parentName };
+  }, [departmentMap]);
 
   const updateQuery = React.useCallback(
     (next: { page?: number; search?: string; scope?: string; status?: string }) => {
@@ -281,8 +300,10 @@ export function AccountClient({
         email: formState.email,
         phone: formState.phone,
         status: formState.status,
-        role_code: formState.role,
+        department_id: formState.departmentId,
         department_name: formState.department,
+        role_id: formState.roleId,
+        role_code: formState.role,
         account_scope: pagination.scope || "admin_portal",
       };
 
@@ -618,7 +639,22 @@ export function AccountClient({
                   </TableCell>
                   <TableCell className="text-foreground">{account.display_name}</TableCell>
                   <TableCell className="text-muted-foreground">{account.email ?? '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{account.department_name ?? '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {(() => {
+                      const deptInfo = getDepartmentDisplay(account.department_id, account.department_name);
+                      if (!deptInfo) return '—';
+                      return (
+                        <div className="flex flex-col">
+                          <span>{deptInfo.name}</span>
+                          {deptInfo.parentName && (
+                            <span className="text-[10px] text-muted-foreground/70">
+                              {deptInfo.parentName}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {account.last_login_at ? new Date(account.last_login_at).toLocaleString('ja-JP') : '未ログイン'}
                   </TableCell>
@@ -676,7 +712,7 @@ export function AccountClient({
                     className="h-7 px-2 text-xs"
                     onClick={() => handlePageSizeChange(size)}
                   >
-                    {size}行
+                    {size}件
                   </Button>
                 ))}
               </div>
@@ -819,7 +855,21 @@ export function AccountClient({
               <Label htmlFor="form-role" className="text-xs font-medium text-foreground">
                 ロール
               </Label>
-              <Select value={formState.role || "__none__"} onValueChange={(value) => handleFormChange("role")(value === "__none__" ? "" : value)}>
+              <Select 
+                value={formState.role || "__none__"} 
+                onValueChange={(value) => {
+                  if (value === "__none__") {
+                    setFormState((prev) => ({ ...prev, role: "", roleId: null }));
+                  } else {
+                    const selectedRole = roles.find((r) => r.code === value);
+                    setFormState((prev) => ({ 
+                      ...prev, 
+                      role: value, 
+                      roleId: selectedRole?.id ?? null 
+                    }));
+                  }
+                }}
+              >
                 <SelectTrigger id="form-role">
                   <SelectValue placeholder="ロールを選択" />
                 </SelectTrigger>
@@ -837,40 +887,22 @@ export function AccountClient({
               <Label htmlFor="form-department" className="text-xs font-medium text-foreground">
                 部署
               </Label>
-              <Select
-                value={formState.department || "__none__"}
-                onValueChange={(value) => handleFormChange("department")(value === "__none__" ? "" : value)}
-              >
-                <SelectTrigger id="form-department">
-                  <SelectValue placeholder="部署を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">未設定</SelectItem>
-                  {Array.from(new Set(departments.map((d) => d.name))).map((name) => (
-                    <SelectItem key={name} value={name}>
-                      {name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <DepartmentTreeSelect
+                departments={departments}
+                value={formState.department}
+                onValueChange={(value, id) => {
+                  setFormState((prev) => ({
+                    ...prev,
+                    department: value,
+                    departmentId: id || null,
+                  }));
+                }}
+                placeholder="部署を選択"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-              <div>
-                <Label className="text-xs font-medium text-foreground">代行請求</Label>
-                <p className="text-xs text-muted-foreground">代理店向け請求を許可</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={formState.delegateBilling}
-                  onCheckedChange={(checked) => handleFormChange("delegateBilling")(checked)}
-                />
-                <span className="text-sm text-foreground">{formState.delegateBilling ? "有効" : "無効"}</span>
-              </div>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="form-price" className="text-xs font-medium text-foreground">
                 価格表示

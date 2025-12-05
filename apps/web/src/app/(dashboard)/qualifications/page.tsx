@@ -3,7 +3,13 @@
 import { DashboardHeader } from "@/components/dashboard/header";
 import Link from "next/link";
 import { useState } from "react";
-import { Plus, Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Qualification = {
   id: string;
@@ -157,94 +163,127 @@ export default function QualificationsManagementPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
-              <table className="w-full text-sm">
-                <thead className="border-b border-border bg-muted/50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">順番</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">資格名</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">コード</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">カテゴリ</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">ステータス</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedItems.map((q, index) => {
-                    const isFirst = index === 0;
-                    const isLast = index === sortedItems.length - 1;
+            <Card className="rounded-xl border bg-card shadow-sm">
+              <CardContent className="p-0">
+                {/* テーブルヘッダー */}
+                <div className="flex items-center justify-between border-b border-border px-6 py-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox aria-label="全て選択" />
+                    <span className="text-sm text-muted-foreground">全て選択</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input placeholder="資格名で検索" className="w-[160px]" />
+                    <Button variant="outline" size="sm">検索</Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <Download className="h-4 w-4" />
+                      エクスポート
+                    </Button>
+                  </div>
+                </div>
 
-                    return (
-                      <tr key={q.id} className="border-t border-border hover:bg-muted/60">
-                        <td className="px-4 py-2 align-top text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <span>{q.sortOrder}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleMove(q.id, "up")}
-                              disabled={isFirst}
-                              className="inline-flex h-6 w-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted disabled:opacity-30"
-                            >
-                              <ArrowUp className="h-3 w-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleMove(q.id, "down")}
-                              disabled={isLast}
-                              className="inline-flex h-6 w-6 items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted disabled:opacity-30"
-                            >
-                              <ArrowDown className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-4 py-2 align-top">
-                          <span className="font-medium text-foreground">{q.name}</span>
-                        </td>
-                        <td className="px-4 py-2 align-top">
-                          <span className="text-foreground">{q.code}</span>
-                        </td>
-                        <td className="px-4 py-2 align-top">
-                          <span className="text-foreground">{q.category}</span>
-                        </td>
-                        <td className="px-4 py-2 align-top">
-                          <span
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                              q.isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {q.isActive ? "有効" : "無効"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 align-top">
-                          <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <Link
-                              href={`/qualifications/${q.id}/edit`}
-                              className="inline-flex items-center justify-center rounded-lg border border-border px-2.5 py-1.5 font-medium text-foreground hover:bg-muted"
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleActive(q.id)}
-                              className="inline-flex items-center justify-center rounded-lg border border-border px-2.5 py-1.5 font-medium text-foreground hover:bg-muted"
-                            >
-                              {q.isActive ? "無効にする" : "有効にする"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(q.id)}
-                              className="inline-flex items-center justify-center rounded-lg border border-destructive/40 px-2.5 py-1.5 font-medium text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b border-border">
+                      <SortableTableHead sortKey="" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[40px] pl-6 cursor-default hover:bg-transparent">
+                        <span className="sr-only">選択</span>
+                      </SortableTableHead>
+                      <SortableTableHead sortKey="sortOrder" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[80px]">
+                        順番
+                      </SortableTableHead>
+                      <SortableTableHead sortKey="name" currentSortKey={null} currentSortOrder={null} onSort={() => {}}>
+                        資格名
+                      </SortableTableHead>
+                      <SortableTableHead sortKey="code" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[100px]">
+                        コード
+                      </SortableTableHead>
+                      <SortableTableHead sortKey="category" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[100px]">
+                        カテゴリ
+                      </SortableTableHead>
+                      <SortableTableHead sortKey="isActive" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[80px]">
+                        ステータス
+                      </SortableTableHead>
+                      <SortableTableHead sortKey="" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[160px] text-right cursor-default hover:bg-transparent">
+                        操作
+                      </SortableTableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedItems.map((q, index) => {
+                      const isFirst = index === 0;
+                      const isLast = index === sortedItems.length - 1;
+                      return (
+                        <TableRow key={q.id} className="border-b border-border">
+                          <TableCell className="pl-6">
+                            <Checkbox aria-label={`${q.name} を選択`} />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm text-muted-foreground">{q.sortOrder}</span>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleMove(q.id, "up")} disabled={isFirst}>
+                                <ArrowUp className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleMove(q.id, "down")} disabled={isLast}>
+                                <ArrowDown className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{q.name}</TableCell>
+                          <TableCell className="text-muted-foreground">{q.code}</TableCell>
+                          <TableCell className="text-muted-foreground">{q.category}</TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${q.isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                              {q.isActive ? "有効" : "無効"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Link href={`/qualifications/${q.id}/edit`}><Edit className="h-4 w-4" /></Link>
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleToggleActive(q.id)}>
+                                {q.isActive ? "無効" : "有効"}
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => handleDelete(q.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+
+                {/* フッター */}
+                <div className="flex items-center justify-between border-t border-border px-6 py-3">
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" disabled>
+                    一括削除
+                  </Button>
+                  <div className="text-sm text-muted-foreground">
+                    全 {sortedItems.length} 件 (1/1ページ)
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">表示件数:</span>
+                      <div className="flex gap-1">
+                        {[20, 50, 100].map((size) => (
+                          <Button key={size} variant={size === 20 ? "default" : "outline"} size="sm" className="h-7 px-2 text-xs">
+                            {size}件
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" disabled>前へ</Button>
+                      <span className="px-2 text-sm">1</span>
+                      <Button variant="ghost" size="sm" disabled>次へ</Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 

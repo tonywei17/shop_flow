@@ -3,7 +3,14 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard/header";
-import { Search, Filter, Download, Calendar, MapPin, Award, Users } from "lucide-react";
+import { Download, Calendar, MapPin, Award, Users } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTableHead, type SortOrder } from "@/components/ui/sortable-table-head";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const applicationTypes = [
   { value: "all", label: "全ての種類" },
@@ -98,9 +105,16 @@ export default function ApplicationsPage() {
   const [keyword, setKeyword] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+
+  const handleSort = (key: string, order: SortOrder) => {
+    setSortKey(order ? key : null);
+    setSortOrder(order);
+  };
 
   const filteredApplications = useMemo(() => {
-    return applications.filter((application) => {
+    let result = applications.filter((application) => {
       const matchesKeyword = keyword
         ? application.title.includes(keyword) || application.applicantName.includes(keyword)
         : true;
@@ -108,7 +122,19 @@ export default function ApplicationsPage() {
       const matchesStatus = selectedStatus === "all" || application.status === selectedStatus;
       return matchesKeyword && matchesType && matchesStatus;
     });
-  }, [keyword, selectedType, selectedStatus]);
+    if (sortKey && sortOrder) {
+      result = [...result].sort((a, b) => {
+        const aVal = a[sortKey as keyof Application];
+        const bVal = b[sortKey as keyof Application];
+        if (aVal === bVal) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+        const cmp = aVal < bVal ? -1 : 1;
+        return sortOrder === "asc" ? cmp : -cmp;
+      });
+    }
+    return result;
+  }, [keyword, selectedType, selectedStatus, sortKey, sortOrder]);
 
   const stats = useMemo(() => {
     const totalRevenue = filteredApplications.reduce((sum, application) => sum + application.price, 0);
@@ -133,122 +159,168 @@ export default function ApplicationsPage() {
         <StatCard title="試験" value={`${stats.exams}件`} accent="text-primary" subtitle={`見込み売上 ¥${stats.revenue.toLocaleString()}`} />
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-            <input
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-              type="text"
-              placeholder="申込対象や申込者で検索..."
-              className="flex h-9 w-full rounded-lg border border-input bg-background px-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-            />
+      <Card className="rounded-xl border bg-card shadow-sm">
+        <CardContent className="p-0">
+          {/* テーブルヘッダー */}
+          <div className="flex items-center justify-between border-b border-border px-6 py-3">
+            <div className="flex items-center gap-2">
+              <Checkbox aria-label="全て選択" />
+              <span className="text-sm text-muted-foreground">全て選択</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+                placeholder="申込対象・申込者で検索"
+                className="w-[200px]"
+              />
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="種類" />
+                </SelectTrigger>
+                <SelectContent>
+                  {applicationTypes.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="ステータス" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm">検索</Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                一括操作
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                エクスポート
+              </Button>
+            </div>
           </div>
-          <select
-            className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            value={selectedType}
-            onChange={(event) => setSelectedType(event.target.value)}
-          >
-            {applicationTypes.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className="h-9 rounded-lg border border-input bg-background px-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            value={selectedStatus}
-            onChange={(event) => setSelectedStatus(event.target.value)}
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">
-            <Filter className="h-4 w-4" />
-            詳細フィルター
-          </button>
-          <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            <Download className="h-4 w-4" />
-            エクスポート
-          </button>
-        </div>
-      </div>
 
-      <div className="rounded-2xl border border-border bg-card">
-        <table className="w-full">
-          <thead className="border-b border-border bg-muted/50">
-            <tr>
-              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">申込対象</th>
-              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">カテゴリ/種類</th>
-              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">開催日時</th>
-              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">申込者</th>
-              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">支払ステータス</th>
-              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">申込ステータス</th>
-              <th className="p-4 text-left text-xs font-semibold text-muted-foreground">操作</th>
-            </tr>
-          </thead>
-          <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border">
+                <SortableTableHead sortKey="" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={() => {}} className="w-[40px] pl-6 cursor-default hover:bg-transparent">
+                  <span className="sr-only">選択</span>
+                </SortableTableHead>
+                <SortableTableHead sortKey="title" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort}>
+                  申込対象
+                </SortableTableHead>
+                <SortableTableHead sortKey="category" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[100px]">
+                  カテゴリ
+                </SortableTableHead>
+                <SortableTableHead sortKey="schedule" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[140px]">
+                  開催日時
+                </SortableTableHead>
+                <SortableTableHead sortKey="applicantName" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort}>
+                  申込者
+                </SortableTableHead>
+                <SortableTableHead sortKey="paymentStatus" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[100px]">
+                  支払
+                </SortableTableHead>
+                <SortableTableHead sortKey="status" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={handleSort} className="w-[100px]">
+                  ステータス
+                </SortableTableHead>
+                <SortableTableHead sortKey="" currentSortKey={sortKey} currentSortOrder={sortOrder} onSort={() => {}} className="w-[100px] text-right cursor-default hover:bg-transparent">
+                  操作
+                </SortableTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
             {filteredApplications.map((application) => (
-              <tr key={application.id} className="border-b border-border last:border-b-0 hover:bg-muted/60">
-                <td className="p-4">
-                  <div className="font-semibold text-foreground">{application.title}</div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+              <TableRow key={application.id} className="border-b border-border">
+                <TableCell className="pl-6">
+                  <Checkbox aria-label={`${application.title} を選択`} />
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium">{application.title}</div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     {iconByType(application.eventType)}
                     {application.eventType}
                   </div>
-                </td>
-                <td className="p-4 text-sm text-foreground">{application.category}</td>
-                <td className="p-4 text-sm text-foreground">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                </TableCell>
+                <TableCell className="text-muted-foreground">{application.category}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 text-sm">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     {application.schedule}
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5" />
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3" />
                     {application.location}
                   </div>
-                </td>
-                <td className="p-4 text-sm text-foreground">
-                  <div className="font-medium text-foreground">{application.applicantName}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium">{application.applicantName}</div>
                   <p className="text-xs text-muted-foreground">{application.applicantEmail}</p>
-                  <span
-                    className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      application.membershipType === "premium"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {application.membershipType === "premium" ? "プレミアム会員" : "仮会員"}
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${application.membershipType === "premium" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                    {application.membershipType === "premium" ? "プレミアム" : "仮会員"}
                   </span>
-                </td>
-                <td className="p-4 text-sm font-semibold text-foreground">{application.paymentStatus}</td>
-                <td className="p-4">
-                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(application.status)}`}>
+                </TableCell>
+                <TableCell className="text-sm font-medium">{application.paymentStatus}</TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(application.status)}`}>
                     {application.status}
                   </span>
-                </td>
-                <td className="p-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/${application.eventType === "試験" ? "exams" : application.eventType === "研修" ? "trainings" : "experiences"}/${application.id}`}
-                      className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:bg-muted"
-                    >
-                      詳細
-                    </Link>
-                    <button className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:bg-muted">
-                      更新
-                    </button>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                      <Link href={`/${application.eventType === "試験" ? "exams" : application.eventType === "研修" ? "trainings" : "experiences"}/${application.id}`}>
+                        詳細
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">更新</Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
+            </TableBody>
+          </Table>
+
+          {/* フッター */}
+          <div className="flex items-center justify-between border-t border-border px-6 py-3">
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" disabled>
+              一括削除
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              全 {filteredApplications.length} 件 (1/1ページ)
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">表示件数:</span>
+                <div className="flex gap-1">
+                  {[20, 50, 100].map((size) => (
+                    <Button key={size} variant={size === 20 ? "default" : "outline"} size="sm" className="h-7 px-2 text-xs">
+                      {size}件
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" disabled>前へ</Button>
+                <span className="px-2 text-sm">1</span>
+                <Button variant="ghost" size="sm" disabled>次へ</Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

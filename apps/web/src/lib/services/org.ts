@@ -5,6 +5,7 @@ import {
   deleteAdminAccount,
   listDepartments,
   deleteDepartment,
+  updateDepartmentProxyBilling,
   listRoles,
   createRole,
   updateRole,
@@ -101,4 +102,11 @@ export async function deleteAdminAccountService(id: string): Promise<void> {
 
 export async function deleteDepartmentService(id: string): Promise<void> {
   return deleteDepartment(id);
+}
+
+export async function updateDepartmentProxyBillingService(
+  id: string,
+  allowProxyBilling: boolean
+): Promise<void> {
+  return updateDepartmentProxyBilling(id, allowProxyBilling);
 }

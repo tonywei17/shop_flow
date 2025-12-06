@@ -20,7 +20,8 @@
     "incremental": true,
     "allowJs": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@enterprise/*": ["../../packages/*/src"]
     },
     "plugins": [
       {

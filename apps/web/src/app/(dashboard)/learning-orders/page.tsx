@@ -1,8 +1,7 @@
 import { DashboardHeader } from "@/components/dashboard/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -182,36 +181,18 @@ export default async function LearningOrdersListPage() {
             <Table className="[&_th]:py-3 [&_td]:py-3">
               <TableHeader>
                 <TableRow className="border-b border-border text-sm text-foreground">
-                  <SortableTableHead sortKey="" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[36px] pl-6 pr-3 cursor-default hover:bg-transparent">
+                  <TableHead className="w-[36px] pl-6 pr-3">
                     <Checkbox aria-label="行を選択" />
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="id" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[180px]">
-                    ID
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="displayId" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
-                    注文番号
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="category" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
-                    注文分類
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="status" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
-                    ステータス
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="paymentStatus" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[160px]">
-                    支払いステータス
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="email" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[180px]">
-                    顧客メール
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="total" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[140px]">
-                    金額
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="createdAt" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[180px]">
-                    注文日時
-                  </SortableTableHead>
-                  <SortableTableHead sortKey="" currentSortKey={null} currentSortOrder={null} onSort={() => {}} className="w-[120px] pr-6 text-right cursor-default hover:bg-transparent">
-                    操作
-                  </SortableTableHead>
+                  </TableHead>
+                  <TableHead className="w-[180px]">ID</TableHead>
+                  <TableHead className="w-[140px]">注文番号</TableHead>
+                  <TableHead className="w-[140px]">注文分類</TableHead>
+                  <TableHead className="w-[140px]">ステータス</TableHead>
+                  <TableHead className="w-[160px]">支払いステータス</TableHead>
+                  <TableHead className="w-[180px]">顧客メール</TableHead>
+                  <TableHead className="w-[140px]">金額</TableHead>
+                  <TableHead className="w-[180px]">注文日時</TableHead>
+                  <TableHead className="w-[120px] pr-6 text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

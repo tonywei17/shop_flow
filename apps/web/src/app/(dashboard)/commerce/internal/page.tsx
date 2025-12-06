@@ -4,9 +4,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { listProducts } from "@enterprise/db";
 
 export default async function InternalProductsPage() {
-  const { items } = await listProducts({ limit: 50 }).catch((error) => {
+  const { products } = await listProducts({ limit: 50 }).catch((error) => {
     console.error("Failed to load Supabase products for internal commerce page", error);
-    return { items: [], count: 0 };
+    return { products: [], count: 0 };
   });
   return (
     <div className="flex flex-col min-h-screen">
@@ -17,7 +17,7 @@ export default async function InternalProductsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>SKU</TableHead>
+                  <TableHead>商品コード</TableHead>
                   <TableHead>商品名</TableHead>
                   <TableHead>小売価格 (JPY)</TableHead>
                   <TableHead>在庫数</TableHead>
@@ -25,14 +25,14 @@ export default async function InternalProductsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.length > 0 ? (
-                  items.map((p) => (
+                {products.length > 0 ? (
+                  products.map((p) => (
                     <TableRow key={p.id}>
-                      <TableCell className="font-mono text-xs">{p.sku}</TableCell>
-                      <TableCell>{p.title}</TableCell>
-                      <TableCell>{(p.price_retail_cents ?? 0) / 100}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.code}</TableCell>
+                      <TableCell>{p.name}</TableCell>
+                      <TableCell>¥{p.price_retail?.toLocaleString() ?? 0}</TableCell>
                       <TableCell>{p.stock ?? 0}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs">{new Date(p.created_at).toLocaleString("ja-JP")}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">{p.created_at ? new Date(p.created_at).toLocaleString("ja-JP") : "-"}</TableCell>
                     </TableRow>
                   ))
                 ) : (

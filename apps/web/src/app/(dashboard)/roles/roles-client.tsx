@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RoleRecord } from "@enterprise/db";
 import type { DataScopeType } from "@/lib/validation/roles";
+import type { PriceType } from "@enterprise/db";
 import { DepartmentMultiSelect, type Department } from "@/components/department-multi-select";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { navSections } from "@/components/dashboard/nav-items";
@@ -42,13 +43,28 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Download, Edit, Plus } from "lucide-react";
+import { Download, Edit, Plus, Store } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
 import {
   SortableTableHead,
   updateSortSearchParams,
   type SortOrder as SortOrderType,
 } from "@/components/ui/sortable-table-head";
+
+const PRICE_TYPE_OPTIONS: { value: PriceType; label: string }[] = [
+  { value: "hq", label: "本部価格" },
+  { value: "branch", label: "支局価格" },
+  { value: "classroom", label: "教室価格" },
+  { value: "retail", label: "一般価格" },
+];
 
 const DATA_SCOPE_OPTIONS: { value: DataScopeType; label: string; description: string }[] = [
   { value: "all", label: "すべてのデータ", description: "全ての部署のデータにアクセス可能" },
@@ -192,6 +208,9 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
   // Data scope state
   const [dataScopeType, setDataScopeType] = React.useState<DataScopeType>("all");
   const [allowedDepartmentIds, setAllowedDepartmentIds] = React.useState<string[]>([]);
+  // Storefront access state
+  const [canAccessStorefront, setCanAccessStorefront] = React.useState(false);
+  const [defaultPriceType, setDefaultPriceType] = React.useState<PriceType>("retail");
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const pageSizeOptions = [20, 50, 100];
 
@@ -305,6 +324,8 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
             status: status || "有効",
             description: payload.description ? String(payload.description) : null,
             feature_permissions: selectedFeatures,
+            can_access_storefront: canAccessStorefront,
+            default_price_type: defaultPriceType,
           }),
         });
 
@@ -329,6 +350,8 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
     setSelectedFeatures(ALL_FEATURE_IDS);
     setDataScopeType("all");
     setAllowedDepartmentIds([]);
+    setCanAccessStorefront(false);
+    setDefaultPriceType("retail");
     setOpen(true);
   };
 
@@ -349,6 +372,9 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
     setDataScopeType(scopeType ?? "all");
     const deptIds = (role as any).allowed_department_ids as string[] | undefined;
     setAllowedDepartmentIds(Array.isArray(deptIds) ? deptIds : []);
+    // Set storefront access from role
+    setCanAccessStorefront((role as any).can_access_storefront ?? false);
+    setDefaultPriceType((role as any).default_price_type ?? "retail");
     setOpen(true);
   };
 
@@ -729,6 +755,53 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
                             );
                           })}
                         </div>
+                      </div>
+                      {/* Storefront Access Settings */}
+                      <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+                        <div className="flex items-center gap-2">
+                          <Store className="h-4 w-4 text-muted-foreground" />
+                          <Label className="text-sm font-medium">オンラインストア設定</Label>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="storefront-access" className="text-sm">
+                              オンラインストアへのアクセス
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              このロールのユーザーが社内ストアにログインできるようにします
+                            </p>
+                          </div>
+                          <Switch
+                            id="storefront-access"
+                            checked={canAccessStorefront}
+                            onCheckedChange={setCanAccessStorefront}
+                          />
+                        </div>
+                        {canAccessStorefront && (
+                          <div className="space-y-2 pt-2 border-t border-border">
+                            <Label htmlFor="price-type" className="text-sm">
+                              デフォルト価格タイプ
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              このロールのユーザーに表示される商品価格
+                            </p>
+                            <Select
+                              value={defaultPriceType}
+                              onValueChange={(value) => setDefaultPriceType(value as PriceType)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="価格タイプを選択" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PRICE_TYPE_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
                       </div>
                       {error ? <p className="text-sm text-destructive">{error}</p> : null}
                       <SheetFooter className="mt-auto border-t border-border px-0 pt-4">

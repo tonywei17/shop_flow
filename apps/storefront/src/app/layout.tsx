@@ -1,31 +1,31 @@
 import type { Metadata } from "next";
 import type { ReactElement, ReactNode } from "react";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { CartProvider } from "@/lib/cart/context";
+import { getCurrentUser } from "@/lib/auth/session";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "社内ストア",
-  description: "Medusa を利用した社内向けストア",
+  description: "社内向け教材・商品販売サイト",
 };
 
 type RootLayoutProps = {
   children: ReactNode;
 };
 
-export default function RootLayout({ children }: RootLayoutProps): ReactElement {
+export default async function RootLayout({ children }: RootLayoutProps): Promise<ReactElement> {
+  const user = await getCurrentUser();
+
   return (
     <html lang="ja">
-      <body>
-        <header style={{ padding: 16, borderBottom: "1px solid #e5e7eb" }}>
-          <div style={{ maxWidth: 960, margin: "0 auto", display: "flex", justifyContent: "space-between" }}>
-            <a href="/" style={{ fontWeight: 700 }}>社内ストア</a>
-            <nav style={{ display: "flex", gap: 12 }}>
-              <a href="/">トップ</a>
-              <a href="/cart">カート</a>
-              <a href="/account">マイページ</a>
-            </nav>
-          </div>
-        </header>
-        <main style={{ maxWidth: 960, margin: "24px auto", padding: 16 }}>{children}</main>
+      <body className="min-h-screen flex flex-col antialiased">
+        <CartProvider>
+          <Header user={user} />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

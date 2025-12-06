@@ -19,6 +19,9 @@
     "jsx": "preserve",
     "incremental": true,
     "allowJs": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "plugins": [
       {
         "name": "next"

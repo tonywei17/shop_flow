@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { FeatureGuard } from "@/components/dashboard/feature-guard";
 import { getSupabaseAdmin } from "@enterprise/db";
 import { navItems, type NavItem } from "@/components/dashboard/nav-items";
+import { UserProvider } from "@/contexts/user-context";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   let allowedFeatureIds: string[] | undefined;
@@ -57,11 +58,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <Sidebar allowedFeatureIds={allowedFeatureIds} />
-      <main className="flex-1 min-w-0 px-0 pb-12 pt-4 md:px-8 md:ml-[268px]">
-        <FeatureGuard allowedFeatureIds={allowedFeatureIds}>{children}</FeatureGuard>
-      </main>
-    </div>
+    <UserProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        <Sidebar allowedFeatureIds={allowedFeatureIds} />
+        <main className="flex-1 min-w-0 px-0 pb-12 pt-4 md:px-8 md:ml-[268px]">
+          <FeatureGuard allowedFeatureIds={allowedFeatureIds}>{children}</FeatureGuard>
+        </main>
+      </div>
+    </UserProvider>
   );
 }

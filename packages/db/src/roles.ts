@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "./client";
 
 export type DataScopeType = "all" | "self_and_descendants" | "self_only" | "custom";
+export type PriceType = "hq" | "branch" | "classroom" | "retail";
 
 export type RoleRecord = {
   id: string;
@@ -13,6 +14,9 @@ export type RoleRecord = {
   status: string;
   description: string | null;
   feature_permissions: string[] | null;
+  // Storefront access settings
+  can_access_storefront?: boolean;
+  default_price_type?: PriceType;
   created_at: string | null;
 };
 
@@ -26,6 +30,9 @@ export type CreateRoleInput = {
   status: string;
   description?: string | null;
   feature_permissions?: string[] | null;
+  // Storefront access settings
+  can_access_storefront?: boolean;
+  default_price_type?: PriceType;
 };
 
 export type UpdateRoleInput = {
@@ -38,6 +45,9 @@ export type UpdateRoleInput = {
   status: string;
   description?: string | null;
   feature_permissions?: string[] | null;
+  // Storefront access settings
+  can_access_storefront?: boolean;
+  default_price_type?: PriceType;
 };
 
 export type SortOrder = "asc" | "desc";
@@ -95,6 +105,8 @@ export async function listRoles(params: ListRolesParams = {}): Promise<{ roles: 
     ...role,
     data_scope_type: role.data_scope_type ?? inferDataScopeType(role.data_scope),
     allowed_department_ids: role.allowed_department_ids ?? [],
+    can_access_storefront: role.can_access_storefront ?? false,
+    default_price_type: role.default_price_type ?? 'retail',
   }));
   return { roles, count: typeof count === "number" ? count : roles.length };
 }
@@ -128,6 +140,8 @@ export async function createRole(input: CreateRoleInput): Promise<RoleRecord> {
     status: input.status,
     description: input.description ?? null,
     feature_permissions: input.feature_permissions ?? null,
+    can_access_storefront: input.can_access_storefront ?? false,
+    default_price_type: input.default_price_type ?? 'retail',
   };
 
   const { data, error } = await sb.from("roles").insert([payload]).select().single();
@@ -163,6 +177,8 @@ export async function updateRole(
     status: input.status,
     description: input.description ?? null,
     feature_permissions: input.feature_permissions ?? null,
+    can_access_storefront: input.can_access_storefront ?? false,
+    default_price_type: input.default_price_type ?? 'retail',
   };
 
   const { data, error } = await sb

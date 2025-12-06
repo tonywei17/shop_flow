@@ -101,7 +101,9 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
           <span>学習プラットフォームへ</span>
         </Link>
         <Link
-          href="/storefront"
+          href="http://localhost:3001"
+          target="_blank"
+          rel="noreferrer"
           onClick={onNavigate}
           className="mt-3 flex items-center justify-center gap-2 rounded-md bg-sidebar-primary px-4 py-3 text-sm font-semibold text-sidebar-primary-foreground shadow-sm transition-colors hover:bg-sidebar-primary/90"
         >

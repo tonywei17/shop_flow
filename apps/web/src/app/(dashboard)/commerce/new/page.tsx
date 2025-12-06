@@ -10,21 +10,19 @@ import { createProduct } from "@enterprise/db";
 export default function CommerceNewPage() {
   async function saveAction(formData: FormData) {
     "use server";
-    const sku = String(formData.get("sku") || "").trim();
-    const title = String(formData.get("title") || "").trim();
+    const code = String(formData.get("code") || "").trim();
+    const name = String(formData.get("name") || "").trim();
     const price = Number(formData.get("price") || 0);
     const stock = Number(formData.get("stock") || 0);
-    const tenant_id = (formData.get("tenant_id") as string | null) || undefined;
 
-    if (!sku || !title) {
+    if (!code || !name) {
       redirect("/commerce/internal");
     }
 
     await createProduct({
-      tenant_id,
-      sku,
-      title,
-      price_retail_cents: Math.max(0, Math.round(price * 100)),
+      code,
+      name,
+      price_retail: Math.max(0, Math.round(price)),
       stock: Math.max(0, Number.isFinite(stock) ? stock : 0),
     });
     redirect("/commerce/internal");
@@ -38,20 +36,16 @@ export default function CommerceNewPage() {
           <CardContent className="p-6">
             <form className="grid gap-4 max-w-xl" action={saveAction}>
               <div className="grid gap-2">
-                <Label htmlFor="tenant_id">テナント ID（任意）</Label>
-                <Input id="tenant_id" name="tenant_id" placeholder="tenant uuid" />
+                <Label htmlFor="code">商品コード</Label>
+                <Input id="code" name="code" placeholder="PROD-001" />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="sku">SKU</Label>
-                <Input id="sku" name="sku" placeholder="SKU-001" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="title">商品名</Label>
-                <Input id="title" name="title" placeholder="社内販売用の名称" />
+                <Label htmlFor="name">商品名</Label>
+                <Input id="name" name="name" placeholder="商品名を入力" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="price">小売価格 (JPY)</Label>
-                <Input id="price" name="price" type="number" step="0.01" placeholder="0.00" />
+                <Input id="price" name="price" type="number" step="1" placeholder="0" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="stock">在庫数</Label>

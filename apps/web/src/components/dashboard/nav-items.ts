@@ -77,6 +77,6 @@ export const navSections: NavSection[] = [
       { label: "マスター管理", href: "/master-data", icon: Database },
     ],
   },
-];
+  ];
 
 export const navItems: NavItem[] = navSections.flatMap((section) => section.items);

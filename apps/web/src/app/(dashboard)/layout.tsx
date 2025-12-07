@@ -5,6 +5,7 @@ import { FeatureGuard } from "@/components/dashboard/feature-guard";
 import { getSupabaseAdmin } from "@enterprise/db";
 import { navItems, type NavItem } from "@/components/dashboard/nav-items";
 import { UserProvider } from "@/contexts/user-context";
+import { AIChatTrigger } from "@/components/ai-assistant";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   let allowedFeatureIds: string[] | undefined;
@@ -64,6 +65,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <main className="flex-1 min-w-0 px-0 pb-12 pt-4 md:px-8 md:ml-[268px]">
           <FeatureGuard allowedFeatureIds={allowedFeatureIds}>{children}</FeatureGuard>
         </main>
+        <AIChatTrigger />
       </div>
     </UserProvider>
   );

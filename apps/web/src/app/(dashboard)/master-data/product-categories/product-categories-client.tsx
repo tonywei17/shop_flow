@@ -187,8 +187,7 @@ export function ProductCategoriesClient({
         alert(message);
         return;
       }
-      const params = new URLSearchParams(searchParams?.toString());
-      router.replace(`${pathname}?${params.toString()}`);
+      router.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : "削除に失敗しました";
       alert(message);
@@ -219,8 +218,7 @@ export function ProductCategoriesClient({
         return;
       }
 
-      const params = new URLSearchParams(searchParams?.toString());
-      router.replace(`${pathname}?${params.toString()}`);
+      router.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : "一括削除に失敗しました";
       if (typeof window !== "undefined") {
@@ -311,8 +309,7 @@ export function ProductCategoriesClient({
       }
 
       setDialogOpen(false);
-      const params = new URLSearchParams(searchParams?.toString());
-      router.replace(`${pathname}?${params.toString()}`);
+      router.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : "保存に失敗しました";
       setSubmitError(message);

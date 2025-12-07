@@ -307,9 +307,7 @@ export function AccountClient({
       }
 
       handleDrawerClose();
-
-      const params = new URLSearchParams(searchParams?.toString());
-      router.replace(`${pathname}?${params.toString()}`);
+      router.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : "アカウントの保存に失敗しました";
       setSubmitError(message);

@@ -15,7 +15,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { LocalSearchInput } from "@/components/ui/local-search-input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -32,11 +32,10 @@ import {
   ChevronsDownUp, 
   ChevronsUpDown, 
   Download, 
-  Search,
   Receipt,
   MapPin,
   User,
-  Phone
+  Phone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -515,15 +514,12 @@ export function DepartmentsTreeClient({
 
           <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
             {/* 検索 */}
-            <div className="relative w-full max-w-xs">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="店番・部署名・責任者・地域で検索"
-                className="pl-9"
-              />
-            </div>
+            <LocalSearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="店番・部署名・責任者・地域で検索"
+              className="w-full max-w-xs"
+            />
 
             {/* 展開/折りたたみボタン */}
             <div className="flex items-center gap-1">
@@ -662,7 +658,7 @@ export function DepartmentsTreeClient({
                         <span className="font-medium text-foreground truncate">
                           {highlightText(node.name, searchTerm)}
                         </span>
-                        {node.category && (
+                        {node.category && node.parent_id && (
                           <Badge 
                             variant="secondary" 
                             className={cn("text-xs flex-shrink-0", getCategoryColor(node.category))}

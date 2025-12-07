@@ -41,8 +41,8 @@ export async function listProductCategories(
   if (params.search) {
     const search = params.search.trim();
     if (search) {
-      // 商品区分ID(コード) も名称も対象に検索
-      query = query.or(`code.eq.${search},name.ilike.%${search}%`);
+      // 商品区分ID(コード) も名称も対象に検索（部分一致）
+      query = query.or(`code.ilike.%${search}%,name.ilike.%${search}%`);
     }
   }
 

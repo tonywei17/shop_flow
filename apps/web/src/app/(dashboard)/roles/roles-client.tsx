@@ -2,12 +2,21 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { RoleRecord } from "@enterprise/db";
+import type { RoleRecord, PriceType } from "@enterprise/db";
 import type { DataScopeType } from "@/lib/validation/roles";
-import type { PriceType } from "@enterprise/db";
+import { getStatusBadge, getScopeBadge } from "@/lib/constants/status-badges";
+import {
+  PRICE_TYPE_OPTIONS,
+  BADGE_COLOR_OPTIONS,
+  getBadgeStyle,
+  DATA_SCOPE_OPTIONS,
+  DATA_SCOPE_LABELS,
+  FEATURE_GROUPS,
+  ALL_FEATURE_IDS,
+  isSuperAdminRole,
+} from "@/lib/constants/roles";
 import { DepartmentMultiSelect, type Department } from "@/components/department-multi-select";
 import { DashboardHeader } from "@/components/dashboard/header";
-import { navSections } from "@/components/dashboard/nav-items";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -58,72 +67,6 @@ import {
   updateSortSearchParams,
   type SortOrder as SortOrderType,
 } from "@/components/ui/sortable-table-head";
-
-const PRICE_TYPE_OPTIONS: { value: PriceType; label: string }[] = [
-  { value: "hq", label: "本部価格" },
-  { value: "branch", label: "支局価格" },
-  { value: "classroom", label: "教室価格" },
-  { value: "retail", label: "一般価格" },
-];
-
-const DATA_SCOPE_OPTIONS: { value: DataScopeType; label: string; description: string }[] = [
-  { value: "all", label: "すべてのデータ", description: "全ての部署のデータにアクセス可能" },
-  { value: "self_and_descendants", label: "所属部署と下位部署", description: "所属部署とその下位部署のデータにアクセス可能" },
-  { value: "self_only", label: "所属部署のみ", description: "所属部署のデータのみアクセス可能" },
-  { value: "custom", label: "カスタム", description: "特定の部署を選択してアクセス範囲を設定" },
-];
-
-const DATA_SCOPE_LABELS: Record<DataScopeType, string> = {
-  all: "全データ",
-  self_and_descendants: "部署+下位",
-  self_only: "部署のみ",
-  custom: "カスタム",
-};
-
-const scopeBadgeMap: Record<string, { label: string; className: string }> = {
-  all: { label: "全データ", className: "bg-primary/10 text-primary" },
-  self_and_descendants: { label: "部署+下位", className: "bg-blue-500/10 text-blue-600" },
-  self_only: { label: "部署のみ", className: "bg-amber-500/10 text-amber-600" },
-  custom: { label: "カスタム", className: "bg-muted text-foreground" },
-  // Legacy values
-  "すべてのデータ権限": { label: "全権限", className: "bg-primary/10 text-primary" },
-  "カスタムデータ権限": { label: "カスタム", className: "bg-muted text-foreground" },
-};
-
-const statusBadgeMap: Record<string, { label: string; className: string }> = {
-  有効: { label: "有効", className: "bg-primary/10 text-primary" },
-  無効: { label: "無効", className: "bg-destructive/10 text-destructive" },
-};
-
-function getScopeBadge(scopeType: string | null | undefined, legacyScope?: string | null) {
-  // First try scopeType (new field)
-  if (scopeType && scopeBadgeMap[scopeType]) {
-    return scopeBadgeMap[scopeType];
-  }
-  // Fallback to legacy scope
-  if (legacyScope && scopeBadgeMap[legacyScope]) {
-    return scopeBadgeMap[legacyScope];
-  }
-  return { label: "-", className: "bg-muted text-muted-foreground" };
-}
-
-function getStatusBadge(status: string | null | undefined) {
-  if (!status) return { label: "-", className: "bg-muted text-muted-foreground" };
-  return statusBadgeMap[status] ?? { label: status, className: "bg-muted text-muted-foreground" };
-}
-
-const FEATURE_GROUPS = navSections.map((section) => ({
-  id: section.label,
-  label: section.label,
-  items: section.items.map((item) => ({
-    id: item.href,
-    label: item.label,
-  })),
-}));
-
-const ALL_FEATURE_IDS: string[] = FEATURE_GROUPS.flatMap((group) =>
-  group.items.map((item) => item.id),
-);
 
 /**
  * 根据 feature_permissions 数组格式化显示功能权限
@@ -211,6 +154,8 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
   // Storefront access state
   const [canAccessStorefront, setCanAccessStorefront] = React.useState(false);
   const [defaultPriceType, setDefaultPriceType] = React.useState<PriceType>("retail");
+  // Badge color state
+  const [badgeColor, setBadgeColor] = React.useState<string | null>(null);
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const pageSizeOptions = [20, 50, 100];
 
@@ -326,6 +271,7 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
             feature_permissions: selectedFeatures,
             can_access_storefront: canAccessStorefront,
             default_price_type: defaultPriceType,
+            badge_color: badgeColor,
           }),
         });
 
@@ -352,6 +298,7 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
     setAllowedDepartmentIds([]);
     setCanAccessStorefront(false);
     setDefaultPriceType("retail");
+    setBadgeColor(null);
     setOpen(true);
   };
 
@@ -375,6 +322,8 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
     // Set storefront access from role
     setCanAccessStorefront((role as any).can_access_storefront ?? false);
     setDefaultPriceType((role as any).default_price_type ?? "retail");
+    // Set badge color from role
+    setBadgeColor((role as any).badge_color ?? null);
     setOpen(true);
   };
 
@@ -756,6 +705,53 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
                           })}
                         </div>
                       </div>
+                      {/* Badge Color Settings */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">ロールタグの色</Label>
+                        <p className="text-xs text-muted-foreground">
+                          このロールの表示色を選択してください。全システムで統一されます。
+                        </p>
+                        <div className="grid grid-cols-6 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setBadgeColor(null)}
+                            className={`h-8 w-full rounded-md border-2 transition-all ${
+                              badgeColor === null
+                                ? "border-primary ring-2 ring-primary/20"
+                                : "border-border hover:border-muted-foreground"
+                            } bg-muted flex items-center justify-center`}
+                          >
+                            <span className="text-[10px] text-muted-foreground">デフォルト</span>
+                          </button>
+                          {BADGE_COLOR_OPTIONS.map((color) => (
+                            <button
+                              key={color.value}
+                              type="button"
+                              onClick={() => setBadgeColor(color.value)}
+                              className={`h-8 w-full rounded-md border-2 transition-all ${
+                                badgeColor === color.value
+                                  ? "border-primary ring-2 ring-primary/20"
+                                  : "border-transparent hover:border-muted-foreground"
+                              }`}
+                              style={{ backgroundColor: `${color.value}20` }}
+                              title={color.label}
+                            >
+                              <span
+                                className="block h-4 w-4 rounded-full mx-auto"
+                                style={{ backgroundColor: color.value }}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                        {badgeColor && (
+                          <div className="flex items-center gap-2 pt-1">
+                            <span className="text-xs text-muted-foreground">プレビュー:</span>
+                            <Badge className={`border-none px-3 py-1 text-[12px] ${getBadgeStyle(badgeColor).bg} ${getBadgeStyle(badgeColor).text}`}>
+                              {editingRole?.name || "ロール名"}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
                       {/* Storefront Access Settings */}
                       <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
                         <div className="flex items-center gap-2">
@@ -890,34 +886,40 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
                 const scopeBadge = getScopeBadge(roleAny.data_scope_type, role.data_scope);
                 const statusBadge = getStatusBadge(role.status);
                 const permissions = formatFeaturePermissions(role.feature_permissions);
+                const roleBadgeStyle = getBadgeStyle(roleAny.badge_color);
+                const isSuperAdmin = role.code === "admin";
                 return (
                   <TableRow key={role.id} className="border-b border-border text-sm">
                     <TableCell className="pl-6 pr-3">
-                      <Checkbox
-                        aria-label={`${role.name} を選択`}
-                        checked={selectedIds.includes(role.id)}
-                        onCheckedChange={(checked) => {
-                          const isChecked = checked === true;
-                          setSelectedIds((prev) => {
-                            if (isChecked) {
-                              if (prev.includes(role.id)) return prev;
-                              return [...prev, role.id];
-                            }
-                            return prev.filter((id) => id !== role.id);
-                          });
-                        }}
-                      />
+                      {isSuperAdmin ? (
+                        <div className="w-4" />
+                      ) : (
+                        <Checkbox
+                          aria-label={`${role.name} を選択`}
+                          checked={selectedIds.includes(role.id)}
+                          onCheckedChange={(checked) => {
+                            const isChecked = checked === true;
+                            setSelectedIds((prev) => {
+                              if (isChecked) {
+                                if (prev.includes(role.id)) return prev;
+                                return [...prev, role.id];
+                              }
+                              return prev.filter((id) => id !== role.id);
+                            });
+                          }}
+                        />
+                      )}
                     </TableCell>
                     <TableCell className="font-medium text-foreground">{role.role_id ?? "-"}</TableCell>
                     <TableCell className="font-mono text-muted-foreground">{role.code}</TableCell>
                     <TableCell>
-                      <Badge className="border-none px-3 py-1 text-[12px] bg-muted text-foreground">{role.name}</Badge>
+                      <Badge className={`border-none px-3 py-1 text-[12px] hover:bg-transparent ${roleBadgeStyle.bg} ${roleBadgeStyle.text}`}>{role.name}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={`border-none px-3 py-1 text-[12px] ${scopeBadge.className}`}>{scopeBadge.label}</Badge>
+                      <Badge className={`border-none px-3 py-1 text-[12px] hover:bg-transparent ${scopeBadge.className}`}>{scopeBadge.label}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={`border-none px-3 py-1 text-[12px] ${statusBadge.className}`}>{statusBadge.label}</Badge>
+                      <Badge className={`border-none px-3 py-1 text-[12px] hover:bg-transparent ${statusBadge.className}`}>{statusBadge.label}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {permissions.length === 1 ? (
@@ -931,25 +933,29 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
                       )}
                     </TableCell>
                     <TableCell className="pr-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
-                          onClick={() => handleOpenEdit(role)}
-                        >
-                          <Edit className="h-4 w-4" />
-                          編集
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="px-2 py-1 text-xs text-destructive border-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(role)}
-                        >
-                          削除
-                        </Button>
-                      </div>
+                      {isSuperAdmin ? (
+                        <span className="text-xs text-muted-foreground">システム管理者</span>
+                      ) : (
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
+                            onClick={() => handleOpenEdit(role)}
+                          >
+                            <Edit className="h-4 w-4" />
+                            編集
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="px-2 py-1 text-xs text-destructive border-destructive hover:bg-destructive/10"
+                            onClick={() => handleDelete(role)}
+                          >
+                            削除
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

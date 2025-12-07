@@ -2,11 +2,18 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ShoppingCart, User, Search, Menu, Package } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ShoppingCart, User, Search, Menu, Package, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCart } from "@/lib/cart/context";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +26,24 @@ type HeaderProps = {
 
 export function Header({ user }: HeaderProps): React.ReactElement {
   const pathname = usePathname();
+  const router = useRouter();
   const { itemCount } = useCart();
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        router.push("/");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const navItems = [
     { href: "/", label: "ホーム" },
@@ -92,12 +116,31 @@ export function Header({ user }: HeaderProps): React.ReactElement {
 
           {/* User */}
           {user ? (
-            <Link href="/account">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">{user.displayName}</span>
-              </Button>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline">{user.displayName}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/account" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    マイページ
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {isLoggingOut ? "ログアウト中..." : "ログアウト"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link href="/login">
               <Button variant="outline" size="sm">

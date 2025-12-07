@@ -14,6 +14,7 @@ export const roleCreateSchema = z.object({
   status: z.string().optional(),
   description: z.string().optional().nullable(),
   feature_permissions: z.array(z.string()).optional(),
+  badge_color: z.string().optional().nullable(),
 });
 
 export type RoleCreateInput = z.infer<typeof roleCreateSchema>;

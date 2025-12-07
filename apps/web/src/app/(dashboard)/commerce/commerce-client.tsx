@@ -13,6 +13,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -49,7 +50,6 @@ import {
 import { 
   Download, 
   Plus, 
-  Search, 
   MoreHorizontal, 
   Pencil, 
   Trash2,
@@ -63,6 +63,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProductImageManager } from "@/components/product-image-manager";
+import { HighlightText } from "@/components/ui/highlight-text";
 
 // ============================================================
 // 类型定义
@@ -165,6 +166,7 @@ export function CommerceClient({
   // 状态
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [searchTerm, setSearchTerm] = React.useState(pagination.search);
+  const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [drawerState, setDrawerState] = React.useState<DrawerState>({
     open: false,
     mode: "create",
@@ -199,10 +201,44 @@ export function CommerceClient({
     [router, searchParams],
   );
 
-  // 搜索处理
-  const handleSearch = React.useCallback(() => {
-    updateQuery({ q: searchTerm, page: 1 });
-  }, [searchTerm, updateQuery]);
+  // 搜索处理 - debounced with minimum characters
+  const lastSearchRef = React.useRef(pagination.search);
+  
+  const handleSearchChange = React.useCallback(
+    (value: string) => {
+      setSearchTerm(value);
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      
+      const trimmed = value.trim();
+      
+      // Don't search if below 2 characters (unless clearing)
+      if (trimmed.length > 0 && trimmed.length < 2) {
+        return;
+      }
+      
+      // Skip if same as last search
+      if (trimmed === lastSearchRef.current) {
+        return;
+      }
+      
+      searchTimeoutRef.current = setTimeout(() => {
+        lastSearchRef.current = trimmed;
+        updateQuery({ q: trimmed || null, page: 1 });
+      }, 500);
+    },
+    [updateQuery]
+  );
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 排序处理
   const handleSort = React.useCallback(
@@ -439,11 +475,8 @@ export function CommerceClient({
 
             {/* 中央：検索とフィルター */}
             <div className="flex items-center gap-2">
-              <Input
+              <SearchInput
                 placeholder="商品コード・商品名で検索"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 className="w-[240px]"
               />
               <Select
@@ -475,9 +508,6 @@ export function CommerceClient({
                   <SelectItem value="inactive">非公開</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={handleSearch}>
-                検索
-              </Button>
             </div>
 
             {/* 右側：操作ボタン */}
@@ -620,8 +650,12 @@ export function CommerceClient({
                         aria-label={`${product.name} を選択`}
                       />
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{product.code}</TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <HighlightText text={product.code} searchTerm={searchTerm} />
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <HighlightText text={product.name} searchTerm={searchTerm} />
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {product.category_name || "—"}
                     </TableCell>

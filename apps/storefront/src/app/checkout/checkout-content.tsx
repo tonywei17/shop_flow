@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/lib/cart/context";
+import { useStoreSettings, calculateShippingFee } from "@/lib/store-settings-context";
 import { formatPrice } from "@/lib/utils";
 import type { StorefrontUser } from "@/lib/auth/types";
-import { Loader2, CreditCard, Package, MapPin } from "lucide-react";
+import { Loader2, CreditCard, Package, MapPin, AlertCircle } from "lucide-react";
 
 type CheckoutContentProps = {
   user: StorefrontUser | null;
@@ -19,8 +20,25 @@ type CheckoutContentProps = {
 export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElement {
   const router = useRouter();
   const { cart, clearCart } = useCart();
+  const { settings, isMaintenanceMode } = useStoreSettings();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Calculate shipping fee based on store settings
+  const shippingFee = settings
+    ? calculateShippingFee(
+        cart.subtotal,
+        settings.shipping_fee,
+        settings.free_shipping_threshold
+      )
+    : 0;
+
+  // Calculate total with shipping
+  const totalWithShipping = cart.total + shippingFee;
+
+  // Check minimum order amount
+  const minimumOrderAmount = settings?.minimum_order_amount ?? 0;
+  const isBelowMinimum = minimumOrderAmount > 0 && cart.subtotal < minimumOrderAmount;
 
   // Shipping address form state
   const [address, setAddress] = React.useState({
@@ -32,6 +50,20 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
     addressLine2: "",
     phone: "",
   });
+
+  // Show maintenance mode message
+  if (isMaintenanceMode) {
+    return (
+      <div className="text-center py-16">
+        <AlertCircle className="h-16 w-16 mx-auto text-amber-500 mb-4" />
+        <h2 className="text-xl font-semibold mb-2">メンテナンス中</h2>
+        <p className="text-muted-foreground mb-6">
+          現在、ストアはメンテナンス中です。しばらくお待ちください。
+        </p>
+        <Button onClick={() => router.push("/")}>トップページへ</Button>
+      </div>
+    );
+  }
 
   if (cart.items.length === 0) {
     return (
@@ -61,7 +93,8 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
           shippingAddress: address,
           subtotal: cart.subtotal,
           taxAmount: cart.taxAmount,
-          total: cart.total,
+          shippingFee: shippingFee,
+          total: totalWithShipping,
         }),
       });
 
@@ -249,13 +282,30 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">送料</span>
-                <span>無料</span>
+                {shippingFee === 0 ? (
+                  <span className="text-green-600">無料</span>
+                ) : (
+                  <span>{formatPrice(shippingFee)}</span>
+                )}
               </div>
+              {settings?.free_shipping_threshold && shippingFee > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  あと{formatPrice(settings.free_shipping_threshold - cart.subtotal)}で送料無料
+                </p>
+              )}
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>合計（税込）</span>
-                <span>{formatPrice(cart.total)}</span>
+                <span>{formatPrice(totalWithShipping)}</span>
               </div>
+              {isBelowMinimum && (
+                <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>最低注文金額は{formatPrice(minimumOrderAmount)}です</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex-col gap-3">
               {error && (
@@ -267,7 +317,7 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
                 type="submit"
                 className="w-full"
                 size="lg"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isBelowMinimum}
               >
                 {isSubmitting ? (
                   <>

@@ -17,6 +17,8 @@ export type RoleRecord = {
   // Storefront access settings
   can_access_storefront?: boolean;
   default_price_type?: PriceType;
+  // Badge color for role tag display
+  badge_color?: string | null;
   created_at: string | null;
 };
 
@@ -33,6 +35,8 @@ export type CreateRoleInput = {
   // Storefront access settings
   can_access_storefront?: boolean;
   default_price_type?: PriceType;
+  // Badge color for role tag display
+  badge_color?: string | null;
 };
 
 export type UpdateRoleInput = {
@@ -48,6 +52,8 @@ export type UpdateRoleInput = {
   // Storefront access settings
   can_access_storefront?: boolean;
   default_price_type?: PriceType;
+  // Badge color for role tag display
+  badge_color?: string | null;
 };
 
 export type SortOrder = "asc" | "desc";
@@ -142,6 +148,7 @@ export async function createRole(input: CreateRoleInput): Promise<RoleRecord> {
     feature_permissions: input.feature_permissions ?? null,
     can_access_storefront: input.can_access_storefront ?? false,
     default_price_type: input.default_price_type ?? 'retail',
+    badge_color: input.badge_color ?? null,
   };
 
   const { data, error } = await sb.from("roles").insert([payload]).select().single();
@@ -179,6 +186,7 @@ export async function updateRole(
     feature_permissions: input.feature_permissions ?? null,
     can_access_storefront: input.can_access_storefront ?? false,
     default_price_type: input.default_price_type ?? 'retail',
+    badge_color: input.badge_color ?? null,
   };
 
   const { data, error } = await sb

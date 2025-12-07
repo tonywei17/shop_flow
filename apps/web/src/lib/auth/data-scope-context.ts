@@ -35,6 +35,20 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       return null;
     }
 
+    // Check if this is the env super admin
+    const envAdminId = process.env.ADMIN_LOGIN_ID;
+    if (envAdminId && adminAccountId === envAdminId) {
+      return {
+        id: envAdminId,
+        accountId: "admin",
+        displayName: "システム管理者",
+        departmentId: null,
+        departmentName: "リトミック本部",
+        roleId: null,
+        roleCode: "super_admin",
+      };
+    }
+
     const sb = getSupabaseAdmin();
     const { data: account, error } = await sb
       .from("admin_accounts")

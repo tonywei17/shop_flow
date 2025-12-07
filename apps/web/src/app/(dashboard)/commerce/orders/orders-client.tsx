@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { LocalSearchInput } from "@/components/ui/local-search-input";
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Eye, Search, MoreHorizontal, Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Download, Eye, MoreHorizontal, Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
 import type { Order } from "./page";
 
 type OrdersClientProps = {
@@ -182,15 +182,12 @@ export function OrdersClient({ orders, error }: OrdersClientProps) {
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="注文番号・顧客名で検索"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-[240px] pl-9"
-                />
-              </div>
+              <LocalSearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="注文番号・顧客名で検索"
+                className="w-[240px]"
+              />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="ステータス" />

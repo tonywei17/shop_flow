@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
     const status = (data.status ?? "active").trim() || "active";
     const description = data.description ? data.description.trim() : null;
     const featurePermissions = data.feature_permissions ?? [];
+    const badgeColor = data.badge_color ?? null;
 
     if (!name || !code) {
       return NextResponse.json({ error: "Missing name or code" }, { status: 400 });
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
         status: status || "active",
         description,
         feature_permissions: featurePermissions,
+        badge_color: badgeColor,
       });
 
       return NextResponse.json({ role: updated, mode: "edit" }, { status: 200 });
@@ -90,6 +92,7 @@ export async function POST(req: NextRequest) {
       status: status || "active",
       description,
       feature_permissions: featurePermissions,
+      badge_color: badgeColor,
     });
 
     return NextResponse.json({ role: created, mode: "create" }, { status: 201 });

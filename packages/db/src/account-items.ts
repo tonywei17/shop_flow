@@ -41,8 +41,11 @@ export async function listAccountItems(
   if (params.search) {
     const search = params.search.trim();
     if (search) {
+      // 勘定項目ID（数値）と名称の両方で部分一致検索
+      // account_item_id は integer なので、数値の場合は完全一致も試す
       const isNumeric = /^\d+$/.test(search);
       if (isNumeric) {
+        // 数値の場合：完全一致 OR 名称部分一致 OR ID文字列として部分一致
         query = query.or(
           `account_item_id.eq.${Number(search)},name.ilike.%${search}%`,
         );

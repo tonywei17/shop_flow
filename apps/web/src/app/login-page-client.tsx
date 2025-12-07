@@ -1,23 +1,35 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
+const REMEMBER_KEY = "admin_remember_account";
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [account, setAccount] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+
+  // Load saved account on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      setAccount(saved);
+    }
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const account = String(formData.get("account") ?? "").trim();
+    const accountValue = String(formData.get("account") ?? "").trim();
     const password = String(formData.get("password") ?? "");
 
     setError(null);
@@ -27,7 +39,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ account, password }),
+        body: JSON.stringify({ account: accountValue, password }),
       });
 
       if (!res.ok) {
@@ -37,9 +49,22 @@ export default function LoginPage() {
         return;
       }
 
+      // Save or clear remembered account
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, accountValue);
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+
       const redirect = searchParams.get("redirect");
-      const target = redirect && redirect.startsWith("/") ? redirect : "/account";
+      // Only use redirect if it's a valid dashboard path (not /login or /)
+      const isValidRedirect = redirect && 
+        redirect.startsWith("/") && 
+        redirect !== "/" && 
+        redirect !== "/login";
+      const target = isValidRedirect ? redirect : "/departments";
       router.push(target);
+      router.refresh();
     } catch {
       setError("ネットワークエラーが発生しました");
     } finally {
@@ -66,6 +91,8 @@ export default function LoginPage() {
               id="account"
               name="account"
               placeholder="example"
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
               className="h-11 focus-visible:ring-[#0f9d58]"
             />
           </div>
@@ -84,11 +111,12 @@ export default function LoginPage() {
           <div className="flex items-center gap-2 text-left">
             <Checkbox
               id="remember"
-              defaultChecked
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked === true)}
               className="data-[state=checked]:bg-[#0f9d58] data-[state=checked]:border-[#0f9d58]"
             />
             <label htmlFor="remember" className="text-sm text-muted-foreground">
-              パスワードを記憶する
+              アカウントを記憶する
             </label>
           </div>
           {error && (

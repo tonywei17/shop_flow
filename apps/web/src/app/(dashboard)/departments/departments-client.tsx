@@ -16,7 +16,6 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -28,6 +27,8 @@ import {
 } from "@/components/ui/pagination";
 import { Building2, Download, FolderTree } from "lucide-react";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+import { SearchInput } from "@/components/ui/search-input";
+import { HighlightText } from "@/components/ui/highlight-text";
 import {
   SortableTableHead,
   updateSortSearchParams,
@@ -82,13 +83,6 @@ export function DepartmentsClient({
     },
     [pagination.limit, pagination.page, pathname, router, searchParams, totalPages],
   );
-
-  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const query = (form.get("search") as string) ?? "";
-    updateQuery({ page: 1, search: query.trim() });
-  };
 
   const handleSort = (key: string, order: SortOrderType) => {
     const params = updateSortSearchParams(searchParams, key, order);
@@ -251,16 +245,11 @@ export function DepartmentsClient({
             />
             <span>全て選択</span>
           </label>
-          <form className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end" onSubmit={handleSearch}>
-            <Input
-              name="search"
-              defaultValue={pagination.search}
+          <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
+            <SearchInput
               placeholder="店番・部署名・責任者・地域で検索"
               className="w-full max-w-xs"
             />
-            <Button type="submit" variant="outline">
-              検索
-            </Button>
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -313,7 +302,7 @@ export function DepartmentsClient({
                 組織構成を編集
               </Button>
             </div>
-          </form>
+          </div>
         </div>
 
         <Table className="[&_th]:py-3 [&_td]:py-3 text-sm">
@@ -388,22 +377,29 @@ export function DepartmentsClient({
                   />
                 </TableCell>
                 <TableCell className="font-mono text-xs text-muted-foreground">
-                  {dept.code ?? '--'}
+                  <HighlightText text={dept.code ?? '--'} searchTerm={pagination.search} />
                 </TableCell>
                 <TableCell className="text-foreground">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span>{dept.name}</span>
+                    <HighlightText text={dept.name} searchTerm={pagination.search} />
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{dept.category ?? '--'}</TableCell>
-                <TableCell className="text-muted-foreground">{dept.parent_name ?? '—'}</TableCell>
-                <TableCell className="text-muted-foreground">{dept.manager_name || '—'}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  <HighlightText text={dept.category ?? '--'} searchTerm={pagination.search} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  <HighlightText text={dept.parent_name ?? '—'} searchTerm={pagination.search} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  <HighlightText text={dept.manager_name || '—'} searchTerm={pagination.search} />
+                </TableCell>
                 <TableCell className="text-muted-foreground">{dept.phone_primary || '—'}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {[dept.prefecture, dept.city, dept.address_line1, dept.address_line2]
-                    .filter(Boolean)
-                    .join(' ') || '—'}
+                  <HighlightText 
+                    text={[dept.prefecture, dept.city, dept.address_line1, dept.address_line2].filter(Boolean).join(' ') || '—'} 
+                    searchTerm={pagination.search} 
+                  />
                 </TableCell>
                 <TableCell className="pr-6 text-right">
                   <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">

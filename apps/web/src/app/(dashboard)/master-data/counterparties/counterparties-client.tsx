@@ -5,10 +5,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Counterparty } from "@enterprise/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
   SheetContent,
@@ -36,12 +38,15 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+import { SearchInput } from "@/components/ui/search-input";
+import { HighlightText } from "@/components/ui/highlight-text";
 import {
   SortableTableHead,
   updateSortSearchParams,
   type SortOrder as SortOrderType,
 } from "@/components/ui/sortable-table-head";
 import type { MasterPagination } from "../account-items/account-items-client";
+import { getStatusBadge } from "@/lib/constants/status-badges";
 
 type FormMode = "create" | "edit";
 
@@ -116,13 +121,6 @@ export function CounterpartiesClient({
       nextPage: 1,
     });
     router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const q = (formData.get("search") as string) ?? "";
-    updateQuery({ page: 1, search: q.trim() });
   };
 
   const handleSort = (key: string, order: SortOrderType) => {
@@ -347,17 +345,10 @@ export function CounterpartiesClient({
             <span>全て選択</span>
           </label>
           <div className="flex flex-col gap-2 text-xs text-muted-foreground md:flex-row md:items-center md:gap-4">
-            <form className="flex items-center gap-2" onSubmit={handleSearch}>
-              <Input
-                name="search"
-                defaultValue={pagination.search}
-                placeholder="相手先ID・名称で検索"
-                className="h-9 w-[220px]"
-              />
-              <Button type="submit" variant="outline" className="h-9 px-4 text-xs">
-                検索
-              </Button>
-            </form>
+            <SearchInput
+              placeholder="相手先ID・名称で検索"
+              className="w-[220px]"
+            />
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10">
                 <Download className="h-4 w-4" />
@@ -473,10 +464,21 @@ export function CounterpartiesClient({
                   />
                 </TableCell>
                 <TableCell className="font-mono text-xs text-muted-foreground">
-                  {item.counterparty_id}
+                  <HighlightText text={String(item.counterparty_id)} searchTerm={pagination.search} />
                 </TableCell>
-                <TableCell className="text-foreground">{item.name ?? "-"}</TableCell>
-                <TableCell className="text-muted-foreground">{item.status}</TableCell>
+                <TableCell className="text-foreground">
+                  <HighlightText text={item.name ?? "-"} searchTerm={pagination.search} />
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const badge = getStatusBadge(item.status);
+                    return (
+                      <Badge className={`border-none px-3 py-1 text-[12px] hover:bg-transparent ${badge.className}`}>
+                        {badge.label}
+                      </Badge>
+                    );
+                  })()}
+                </TableCell>
                 <TableCell className="pr-6 text-right">
                   <Button
                     variant="ghost"
@@ -632,15 +634,27 @@ export function CounterpartiesClient({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="counterparty-status">ステータス</Label>
-                  <Input
-                    id="counterparty-status"
+                  <Label>ステータス</Label>
+                  <RadioGroup
                     value={formState.status}
-                    onChange={(event) =>
-                      setFormState((prev) => ({ ...prev, status: event.target.value }))
+                    onValueChange={(value) =>
+                      setFormState((prev) => ({ ...prev, status: value }))
                     }
-                    placeholder="有効"
-                  />
+                    className="flex flex-row gap-6"
+                  >
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem id="status-active" value="有効" />
+                      <Label htmlFor="status-active" className="text-sm font-normal cursor-pointer">
+                        有効
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem id="status-inactive" value="無効" />
+                      <Label htmlFor="status-inactive" className="text-sm font-normal cursor-pointer">
+                        無効
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
                 {submitError ? (
                   <p className="text-sm text-destructive">{submitError}</p>

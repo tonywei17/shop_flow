@@ -83,3 +83,17 @@ export {
   applyDataScopeFilter,
 } from "./data-scope";
 export type { DataScopeContext } from "./data-scope";
+
+// Store settings
+export {
+  getStoreSettings,
+  updateStoreSettings,
+  initializeStoreSettings,
+} from "./store-settings";
+export type {
+  StoreSettings,
+  UpdateStoreSettingsInput,
+  StoreStatus,
+  TaxType,
+  RoundingMethod,
+} from "./store-settings";

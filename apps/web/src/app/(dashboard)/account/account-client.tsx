@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AdminAccount, RoleRecord, DepartmentWithParent } from "@enterprise/db";
+import { getStatusBadge } from "@/lib/constants/status-badges";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,6 +35,8 @@ import { Download, Edit, Plus } from "lucide-react";
 import { ManagementDrawer } from "@/components/dashboard/management-drawer";
 import { DepartmentTreeSelect } from "@/components/department-tree-select";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
+import { SearchInput } from "@/components/ui/search-input";
+import { HighlightText } from "@/components/ui/highlight-text";
 import {
   SortableTableHead,
   updateSortSearchParams,
@@ -54,17 +57,6 @@ export type AccountsPagination = {
   sortKey: string | null;
   sortOrder: SortOrder;
 };
-
-const statusBadgeMap: Record<string, { label: string; className: string }> = {
-  有効: { label: "有効", className: "bg-[#e5f5ec] text-[#00ac4d]" },
-  無効: { label: "無効", className: "bg-[#fff0f0] text-[#d82b2b]" },
-  停止中: { label: "停止中", className: "bg-[#fff5e6] text-[#d9822b]" },
-};
-
-function getStatusBadge(status: string | null | undefined) {
-  if (!status) return { label: "未設定", className: "bg-[#f4f4f5] text-[#6b7280]" };
-  return statusBadgeMap[status] ?? { label: status, className: "bg-[#f4f4f5] text-[#6b7280]" };
-}
 
 type AccountFormState = {
   accountId: string;
@@ -244,13 +236,6 @@ export function AccountClient({
       const remove = new Set(allCurrentPageIds);
       setSelectedIds((prev) => prev.filter((id) => !remove.has(id)));
     }
-  };
-
-  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const query = (form.get("search") as string) ?? "";
-    updateQuery({ page: 1, search: query.trim() });
   };
 
   const handleSort = (key: string, order: SortOrderType) => {
@@ -456,17 +441,10 @@ export function AccountClient({
             <span>全て選択</span>
           </label>
           <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
-            <form className="flex items-center gap-2" onSubmit={handleSearch}>
-              <Input
-                name="search"
-                defaultValue={pagination.search}
-                placeholder="氏名・メール・IDで検索"
-                className="h-9 w-[220px]"
-              />
-              <Button type="submit" variant="outline">
-                検索
-              </Button>
-            </form>
+            <SearchInput
+              placeholder="氏名・メール・IDで検索"
+              className="w-[220px]"
+            />
             <Button
               variant={pagination.scope === "storefront" ? "default" : "outline"}
               className="h-9"
@@ -616,29 +594,37 @@ export function AccountClient({
               return (
                 <TableRow key={account.id} className="border-b border-border text-sm">
                   <TableCell className="pl-6 pr-3">
-                    <Checkbox
-                      aria-label={`${account.display_name} を選択`}
-                      checked={selectedIds.includes(account.id)}
-                      onCheckedChange={(checked) => {
-                        const isChecked = checked === true;
-                        setSelectedIds((prev) => {
-                          if (isChecked) {
-                            if (prev.includes(account.id)) return prev;
-                            return [...prev, account.id];
-                          }
-                          return prev.filter((id) => id !== account.id);
-                        });
-                      }}
-                    />
+                    {account.account_id === "admin" ? (
+                      <div className="w-4" />
+                    ) : (
+                      <Checkbox
+                        aria-label={`${account.display_name} を選択`}
+                        checked={selectedIds.includes(account.id)}
+                        onCheckedChange={(checked) => {
+                          const isChecked = checked === true;
+                          setSelectedIds((prev) => {
+                            if (isChecked) {
+                              if (prev.includes(account.id)) return prev;
+                              return [...prev, account.id];
+                            }
+                            return prev.filter((id) => id !== account.id);
+                          });
+                        }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     <div className="flex flex-col">
-                      <span>{account.account_id}</span>
+                      <HighlightText text={account.account_id} searchTerm={pagination.search} />
                       <span className="text-[10px] text-muted-foreground">#{account.external_id ?? '—'}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-foreground">{account.display_name}</TableCell>
-                  <TableCell className="text-muted-foreground">{account.email ?? '—'}</TableCell>
+                  <TableCell className="text-foreground">
+                    <HighlightText text={account.display_name} searchTerm={pagination.search} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    <HighlightText text={account.email ?? '—'} searchTerm={pagination.search} />
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {(() => {
                       const deptInfo = getDepartmentDisplay(account.department_id, account.department_name);
@@ -662,15 +648,19 @@ export function AccountClient({
                     <Badge className={`border-none px-3 py-1 text-[12px] ${statusBadge.className}`}>{statusBadge.label}</Badge>
                   </TableCell>
                   <TableCell className="pr-6 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
-                      onClick={() => handleDrawerOpen("edit", account)}
-                    >
-                      <Edit className="h-4 w-4" />
-                      編集
-                    </Button>
+                    {account.account_id === "admin" ? (
+                      <span className="text-xs text-muted-foreground">システム管理者</span>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 px-2 py-1 text-primary hover:bg-primary/10"
+                        onClick={() => handleDrawerOpen("edit", account)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        編集
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               );

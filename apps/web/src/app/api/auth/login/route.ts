@@ -32,6 +32,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "アカウントまたはパスワードが正しくありません" }, { status: 401 });
   }
 
+  // Check if this is the env super admin first (takes priority)
+  const envAdminId = process.env.ADMIN_LOGIN_ID;
+  if (envAdminId && account === envAdminId) {
+    const res = NextResponse.json({
+      ok: true,
+      accountId: envAdminId,
+      displayName: "システム管理者",
+    });
+
+    res.cookies.set({
+      name: "admin_session",
+      value: sessionToken,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 8,
+    });
+
+    res.cookies.set({
+      name: "admin_account_id",
+      value: envAdminId,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 8,
+    });
+
+    return res;
+  }
+
   try {
     const sb = getSupabaseAdmin();
     const { data, error } = await sb
@@ -44,40 +76,6 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("[auth/login] Failed to fetch admin_accounts", error);
-      const message = (error as any)?.message;
-      const isUnauthorized = typeof message === "string" && message.toLowerCase().includes("401");
-      const envAdminId = process.env.ADMIN_LOGIN_ID;
-
-      if (envAdminId && account === envAdminId && password === adminPassword && isUnauthorized) {
-        const res = NextResponse.json({
-          ok: true,
-          accountId: envAdminId,
-          displayName: "システム管理者",
-        });
-
-        res.cookies.set({
-          name: "admin_session",
-          value: sessionToken,
-          httpOnly: true,
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-          path: "/",
-          maxAge: 60 * 60 * 8,
-        });
-
-        res.cookies.set({
-          name: "admin_account_id",
-          value: envAdminId,
-          httpOnly: true,
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-          path: "/",
-          maxAge: 60 * 60 * 8,
-        });
-
-        return res;
-      }
-
       return NextResponse.json({ error: "アカウント情報の取得に失敗しました" }, { status: 500 });
     }
 

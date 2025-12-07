@@ -92,13 +92,19 @@
 
 | 文件 | 说明 | 状态 |
 |------|------|------|
-| `MY_SUPABASE_COMPLETE_GUIDE.md` | Supabase 完整指南 | ⭐ 主线 |
-| `PACKAGE-MANAGER-GUIDE.md` | pnpm 包管理规范 | ✅ 有效 |
-| `QUICK-START.md` | 快速开始指南 | ✅ 有效 |
-| `READINESS-CHECKLIST.md` | 准备清单 | ✅ 有效 |
-| `implementation-guide.md` | 实施指南 | ✅ 有效 |
+| `MY_SUPABASE_COMPLETE_GUIDE.md` | Supabase 完整指南 | 主线 |
+| `PACKAGE-MANAGER-GUIDE.md` | pnpm 包管理规范 | 有效 |
+| `QUICK-START.md` | 快速开始指南 | 有效 |
+| `READINESS-CHECKLIST.md` | 准备清单 | 有效 |
+| `implementation-guide.md` | 实施指南 | 有效 |
 
-## 8. 其他目录
+## 8. 部署文档（deployment/）
+
+| 文件 | 说明 | 状态 |
+|------|------|------|
+| `PRODUCTION-DEPLOYMENT.md` | 生产环境部署指南 | 主线 |
+
+## 9. 其他目录
 
 | 目录 | 说明 |
 |------|------|
@@ -109,9 +115,20 @@
 
 ---
 
+## 生产环境信息
+
+| 服务 | URL |
+|------|-----|
+| 管理端 (web) | https://eurhythmics.nexus-tech.cloud |
+| 商店前端 (storefront) | https://eurhythmics-shop.nexus-tech.cloud |
+| 学習プラットフォーム (learning) | https://e-learning.nexus-tech.cloud |
+
+---
+
 > 整体约定：
 > - **技术/架构现状优先参考**：`TECHNICAL_ARCHITECTURE.md`、`SUPABASE-SCHEMA-STRATEGY.md`、`PACKAGE-MANAGER-GUIDE.md`。
+> - **部署/运维优先参考**：`deployment/PRODUCTION-DEPLOYMENT.md`。
 > - **业务/产品现状优先参考**：`PRD.md`、`notification-system-summary.md`、Learning 相关文档。
 > - **历史/备选方案**：`SYSTEM_ARCHITECTURE_MEDUSA.md`、早期 DEVLOG/DAILY-LOG。
 > 
-> 如果新增了重要模块或架构变更，建议同步更新本索引，以便快速定位“哪篇文档还代表当前真相”。
+> 如果新增了重要模块或架构变更，建议同步更新本索引，以便快速定位"哪篇文档还代表当前真相"。

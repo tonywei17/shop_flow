@@ -1,6 +1,6 @@
 # Shop Flow 文档中心
 
-> 最后更新：2025-12-04
+> 最后更新：2025-12-07
 
 ## 📁 目录结构
 
@@ -13,7 +13,12 @@ docs/
 │   ├── SYSTEM_ARCHITECTURE.md      # 系统架构总览 ⭐
 │   ├── TECHNICAL_ARCHITECTURE.md   # 技术架构详细
 │   ├── SUPABASE-SCHEMA-STRATEGY.md # 数据库策略
+│   ├── PRODUCT-MANAGEMENT-DESIGN.md # 商品管理设计
+│   ├── STORE-SETTINGS-DESIGN.md    # 商店设置设计 ⭐ NEW
 │   └── SYSTEM_ARCHITECTURE_MEDUSA.md # [历史] Medusa 方案
+│
+├── deployment/               # 🚀 部署文档
+│   └── PRODUCTION-DEPLOYMENT.md    # 生产环境部署指南 ⭐ NEW
 │
 ├── product/                  # 📋 产品文档
 │   ├── PRD.md                      # 产品需求文档
@@ -31,7 +36,10 @@ docs/
 │   └── implementation-guide.md     # 实施指南
 │
 ├── devlogs/                  # 📝 开发日志
-│   ├── DEVLOG-2025-12-04.md        # 最新日志
+│   ├── DEVLOG-2025-12-07.md        # 最新日志 ⭐
+│   ├── DEVLOG-2025-12-06.md
+│   ├── DEVLOG-2025-12-05.md
+│   ├── DEVLOG-2025-12-04.md
 │   ├── DEVLOG-2025-12-03.md
 │   ├── DEVLOG-2025-11-24.md
 │   ├── DEVLOG-2025-11-23.md
@@ -69,10 +77,15 @@ docs/
 2. [技术架构](architecture/TECHNICAL_ARCHITECTURE.md)
 3. [产品需求](product/PRD-DETAILED.md)
 
+### 部署运维
+1. [生产环境部署](deployment/PRODUCTION-DEPLOYMENT.md) ⭐ NEW
+2. [商店设置设计](architecture/STORE-SETTINGS-DESIGN.md)
+3. [商品管理设计](architecture/PRODUCT-MANAGEMENT-DESIGN.md)
+
 ### 开发参考
 1. [实施指南](guides/implementation-guide.md)
 2. [准备清单](guides/READINESS-CHECKLIST.md)
-3. [最新开发日志](devlogs/DEVLOG-2025-12-04.md)
+3. [最新开发日志](devlogs/DEVLOG-2025-12-07.md)
 
 ## 📌 文档状态说明
 
@@ -86,7 +99,9 @@ docs/
 
 | 日期 | 变更 |
 |------|------|
-| 2025-12-04 | 新增 SYSTEM_ARCHITECTURE.md、PRD-DETAILED.md；整理目录结构 |
+| 2025-12-07 | 新增 PRODUCTION-DEPLOYMENT.md、STORE-SETTINGS-DESIGN.md；整理目录结构 |
+| 2025-12-05 | 新增 PRODUCT-MANAGEMENT-DESIGN.md |
+| 2025-12-04 | 新增 SYSTEM_ARCHITECTURE.md、PRD-DETAILED.md |
 | 2025-12-03 | 角色权限系统文档更新 |
 | 2025-11-24 | Supabase 迁移相关文档 |
 

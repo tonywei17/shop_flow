@@ -9,6 +9,10 @@ import { GraduationCap, ShoppingBag } from "lucide-react";
 import { navSections } from "./nav-items";
 import { cn } from "@/lib/utils";
 
+// External app URLs - use environment variables for production
+const LEARNING_PLATFORM_URL = process.env.NEXT_PUBLIC_LEARNING_URL || "http://localhost:3002";
+const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
+
 type SidebarProps = {
   isMobile?: boolean;
   onNavigate?: () => void;
@@ -91,7 +95,7 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
           </div>
         </div>
         <Link
-          href="http://localhost:3002"
+          href={LEARNING_PLATFORM_URL}
           target="_blank"
           rel="noreferrer"
           onClick={onNavigate}
@@ -101,7 +105,7 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
           <span>学習プラットフォームへ</span>
         </Link>
         <Link
-          href="http://localhost:3001"
+          href={STOREFRONT_URL}
           target="_blank"
           rel="noreferrer"
           onClick={onNavigate}

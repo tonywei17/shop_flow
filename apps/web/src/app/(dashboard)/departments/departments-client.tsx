@@ -25,7 +25,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Building2, Download, FolderTree } from "lucide-react";
+import { Building2, Download, FolderTree, Percent } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { HighlightText } from "@/components/ui/highlight-text";
@@ -60,6 +62,8 @@ export function DepartmentsClient({
   const searchParams = useSearchParams();
   const [isExporting, setIsExporting] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const [editingCommissionId, setEditingCommissionId] = React.useState<string | null>(null);
+  const [editingCommissionValue, setEditingCommissionValue] = React.useState<string>("");
 
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const pageSizeOptions = [20, 50, 100];
@@ -232,6 +236,36 @@ export function DepartmentsClient({
     }
   };
 
+  const handleSaveCommissionRate = async (deptId: string) => {
+    const rate = parseFloat(editingCommissionValue);
+    if (isNaN(rate) || rate < 0 || rate > 100) {
+      toast.error("マージンは0〜100の範囲で入力してください");
+      setEditingCommissionId(null);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/internal/departments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deptId, commission_rate: rate }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error || "更新に失敗しました");
+      }
+
+      toast.success("マージンを更新しました");
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "マージンの更新に失敗しました";
+      toast.error(message);
+    } finally {
+      setEditingCommissionId(null);
+    }
+  };
+
   return (
     <Card className="rounded-xl border bg-card shadow-sm">
       <CardContent className="p-0">
@@ -354,7 +388,8 @@ export function DepartmentsClient({
               </SortableTableHead>
               <TableHead className="w-[160px]">電話番号</TableHead>
               <TableHead>所在地</TableHead>
-              <TableHead className="w-[120px] pr-6 text-right">操作</TableHead>
+              <TableHead className="w-[100px]">分成比例</TableHead>
+              <TableHead className="w-[80px] pr-6 text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -401,6 +436,47 @@ export function DepartmentsClient({
                     searchTerm={pagination.search} 
                   />
                 </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {dept.type === '支局' ? (
+                    editingCommissionId === dept.id ? (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          value={editingCommissionValue}
+                          onChange={(e) => setEditingCommissionValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveCommissionRate(dept.id);
+                            } else if (e.key === 'Escape') {
+                              setEditingCommissionId(null);
+                            }
+                          }}
+                          onBlur={() => handleSaveCommissionRate(dept.id)}
+                          className="w-16 h-7 text-xs px-2"
+                          autoFocus
+                        />
+                        <span className="text-xs">%</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingCommissionId(dept.id);
+                          setEditingCommissionValue(String((dept as any).commission_rate ?? 10));
+                        }}
+                        className="flex items-center gap-1 hover:text-primary transition-colors"
+                      >
+                        <Percent className="h-3 w-3" />
+                        <span>{(dept as any).commission_rate ?? 10}%</span>
+                      </button>
+                    )
+                  ) : (
+                    <span className="text-muted-foreground/50">—</span>
+                  )}
+                </TableCell>
                 <TableCell className="pr-6 text-right">
                   <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
                     詳細
@@ -410,7 +486,7 @@ export function DepartmentsClient({
             ))}
             {!departments.length ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={10} className="py-12 text-center text-sm text-muted-foreground">
                   部署データがありません。
                 </TableCell>
               </TableRow>

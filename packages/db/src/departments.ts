@@ -21,6 +21,7 @@ export type DepartmentRecord = {
   address_line2: string | null;
   is_independent: boolean;
   allow_proxy_billing: boolean;
+  commission_rate: number | null; // 支局分成比例（百分比）
   created_at: string | null;
 };
 
@@ -72,6 +73,7 @@ export async function listDepartments(
         "code",
         "is_independent",
         "allow_proxy_billing",
+        "commission_rate",
         "created_at",
       ].join(","),
       { count: "exact" },
@@ -164,4 +166,63 @@ export async function updateDepartmentProxyBilling(
   if (error) {
     throw error;
   }
+}
+
+/**
+ * Update commission rate for a branch department
+ * @param id Department ID
+ * @param commissionRate Commission rate in percentage (e.g., 10.00 for 10%)
+ */
+export async function updateDepartmentCommissionRate(
+  id: string,
+  commissionRate: number
+): Promise<void> {
+  const sb = getSupabaseAdmin();
+  const { error } = await sb
+    .from("departments")
+    .update({ commission_rate: commissionRate })
+    .eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}
+
+/**
+ * Get branch department for a classroom (find parent branch)
+ * @param classroomId Classroom department ID
+ * @returns Branch department with commission rate, or null if not found
+ */
+export async function getBranchForClassroom(
+  classroomId: string
+): Promise<{ id: string; name: string; commission_rate: number } | null> {
+  const sb = getSupabaseAdmin();
+  
+  // First get the classroom's parent_id
+  const { data: classroom, error: classroomError } = await sb
+    .from("departments")
+    .select("parent_id")
+    .eq("id", classroomId)
+    .single();
+  
+  if (classroomError || !classroom?.parent_id) {
+    return null;
+  }
+  
+  // Get the parent branch
+  const { data: branch, error: branchError } = await sb
+    .from("departments")
+    .select("id, name, commission_rate, type")
+    .eq("id", classroom.parent_id)
+    .single();
+  
+  if (branchError || !branch || branch.type !== "支局") {
+    return null;
+  }
+  
+  return {
+    id: branch.id as string,
+    name: branch.name as string,
+    commission_rate: (branch.commission_rate as number) ?? 10.00,
+  };
 }

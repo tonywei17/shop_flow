@@ -6,6 +6,7 @@ import {
   listDepartments,
   deleteDepartment,
   updateDepartmentProxyBilling,
+  updateDepartmentCommissionRate,
   listRoles,
   createRole,
   updateRole,
@@ -109,4 +110,11 @@ export async function updateDepartmentProxyBillingService(
   allowProxyBilling: boolean
 ): Promise<void> {
   return updateDepartmentProxyBilling(id, allowProxyBilling);
+}
+
+export async function updateDepartmentCommissionRateService(
+  id: string,
+  commissionRate: number
+): Promise<void> {
+  return updateDepartmentCommissionRate(id, commissionRate);
 }

@@ -2,6 +2,24 @@
 
 import * as React from "react";
 import type { Cart, CartContextType, CartItem } from "./types";
+import { useStoreSettings } from "@/lib/store-settings-context";
+
+type RoundingMethod = "round" | "floor" | "ceil";
+
+/**
+ * Apply rounding method to a number
+ */
+function applyRounding(value: number, method: RoundingMethod): number {
+  switch (method) {
+    case "floor":
+      return Math.floor(value);
+    case "ceil":
+      return Math.ceil(value);
+    case "round":
+    default:
+      return Math.round(value);
+  }
+}
 
 const CART_STORAGE_KEY = "storefront_cart";
 
@@ -12,14 +30,14 @@ const emptyCart: Cart = {
   total: 0,
 };
 
-function calculateCart(items: CartItem[]): Cart {
+function calculateCart(items: CartItem[], roundingMethod: RoundingMethod = "round"): Cart {
   const subtotal = items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0
   );
   const taxAmount = items.reduce(
     (sum, item) =>
-      sum + Math.floor(item.unitPrice * item.quantity * (item.taxRate / 100)),
+      sum + applyRounding(item.unitPrice * item.quantity * (item.taxRate / 100), roundingMethod),
     0
   );
   return {
@@ -35,6 +53,8 @@ const CartContext = React.createContext<CartContextType | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = React.useState<Cart>(emptyCart);
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const { settings } = useStoreSettings();
+  const roundingMethod = settings?.rounding_method ?? "round";
 
   // Load cart from localStorage on mount
   React.useEffect(() => {
@@ -43,13 +63,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
       if (stored) {
         const items = JSON.parse(stored) as CartItem[];
-        setCart(calculateCart(items));
+        setCart(calculateCart(items, roundingMethod));
       }
     } catch {
       // Ignore errors
     }
     setIsLoaded(true);
-  }, []);
+  }, [roundingMethod]);
 
   // Save cart to localStorage when it changes
   React.useEffect(() => {
@@ -80,18 +100,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ];
         }
 
-        return calculateCart(newItems);
+        return calculateCart(newItems, roundingMethod);
       });
     },
-    []
+    [roundingMethod]
   );
 
   const removeItem = React.useCallback((productId: string) => {
     setCart((prev) => {
       const newItems = prev.items.filter((i) => i.productId !== productId);
-      return calculateCart(newItems);
+      return calculateCart(newItems, roundingMethod);
     });
-  }, []);
+  }, [roundingMethod]);
 
   const updateQuantity = React.useCallback(
     (productId: string, quantity: number) => {
@@ -104,10 +124,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const newItems = prev.items.map((i) =>
           i.productId === productId ? { ...i, quantity } : i
         );
-        return calculateCart(newItems);
+        return calculateCart(newItems, roundingMethod);
       });
     },
-    [removeItem]
+    [removeItem, roundingMethod]
   );
 
   const clearCart = React.useCallback(() => {

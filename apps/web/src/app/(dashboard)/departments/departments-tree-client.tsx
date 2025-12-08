@@ -36,7 +36,10 @@ import {
   MapPin,
   User,
   Phone,
+  Percent,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const DEPARTMENTS_SELECTION_STORAGE_KEY = "departments_selected_ids";
@@ -231,6 +234,8 @@ export function DepartmentsTreeClient({
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [updatingProxyBilling, setUpdatingProxyBilling] = React.useState<string | null>(null);
   const [detailDepartment, setDetailDepartment] = React.useState<DepartmentWithParent | null>(null);
+  const [editingCommissionId, setEditingCommissionId] = React.useState<string | null>(null);
+  const [editingCommissionValue, setEditingCommissionValue] = React.useState<string>("");
 
   // 更新代行請求设置
   const handleToggleProxyBilling = async (id: string, currentValue: boolean) => {
@@ -254,6 +259,37 @@ export function DepartmentsTreeClient({
       alert(message);
     } finally {
       setUpdatingProxyBilling(null);
+    }
+  };
+
+  // 更新分成比例
+  const handleSaveCommissionRate = async (deptId: string) => {
+    const rate = parseFloat(editingCommissionValue);
+    if (isNaN(rate) || rate < 0 || rate > 100) {
+      toast.error("マージンは0〜100の範囲で入力してください");
+      setEditingCommissionId(null);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/internal/departments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deptId, commission_rate: rate }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error || "更新に失敗しました");
+      }
+
+      toast.success("マージンを更新しました");
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "マージンの更新に失敗しました";
+      toast.error(message);
+    } finally {
+      setEditingCommissionId(null);
     }
   };
 
@@ -693,6 +729,47 @@ export function DepartmentsTreeClient({
                       </span>
                     )}
                   </div>
+
+                  {/* 分成比例（支局のみ） */}
+                  {node.type === '支局' && (
+                    <div className="flex items-center gap-1 flex-shrink-0 min-w-[80px]">
+                      <Percent className="h-3.5 w-3.5 text-muted-foreground" />
+                      {editingCommissionId === node.id ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value={editingCommissionValue}
+                            onChange={(e) => setEditingCommissionValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSaveCommissionRate(node.id);
+                              } else if (e.key === 'Escape') {
+                                setEditingCommissionId(null);
+                              }
+                            }}
+                            onBlur={() => handleSaveCommissionRate(node.id)}
+                            className="w-14 h-6 text-xs px-1"
+                            autoFocus
+                          />
+                          <span className="text-xs">%</span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingCommissionId(node.id);
+                            setEditingCommissionValue(String((node as any).commission_rate ?? 10));
+                          }}
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {(node as any).commission_rate ?? 10}%
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {/* 代行請求 */}
                   <div className="flex items-center gap-2 flex-shrink-0">

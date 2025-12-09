@@ -2,8 +2,14 @@
 
 import { Header } from '@/components/header';
 import Link from 'next/link';
-import { Calendar, MapPin, Users, DollarSign, PlayCircle, Lock, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, PlayCircle, Lock, CheckCircle, ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { VimeoPlayer } from '@/components/vimeo-player';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ActivityAICompanion } from '@/components/activity-ai-companion';
 
 type ActivityType = '体験' | '見学' | '研修';
 
@@ -12,6 +18,7 @@ type ActivityVideo = {
   title: string;
   duration: string;
   level?: string;
+  vimeoId?: string; // Real Vimeo Video ID
 };
 
 type ActivityVideoGroup = {
@@ -56,8 +63,8 @@ const getActivityData = (id: string): ActivityDetail => {
           title: '体験会の事前ガイダンス',
           description: '体験会に参加する前に知っておきたいポイントをまとめた短い動画です。',
           videos: [
-            { id: 'v1', title: '当日の流れと持ち物', duration: '05:30' },
-            { id: 'v2', title: 'リトミックの基本理念', duration: '08:10' },
+            { id: 'v1', title: '当日の流れと持ち物', duration: '05:30', vimeoId: '76979871' },
+            { id: 'v2', title: 'リトミックの基本理念', duration: '08:10', vimeoId: '76979871' },
           ],
         },
       ],
@@ -81,8 +88,8 @@ const getActivityData = (id: string): ActivityDetail => {
           title: '講義パート',
           description: '理論編の動画をまとめたグループです。',
           videos: [
-            { id: 'v1', title: '幼児の発達段階とリトミック', duration: '18:20', level: '基礎理論' },
-            { id: 'v2', title: '年齢別の指導アプローチ', duration: '22:45', level: '実践理論' },
+            { id: 'v1', title: '幼児の発達段階とリトミック', duration: '18:20', level: '基礎理論', vimeoId: '76979871' },
+            { id: 'v2', title: '年齢別の指導アプローチ', duration: '22:45', level: '実践理論', vimeoId: '824804225' },
           ],
         },
         {
@@ -90,8 +97,8 @@ const getActivityData = (id: string): ActivityDetail => {
           title: '実技デモ',
           description: '実際のレッスン風景を収録した動画です。',
           videos: [
-            { id: 'v3', title: '3歳児クラスの導入例', duration: '12:10', level: '実技' },
-            { id: 'v4', title: 'グループ活動の進め方', duration: '15:30', level: '実技' },
+            { id: 'v3', title: '3歳児クラスの導入例', duration: '12:10', level: '実技', vimeoId: '76979871' },
+            { id: 'v4', title: 'グループ活動の進め方', duration: '15:30', level: '実技', vimeoId: '76979871' },
           ],
         },
       ],
@@ -113,7 +120,7 @@ const getActivityData = (id: string): ActivityDetail => {
           id: 'g1',
           title: '見学用ガイド動画',
           videos: [
-            { id: 'v1', title: '見学のポイントと注意事項', duration: '07:40' },
+            { id: 'v1', title: '見学のポイントと注意事項', duration: '07:40', vimeoId: '76979871' },
           ],
         },
       ],
@@ -137,8 +144,8 @@ const getActivityData = (id: string): ActivityDetail => {
           title: '事前学習コンテンツ',
           description: '研修当日までに視聴しておくと理解が深まる動画です。',
           videos: [
-            { id: 'v1', title: 'ケーススタディの読み方', duration: '10:05', level: '事前学習' },
-            { id: 'v2', title: '観察シートの使い方', duration: '09:30', level: '事前学習' },
+            { id: 'v1', title: 'ケーススタディの読み方', duration: '10:05', level: '事前学習', vimeoId: '76979871' },
+            { id: 'v2', title: '観察シートの使い方', duration: '09:30', level: '事前学習', vimeoId: '76979871' },
           ],
         },
         {
@@ -146,7 +153,7 @@ const getActivityData = (id: string): ActivityDetail => {
           title: 'フォローアップ動画',
           description: '研修後の振り返りに役立つ動画です。',
           videos: [
-            { id: 'v3', title: 'ロールプレイの振り返り', duration: '16:20', level: 'フォローアップ' },
+            { id: 'v3', title: 'ロールプレイの振り返り', duration: '16:20', level: 'フォローアップ', vimeoId: '76979871' },
           ],
         },
       ],
@@ -160,6 +167,7 @@ export default function ActivityDetailPage({ params }: { params: { id: string } 
   const activity = getActivityData(params.id);
   const [hasApplied, setHasApplied] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<ActivityVideo | null>(null);
 
   const isPremium = activity.requiredMembership === 'premium';
   const isFull = activity.enrolled >= activity.capacity;
@@ -171,243 +179,303 @@ export default function ActivityDetailPage({ params }: { params: { id: string } 
     await new Promise((resolve) => setTimeout(resolve, 1200));
     setIsApplying(false);
     setHasApplied(true);
-    alert('お申し込みありがとうございます。\n\nこの体験・研修の専用動画が視聴可能になりました。');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       <Header />
 
       {/* Hero */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="container mx-auto px-4 py-8 sm:py-10">
-          <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
+      <div className="bg-primary/5 pb-8 pt-8 border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-4">
-                <span
-                  className={`text-xs px-3 py-1 rounded-full font-semibold bg-white/20 ${
-                    activity.type === '体験'
-                      ? 'text-emerald-100'
-                      : activity.type === '見学'
-                      ? 'text-sky-100'
-                      : 'text-violet-100'
-                  }`}
-                >
+              <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground">
+                <Link href="/activities">
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  一覧に戻る
+                </Link>
+              </Button>
+
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <Badge variant="outline" className="bg-background">
                   {activity.type}
-                </span>
+                </Badge>
                 {isPremium && (
-                  <span className="text-xs px-3 py-1 rounded-full font-semibold bg-yellow-400 text-gray-900">
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-none">
                     プレミアム会員限定
-                  </span>
+                  </Badge>
                 )}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 leading-tight">{activity.title}</h1>
-              <p className="text-sm sm:text-base md:text-lg opacity-90 mb-4 sm:mb-6 max-w-2xl">
+              <h1 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">{activity.title}</h1>
+              <p className="text-lg text-muted-foreground mb-6 max-w-2xl leading-relaxed">
                 {activity.description}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-1 opacity-80">
-                    <Calendar className="h-4 w-4" />
-                    <span>開催日時</span>
-                  </div>
-                  <div className="font-semibold">{activity.date}</div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-1 opacity-80">
-                    <MapPin className="h-4 w-4" />
-                    <span>会場</span>
-                  </div>
-                  <div className="font-semibold">{activity.location}</div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-1 opacity-80">
-                    <Users className="h-4 w-4" />
-                    <span>定員</span>
-                  </div>
-                  <div className="font-semibold">
-                    {activity.enrolled}/{activity.capacity}名
-                    <span className="block text-xs mt-1">残り {availableSeats}席</span>
-                  </div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-1 opacity-80">
-                    <DollarSign className="h-4 w-4" />
-                    <span>参加費</span>
-                  </div>
-                  <div className="font-semibold text-2xl">
-                    {activity.price === 0 ? '無料' : `¥${activity.price.toLocaleString()}`}
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="bg-background/50 border-none shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full text-primary">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">開催日時</p>
+                      <p className="font-semibold text-sm">{activity.date}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-background/50 border-none shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full text-primary">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">会場</p>
+                      <p className="font-semibold text-sm">{activity.location}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-background/50 border-none shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full text-primary">
+                      <Users className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">定員</p>
+                      <p className="font-semibold text-sm">
+                        {activity.enrolled}/{activity.capacity}名
+                        <span className="text-xs text-muted-foreground ml-1">残り{availableSeats}席</span>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-background/50 border-none shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full text-primary">
+                      <DollarSign className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">参加費</p>
+                      <p className="font-semibold text-sm">{activity.price === 0 ? '無料' : `¥${activity.price.toLocaleString()}`}</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
-            {/* Application card in hero */}
-            <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6 text-gray-900">
-              <div className="text-center mb-4">
-                <div className="text-3xl font-bold mb-1">
+            {/* Application Card */}
+            <Card className="w-full lg:max-w-sm shadow-lg border-primary/20">
+              <CardHeader className="text-center pb-2">
+                <CardTitle className="text-3xl font-bold">
                   {activity.price === 0 ? '無料' : `¥${activity.price.toLocaleString()}`}
-                </div>
-                {activity.price > 0 && (
-                  <div className="text-xs text-gray-500">参加費（税込）</div>
-                )}
-              </div>
+                </CardTitle>
+                {activity.price > 0 && <CardDescription>参加費（税込）</CardDescription>}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={handleApply}
+                  disabled={isFull || hasApplied || isApplying}
+                  className="w-full text-lg h-12"
+                  size="lg"
+                  variant={hasApplied ? "secondary" : "default"}
+                >
+                  {isFull
+                    ? '満席のため受付終了'
+                    : hasApplied
+                    ? '申し込み済み'
+                    : isApplying
+                    ? '申し込み処理中...'
+                    : `${activity.type}に申し込む`}
+                </Button>
 
-              <button
-                onClick={handleApply}
-                disabled={isFull || hasApplied || isApplying}
-                className={`w-full py-3 rounded-lg font-semibold text-sm mb-3 transition-colors ${
-                  isFull || hasApplied || isApplying
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                {isFull
-                  ? '満席のため受付終了'
-                  : hasApplied
-                  ? '申し込み済み'
-                  : isApplying
-                  ? '申し込み処理中...'
-                  : `${activity.type}に申し込む`}
-              </button>
-
-              <p className="text-xs text-gray-600 text-center mb-3">
-                申込後に、この活動専用の学習動画が視聴できるようになります。
-              </p>
-
-              {activity.requiredQualification && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start gap-2">
-                  <Lock className="h-4 w-4 mt-0.5" />
-                  <span>必要資格: {activity.requiredQualification}</span>
+                <p className="text-xs text-muted-foreground text-center">
+                  申込後に、この活動専用の学習動画が視聴できるようになります。
                 </p>
-              )}
-            </div>
+
+                {activity.requiredQualification && (
+                  <div className="bg-amber-50 text-amber-800 text-xs p-3 rounded-md border border-amber-200 flex items-start gap-2">
+                    <Lock className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span>必要資格: {activity.requiredQualification}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="container mx-auto px-4 py-8 sm:py-10">
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Left: details & videos */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Outline */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">活動概要</h2>
-              <p className="text-sm text-gray-700 mb-4">{activity.description}</p>
-              <dl className="grid sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <dt className="text-gray-500 mb-1">対象</dt>
-                  <dd className="text-gray-900">
-                    {activity.type === '体験'
-                      ? 'リトミックに興味のある方（初めての方歓迎）'
-                      : activity.type === '見学'
-                      ? '実際のクラスを見学したい方'
-                      : '既に初級資格をお持ちの指導者の方'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-gray-500 mb-1">参加条件</dt>
-                  <dd className="text-gray-900">
-                    {isPremium ? 'プレミアム会員の方' : '無料会員を含む全会員'}
-                  </dd>
-                </div>
-              </dl>
+      {/* Learning Video Section - Full Width */}
+      <div className="w-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 py-12 border-y border-slate-200 dark:border-zinc-800 transition-colors duration-300">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <PlayCircle className="h-6 w-6 text-primary" />
+              学習動画
+            </h2>
+            {!hasApplied && (
+              <Badge variant="secondary" className="flex items-center gap-1 bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-transparent shadow-sm">
+                <Lock className="h-3 w-3" /> 申込後に視聴可能
+              </Badge>
+            )}
+          </div>
+
+          {!hasApplied ? (
+            <div className="bg-white/60 dark:bg-zinc-900/50 border border-dashed border-slate-300 dark:border-zinc-800 rounded-xl p-12 text-center max-w-3xl mx-auto">
+              <PlayCircle className="h-16 w-16 mx-auto text-slate-400 dark:text-zinc-700 mb-6" />
+              <p className="font-bold text-lg mb-3">申し込みを完了すると動画が視聴できます</p>
+              <p className="text-slate-500 dark:text-zinc-400 max-w-md mx-auto">
+                事前学習動画や、当日の振り返りに役立つフォローアップ動画など、
+                より深い学びに役立つコンテンツをご用意しています。
+              </p>
             </div>
-
-            {/* Video section */}
-            <div className="bg-white rounded-lg border p-6">
-              <div className="flex items-center justify-between mb-4 gap-4">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <PlayCircle className="h-5 w-5 text-blue-600" />
-                  学習動画
-                </h2>
-                {!hasApplied && (
-                  <span className="inline-flex items-center gap-1 text-xs text-gray-500">
-                    <Lock className="h-3.5 w-3.5" /> 申込後に視聴可能
-                  </span>
-                )}
-              </div>
-
-              {!hasApplied ? (
-                <div className="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                  <p className="text-sm text-gray-700 mb-3">
-                    この活動の申込が完了すると、事前学習やフォローアップ用の動画がここに表示されます。
-                  </p>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    <li>・ 体験会の場合：当日の流れや持ち物、リトミックの基本を解説した動画</li>
-                    <li>・ 研修の場合：事前学習コンテンツや研修後の振り返り動画</li>
-                    <li>・ 見学会の場合：見学のポイントをまとめたガイド動画</li>
-                  </ul>
+          ) : (
+            <div className="space-y-8">
+              {/* Active Video Player & AI Companion */}
+              {activeVideo ? (
+                <div className="grid xl:grid-cols-4 gap-6">
+                  <div className="xl:col-span-3 space-y-4">
+                    <div className="bg-black rounded-xl overflow-hidden shadow-2xl aspect-video border border-slate-200 dark:border-zinc-800">
+                      <VimeoPlayer videoId={activeVideo.vimeoId || '76979871'} autoplay className="h-full w-full" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold flex items-center gap-3">
+                        <PlayCircle className="h-6 w-6 text-primary" />
+                        {activeVideo.title}
+                      </h3>
+                      <Badge variant="outline" className="text-slate-500 dark:text-zinc-400 border-slate-300 dark:border-zinc-700">
+                        {activeVideo.duration}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="xl:col-span-1 h-full min-h-[500px]">
+                    <ActivityAICompanion 
+                      activityTitle={activity.title} 
+                      videoTitle={activeVideo.title} 
+                      className="h-full bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-zinc-100"
+                    />
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {activity.videos.map((group) => (
-                    <div key={group.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div>
-                          <h3 className="text-sm font-semibold mb-1 flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            {group.title}
-                          </h3>
-                          {group.description && (
-                            <p className="text-xs text-gray-600">{group.description}</p>
-                          )}
-                        </div>
-                      </div>
+                <div className="bg-slate-100 dark:bg-zinc-900 rounded-xl p-12 text-center border border-slate-200 dark:border-zinc-800">
+                  <p className="font-medium text-slate-500 dark:text-zinc-400">リストから動画を選択して再生してください</p>
+                </div>
+              )}
 
+              {/* Video List */}
+              <div className="bg-white/60 dark:bg-zinc-900/50 rounded-xl border border-slate-200 dark:border-zinc-800 p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                  動画リスト
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {activity.videos.map((group) => (
+                    <div key={group.id} className="space-y-3">
+                      <h4 className="font-medium text-slate-500 dark:text-zinc-400 text-sm pl-2 border-l-2 border-primary">
+                        {group.title}
+                      </h4>
                       <div className="space-y-2">
                         {group.videos.map((video, index) => (
-                          <div
+                          <button
                             key={video.id}
-                            className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-gray-50"
+                            onClick={() => setActiveVideo(video)}
+                            className={`w-full flex items-center justify-between p-3 rounded-lg transition-all text-left group shadow-sm ${
+                              activeVideo?.id === video.id 
+                                ? 'bg-primary/10 border border-primary/30 dark:bg-primary/20' 
+                                : 'bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-100 dark:border-transparent'
+                            }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                                activeVideo?.id === video.id 
+                                  ? 'bg-primary text-primary-foreground' 
+                                  : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 group-hover:bg-slate-200 dark:group-hover:bg-zinc-700'
+                              }`}>
                                 {index + 1}
                               </div>
                               <div>
-                                <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                <div className={`text-sm font-medium ${activeVideo?.id === video.id ? 'text-primary' : 'text-slate-700 dark:text-zinc-300'}`}>
                                   {video.title}
-                                  {video.level && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-blue-50 text-blue-700">
-                                      {video.level}
-                                    </span>
-                                  )}
                                 </div>
-                                <div className="text-xs text-gray-500 flex items-center gap-2">
-                                  <PlayCircle className="h-3.5 w-3.5" />
-                                  <span>{video.duration}</span>
+                                <div className="text-xs text-slate-500 dark:text-zinc-500 mt-1">
+                                  {video.duration}
                                 </div>
                               </div>
                             </div>
-                            <button className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700">
-                              <PlayCircle className="h-3.5 w-3.5" /> 再生
-                            </button>
-                          </div>
+                            {activeVideo?.id === video.id && (
+                              <PlayCircle className="h-4 w-4 text-primary animate-pulse" />
+                            )}
+                          </button>
                         ))}
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Description */}
+            <Card className="border-none shadow-md">
+              <CardHeader>
+                <CardTitle className="text-xl">活動概要</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="leading-relaxed">{activity.description}</p>
+                <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">対象</p>
+                    <p className="text-sm">
+                      {activity.type === '体験'
+                        ? 'リトミックに興味のある方（初めての方歓迎）'
+                        : activity.type === '見学'
+                        ? '実際のクラスを見学したい方'
+                        : '既に初級資格をお持ちの指導者の方'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">参加条件</p>
+                    <p className="text-sm">
+                      {isPremium ? 'プレミアム会員の方' : '無料会員を含む全会員'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Right: links back to list, etc. */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-lg border p-4">
-              <h3 className="text-sm font-semibold mb-2">他の体験・研修</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link href="/activities" className="text-blue-600 hover:underline">
-                    一覧に戻る
-                  </Link>
-                </li>
-              </ul>
-            </div>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">他の体験・研修</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="/activities" className="text-sm hover:text-primary hover:underline block truncate">
+                      ・ リトミック見学会（オンライン）
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/activities" className="text-sm hover:text-primary hover:underline block truncate">
+                      ・ 中級指導者認定研修
+                    </Link>
+                  </li>
+                </ul>
+                <div className="mt-4 pt-4 border-t text-center">
+                  <Button variant="link" size="sm" asChild>
+                    <Link href="/activities">一覧に戻る</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

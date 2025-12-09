@@ -2,11 +2,16 @@
 
 import { Header } from "@/components/header";
 import Link from "next/link";
-import { Award, Calendar, CreditCard, User } from "lucide-react";
+import { Award, Calendar, CreditCard, User, LogOut, CheckCircle, ChevronRight, BookOpen } from "lucide-react";
 import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function DashboardPage() {
-  const [user, setUser] = useState({
+  const [user] = useState({
     name: "山田太郎",
     email: "yamada@example.com",
     membershipType: "premium",
@@ -15,182 +20,253 @@ export default function DashboardPage() {
     enrolledCourses: 3,
     completedCourses: 1,
     upcomingActivities: 2,
+    progress: 33,
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       <Header isLoggedIn />
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8">マイページ</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">マイページ</h1>
+            <p className="text-muted-foreground mt-1">学習の進捗や活動予定を確認しましょう</p>
+          </div>
+          <Button asChild>
+            <Link href="/courses">新しいコースを探す</Link>
+          </Button>
+        </div>
 
         {/* User Info Card */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 sm:p-8 mb-6 sm:mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-white mb-2">{user.name}</h2>
-              <p className="text-white opacity-90 mb-4">{user.email}</p>
+        <Card className="mb-8 border-none bg-gradient-to-r from-primary/90 to-primary text-primary-foreground shadow-lg">
+          <CardContent className="p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-medium text-white">
-                  {user.membershipType === "premium" ? "プレミアム会員" : "無料会員"}
-                </span>
-                <span className="text-sm text-white opacity-90">
-                  有効期限: {user.membershipExpiry}
-                </span>
+                <Avatar className="h-16 w-16 border-2 border-white/20">
+                  <AvatarImage src="/avatars/01.png" />
+                  <AvatarFallback className="bg-primary-foreground/10 text-primary-foreground">YT</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-2xl font-bold">{user.name}</h2>
+                  <p className="text-primary-foreground/80">{user.email}</p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Badge variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-none">
+                      {user.membershipType === "premium" ? "プレミアム会員" : "無料会員"}
+                    </Badge>
+                    <span className="text-xs text-primary-foreground/80">
+                      有効期限: {user.membershipExpiry}
+                    </span>
+                  </div>
+                </div>
               </div>
+              <Button asChild variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border-white/20">
+                <Link href="/membership">
+                  会員プラン変更
+                </Link>
+              </Button>
             </div>
-            <Link
-              href="/membership"
-              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100"
-            >
-              会員プラン変更
-            </Link>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
-            icon={<Award className="h-8 w-8" />}
+            icon={<Award className="h-5 w-5" />}
             title="取得資格"
-            value={user.qualifications.length}
+            value={`${user.qualifications.length}つ`}
             link="/dashboard/qualifications"
+            description="次の資格まであと2ステップ"
           />
           <StatCard
-            icon={<Calendar className="h-8 w-8" />}
-            title="参加予定の体験・研修"
-            value={user.upcomingActivities}
+            icon={<Calendar className="h-5 w-5" />}
+            title="参加予定の活動"
+            value={`${user.upcomingActivities}件`}
             link="/dashboard/activities"
+            description="直近: 11/25 大阪支部"
           />
           <StatCard
-            icon={<CreditCard className="h-8 w-8" />}
-            title="支払い履歴"
-            value="確認"
-            link="/dashboard/payments"
+            icon={<BookOpen className="h-5 w-5" />}
+            title="学習進捗"
+            value={`${user.progress}%`}
+            link="/dashboard/courses"
+            description="現在のコース: 初級指導法"
+            showProgress
+            progressValue={user.progress}
           />
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* My Qualifications */}
-          <div className="bg-white rounded-lg border p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">取得資格</h3>
-              <Link href="/qualifications" className="text-primary text-sm hover:underline">
-                資格について →
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {user.qualifications.map((qual, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <Award className="h-10 w-10 text-green-600" />
-                  <div className="flex-1">
-                    <h4 className="font-bold">{qual}</h4>
-                    <p className="text-sm text-muted-foreground">取得日: 2024年10月15日</p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <Award className="h-5 w-5 text-primary" />
+                取得資格
+              </CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/qualifications" className="text-primary text-xs">
+                  資格について <ChevronRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                {user.qualifications.map((qual, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border">
+                    <div className="bg-primary/10 p-2 rounded-full">
+                      <Award className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold">{qual}</h4>
+                      <p className="text-xs text-muted-foreground">取得日: 2024年10月15日</p>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      証明書
+                    </Button>
                   </div>
-                  <button className="text-sm text-primary hover:underline">
-                    証明書
-                  </button>
-                </div>
-              ))}
-              <Link
-                href="/qualifications"
-                className="block text-center border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-primary hover:bg-primary/5 transition-colors"
-              >
-                <Award className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium">次の資格に挑戦</p>
-              </Link>
-            </div>
-          </div>
+                ))}
+                <Link
+                  href="/qualifications"
+                  className="group block text-center border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 hover:border-primary hover:bg-primary/5 transition-all"
+                >
+                  <Award className="h-8 w-8 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <p className="text-sm font-medium group-hover:text-primary transition-colors">次の資格に挑戦する</p>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Upcoming Activities */}
-          <div className="bg-white rounded-lg border p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">参加予定の体験・研修</h3>
-              <Link href="/activities" className="text-primary text-sm hover:underline">
-                体験・研修を探す →
-              </Link>
-            </div>
-            <div className="space-y-4">
-              <ActivityItem
-                id="2"
-                title="幼児指導法ワークショップ"
-                date="2025年11月25日 10:00"
-                location="大阪支部"
-              />
-              <ActivityItem
-                id="4"
-                title="中級指導者認定研修"
-                date="2025年12月10日 09:00"
-                location="東京本部"
-              />
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                参加予定の体験・研修
+              </CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/activities" className="text-primary text-xs">
+                  探す <ChevronRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                <ActivityItem
+                  id="2"
+                  title="幼児指導法ワークショップ"
+                  date="2025年11月25日 10:00"
+                  location="大阪支部"
+                  type="研修"
+                />
+                <ActivityItem
+                  id="4"
+                  title="中級指導者認定研修"
+                  date="2025年12月10日 09:00"
+                  location="東京本部"
+                  type="研修"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Account Settings */}
-          <div className="bg-white rounded-lg border p-6">
-            <h3 className="text-xl font-bold mb-6">アカウント設定</h3>
-            <div className="space-y-3">
-              <Link href="/dashboard/profile" className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <span>プロフィール編集</span>
-              </Link>
-              <Link href="/dashboard/payments" className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
-                <CreditCard className="h-5 w-5 text-muted-foreground" />
-                <span>支払い方法</span>
-              </Link>
-              <button className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg text-left">
-                <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span>ログアウト</span>
-              </button>
-            </div>
-          </div>
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">アカウント設定</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <Link href="/dashboard/profile">
+                  <div className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <User className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">プロフィール編集</span>
+                  </div>
+                </Link>
+                <Link href="/dashboard/payments">
+                  <div className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <CreditCard className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">支払い方法</span>
+                  </div>
+                </Link>
+                <button className="flex items-center gap-3 p-4 border rounded-lg hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-colors text-left group">
+                  <LogOut className="h-5 w-5 text-muted-foreground group-hover:text-red-600" />
+                  <span className="font-medium">ログアウト</span>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
 }
 
-function StatCard({ icon, title, value, link }: { icon: React.ReactNode; title: string; value: number | string; link: string }) {
+function StatCard({ 
+  icon, 
+  title, 
+  value, 
+  link, 
+  description,
+  showProgress = false,
+  progressValue = 0
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  value: string; 
+  link: string;
+  description?: string;
+  showProgress?: boolean;
+  progressValue?: number;
+}) {
   return (
-    <Link href={link} className="bg-white rounded-lg border p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-center gap-4">
-        <div className="text-primary">{icon}</div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">{title}</p>
-          <p className="text-3xl font-bold">{value}</p>
-        </div>
-      </div>
-    </Link>
+    <Card className="hover:shadow-md transition-shadow">
+      <Link href={link}>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between space-y-0 pb-2">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <div className="text-muted-foreground bg-muted p-2 rounded-full">{icon}</div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-2xl font-bold">{value}</span>
+            {showProgress ? (
+              <div className="w-full mt-2">
+                <Progress value={progressValue} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1 text-right">{progressValue}% 完了</p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
+          </div>
+        </CardContent>
+      </Link>
+    </Card>
   );
 }
 
-function ActivityItem({ id, title, date, location }: { id: string; title: string; date: string; location: string }) {
+function ActivityItem({ id, title, date, location, type }: { id: string; title: string; date: string; location: string; type: string }) {
   return (
-    <div className="border rounded-lg p-4">
-      <h4 className="font-medium mb-2">
-        <Link href={`/activities/${id}`} className="text-primary hover:underline">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs font-normal">
+            {type}
+          </Badge>
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3" /> {date}
+          </span>
+        </div>
+        <Link href={`/activities/${id}`} className="block font-medium hover:text-primary transition-colors">
           {title}
         </Link>
-      </h4>
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Calendar className="h-4 w-4" />
-          {date}
-        </span>
-        <span className="flex items-center gap-1">
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <CheckCircle className="h-3 w-3" />
           {location}
-        </span>
+        </div>
       </div>
-      <div className="mt-3">
-        <Link href={`/activities/${id}`} className="text-xs text-primary hover:underline">
-          詳細・動画を見る
-        </Link>
-      </div>
+      <Button size="sm" variant="secondary" asChild className="shrink-0">
+        <Link href={`/activities/${id}`}>詳細</Link>
+      </Button>
     </div>
   );
 }
+

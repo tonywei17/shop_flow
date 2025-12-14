@@ -45,6 +45,7 @@ export const navSections: NavSection[] = [
     label: "オンラインストア管理",
     items: [
       { label: "商品管理", href: "/commerce", icon: Package },
+      { label: "在庫管理", href: "/inventory", icon: Package },
       { label: "注文管理", href: "/commerce/orders", icon: ShoppingBag },
       { label: "商店設定", href: "/commerce/settings", icon: Settings },
     ],

@@ -225,3 +225,8 @@ body {
 .sidebar-drawer[data-state="closed"] {
   animation: slide-out-to-right var(--sidebar-drawer-duration) var(--sidebar-drawer-easing);
 }
+
+html.light body,
+body.light {
+  background-color: #F0F5F3;
+}

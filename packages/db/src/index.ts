@@ -97,3 +97,17 @@ export type {
   TaxType,
   RoundingMethod,
 } from "./store-settings";
+
+// Inventory management
+export {
+  listInventory,
+  adjustInventory,
+  listInventoryAdjustments,
+} from "./inventory";
+export type {
+  InventoryRow,
+  InventoryStatus,
+  InventoryAdjustment,
+  ListInventoryParams,
+  ListInventoryAdjustmentsParams,
+} from "./inventory";

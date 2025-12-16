@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactElement, ReactNode } from "react";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartProvider } from "@/lib/cart/context";
@@ -22,15 +23,22 @@ export default async function RootLayout({ children }: RootLayoutProps): Promise
   const storeSettings = await getStoreSettings() ?? DEFAULT_STORE_SETTINGS;
 
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col antialiased">
-        <StoreSettingsProvider initialSettings={storeSettings}>
-          <CartProvider>
-            <Header user={user} />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </CartProvider>
-        </StoreSettingsProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <StoreSettingsProvider initialSettings={storeSettings}>
+            <CartProvider>
+              <Header user={user} />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </CartProvider>
+          </StoreSettingsProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

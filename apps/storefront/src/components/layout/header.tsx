@@ -3,9 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingCart, User, Search, Menu, Package, LogOut, Settings } from "lucide-react";
+import { ShoppingCart, User, Menu, Package, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCart } from "@/lib/cart/context";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type HeaderProps = {
   user: {
@@ -53,50 +53,43 @@ export function Header({ user }: HeaderProps): React.ReactElement {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <Package className="h-6 w-6" />
-          <span className="text-lg font-bold">社内ストア</span>
-        </Link>
+        {/* Left: Logo + Navigation */}
+        <div className="flex items-center gap-6 flex-1 min-w-0">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <Package className="h-6 w-6 shrink-0" />
+            <span className="text-lg font-bold whitespace-nowrap">社内ストア</span>
+          </Link>
 
-        {/* Navigation - Desktop */}
-        <nav className="hidden md:flex items-center gap-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === item.href
-                  ? "text-foreground"
-                  : "text-muted-foreground"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Search - Desktop */}
-        <div className="hidden md:flex flex-1 max-w-md mx-6">
-          <form action="/products" className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              name="q"
-              placeholder="商品を検索..."
-              className="pl-10 w-full"
-            />
-          </form>
+          {/* Navigation - Desktop */}
+          <nav className="hidden md:flex items-center gap-6 shrink-0">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === item.href
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 shrink-0">
           {/* Mobile menu button */}
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
             <span className="sr-only">メニュー</span>
           </Button>
+
+          {/* Theme toggle */}
+          <ThemeToggle />
 
           {/* Cart */}
           <Link href="/cart">

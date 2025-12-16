@@ -39,14 +39,14 @@ export default async function AccountPage(): Promise<ReactElement> {
   ];
 
   return (
-    <div className="container px-4 py-8 md:px-6">
+    <div className="container px-4 py-10 md:px-8">
       <h1 className="text-3xl font-bold tracking-tight mb-8">マイページ</h1>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-10 lg:grid-cols-3">
         {/* Profile Card */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader className="text-center">
+          <Card className="h-full">
+            <CardHeader className="text-center space-y-3">
               <Avatar className="h-20 w-20 mx-auto mb-4">
                 <AvatarFallback className="text-2xl">
                   {user?.displayName?.charAt(0) ?? "U"}
@@ -55,8 +55,8 @@ export default async function AccountPage(): Promise<ReactElement> {
               <CardTitle>{user?.displayName ?? "ユーザー"}</CardTitle>
               <CardDescription>{user?.email ?? user?.accountId}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
+            <CardContent className="space-y-4">
+              <div className="space-y-3 text-sm">
                 {user?.departmentName && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">所属</span>
@@ -76,23 +76,25 @@ export default async function AccountPage(): Promise<ReactElement> {
                   </span>
                 </div>
               </div>
-              <Separator className="my-4" />
-              <LogoutButton />
+              <Separator />
+              <div className="flex justify-center">
+                <LogoutButton />
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Menu Items */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-6">
           {menuItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <Card className="hover:bg-muted/50 transition-colors">
-                <CardContent className="p-4">
+            <Link key={item.href} href={item.href} className="block">
+              <Card className="hover:bg-muted/60 transition-colors border-muted/60">
+                <CardContent className="p-5">
                   <div className="flex items-center gap-4">
                     <div className="rounded-full bg-primary/10 p-3">
                       <item.icon className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 space-y-1">
                       <h3 className="font-semibold">{item.title}</h3>
                       <p className="text-sm text-muted-foreground">
                         {item.description}

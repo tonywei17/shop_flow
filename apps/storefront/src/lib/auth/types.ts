@@ -5,6 +5,7 @@ export type StorefrontUser = {
   accountId: string;
   displayName: string;
   email: string | null;
+  phone?: string | null;
   departmentId: string | null;
   departmentName: string | null;
   roleId: string | null;

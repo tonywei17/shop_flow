@@ -5,9 +5,9 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
-import { Package, Search, Filter } from "lucide-react";
+import { Package } from "lucide-react";
+import { SearchBar } from "./search-bar";
 
 type PriceType = "hq" | "branch" | "classroom" | "retail";
 
@@ -81,21 +81,9 @@ export default async function ProductsPage({
 
       {/* Search and Filter */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <form action="/products" className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              name="q"
-              placeholder="商品名・商品コードで検索..."
-              defaultValue={params.q}
-              className="pl-10"
-            />
-          </div>
-          {params.category && (
-            <input type="hidden" name="category" value={params.category} />
-          )}
-        </form>
+        <div className="flex-1">
+          <SearchBar defaultValue={params.q} category={params.category} />
+        </div>
 
         {/* Category Filter */}
         <div className="flex gap-2 flex-wrap">

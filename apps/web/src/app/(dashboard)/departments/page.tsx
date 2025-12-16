@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { getDepartmentsWithScope } from "@/lib/services/org";

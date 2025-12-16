@@ -115,7 +115,7 @@ export function InventoryClient({ items, pagination }: InventoryClientProps) {
           <div className="flex items-center gap-2">
             <Input
               placeholder="商品コード・商品名で検索"
-              className="w-[220px]"
+              className="w-full min-w-[260px] max-w-[360px]"
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
             />

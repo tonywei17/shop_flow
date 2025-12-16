@@ -15,8 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sidebar } from "./sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Sidebar } from "@/components/dashboard/sidebar";
 import { useUser } from "@/contexts/user-context";
 import { Building2, CircleHelp, Home, Menu, LogOut, Settings } from "lucide-react";
 
@@ -79,6 +80,44 @@ const labelMap: Record<string, string> = {
   users: "ユーザー",
 };
 
+const tooltipMap: Record<string, string> = {
+  billing: "請求書発行と費用精算を管理します",
+  invoices: "請求一覧の確認とステータス管理を行います",
+  "cc-fees": "CC会費の計上・管理を行います",
+  expenses: "その他費用の登録と管理を行います",
+  commerce: "商品カタログと価格を管理します",
+  internal: "内部商品データを管理します",
+  orders: "受注一覧の確認と出荷状況管理を行います",
+  settings: "店舗の基本設定・送料・税率を管理します",
+  members: "会員アカウントの登録・閲覧を行います",
+  "learning-analytics": "学習データの分析と可視化を行います",
+  "learning-orders": "学習コースの注文と決済履歴を管理します",
+  trainings: "研修プログラムの登録・編集を行います",
+  experiences: "見学・体験申込の管理を行います",
+  qualifications: "資格種別と要件の管理を行います",
+  exams: "試験スケジュールと結果の管理を行います",
+  "exam-levels": "試験レベルの定義と設定を行います",
+  applications: "各種申込の受付状況を管理します",
+  "information-requests": "資料請求の対応状況を管理します",
+  notifications: "通知テンプレートと配信履歴を管理します",
+  "course-videos": "コース動画の登録と公開設定を行います",
+  venues: "会場情報の登録・編集を行います",
+  departments: "部署マスタと階層の管理を行います",
+  account: "管理者アカウントの作成・権限設定を行います",
+  roles: "ロール権限の定義と付与を行います",
+  permissions: "機能レベルのアクセス権を管理します",
+  "system-fields": "システム項目の追加・編集を行います",
+  "master-data": "共通マスターデータを管理します",
+  "account-items": "勘定科目マスターを管理します",
+  "product-categories": "商品カテゴリの分類を管理します",
+  counterparties: "取引先情報の管理を行います",
+  profile: "自身のプロフィールを確認・編集します",
+  activities: "アクティビティの管理を行います",
+  "request-forms": "申請フォームの作成と公開を行います",
+  new: "新規作成ページです",
+  users: "ユーザー一覧と詳細管理を行います",
+};
+
 export function DashboardHeader({
   title,
   breadcrumbs,
@@ -102,11 +141,19 @@ export function DashboardHeader({
     return list;
   }, [breadcrumbs, segments]);
 
+  const currentTooltip = React.useMemo(() => {
+    for (let i = segments.length - 1; i >= 0; i -= 1) {
+      const key = segments[i];
+      if (tooltipMap[key]) return tooltipMap[key];
+    }
+    return undefined;
+  }, [segments]);
+
   const headerRightSlot =
     rightSlot ?? (
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <DefaultUserSummary />
+        <HeaderUserSummary />
       </div>
     );
 
@@ -119,9 +166,22 @@ export function DashboardHeader({
             <div className="flex items-center gap-2">
               <h1 className="text-[24px] font-bold leading-none text-foreground">{title}</h1>
               {showHelpIcon ? (
-                <button type="button" aria-label="ヘルプ" className="text-primary transition-opacity hover:opacity-80">
-                  <CircleHelp className="h-[18px] w-[18px]" />
-                </button>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="ページの概要"
+                        className="text-primary transition-opacity hover:opacity-80"
+                      >
+                        <CircleHelp className="h-[18px] w-[18px]" />
+                      </button>
+                    </TooltipTrigger>
+                    {currentTooltip ? (
+                      <TooltipContent side="right">{currentTooltip}</TooltipContent>
+                    ) : null}
+                  </Tooltip>
+                </TooltipProvider>
               ) : null}
             </div>
           </div>
@@ -193,7 +253,7 @@ function MobileSidebarTrigger() {
   );
 }
 
-function DefaultUserSummary() {
+function HeaderUserSummary() {
   const router = useRouter();
   const { user, isLoading } = useUser();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);

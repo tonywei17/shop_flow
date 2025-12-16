@@ -356,7 +356,7 @@ export function AccountItemsClient({
           <div className="flex flex-col gap-2 text-xs text-muted-foreground md:flex-row md:items-center md:gap-4">
             <SearchInput
               placeholder="勘定項目ID・名称で検索"
-              className="w-[220px]"
+              className="w-full min-w-[260px] max-w-[360px]"
             />
             <div className="flex flex-wrap items-center gap-2">
               <DropdownMenu>

@@ -344,14 +344,14 @@ export function ProductCategoriesClient({
           <div className="flex flex-col gap-2 text-xs text-muted-foreground md:flex-row md:items-center md:gap-4">
             <SearchInput
               placeholder="商品区分ID・名称で検索"
-              className="w-[220px]"
+              className="w-full min-w-[260px] max-w-[360px]"
             />
             <div className="flex flex-wrap items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2 border-primary text-primary hover:bg-primary/10"
+                    className="h-9"
                     disabled={isExporting}
                   >
                     <Download className="h-4 w-4" />

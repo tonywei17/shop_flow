@@ -280,10 +280,10 @@ export function DepartmentsClient({
             <span>全て選択</span>
           </label>
           <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
-            <SearchInput
-              placeholder="店番・部署名・責任者・地域で検索"
-              className="w-full max-w-xs"
-            />
+          <SearchInput
+            placeholder="店番・部署名・責任者・地域で検索"
+            className="w-full min-w-[260px] max-w-[360px]"
+          />
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -499,7 +499,7 @@ export function AccountClient({
           <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
             <SearchInput
               placeholder="氏名・メール・IDで検索"
-              className="w-[220px]"
+              className="w-full min-w-[260px] max-w-[360px]"
             />
             <Button
               variant={pagination.scope === "storefront" ? "default" : "outline"}

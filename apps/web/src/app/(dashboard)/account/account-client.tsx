@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { AdminAccount, RoleRecord, DepartmentWithParent } from "@enterprise/db";
+import type { AdminAccount, RoleRecord, DepartmentWithParent, PriceType } from "@enterprise/db";
 import { getStatusBadge } from "@/lib/constants/status-badges";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -37,11 +37,13 @@ import { DepartmentTreeSelect } from "@/components/department-tree-select";
 import { buildVisiblePages, updatePaginationSearchParams } from "@/lib/pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { HighlightText } from "@/components/ui/highlight-text";
+import { PRICE_TYPE_OPTIONS, getBadgeStyle } from "@/lib/constants/roles";
 import {
   SortableTableHead,
   updateSortSearchParams,
   type SortOrder as SortOrderType,
 } from "@/components/ui/sortable-table-head";
+import { SendCredentialsDialog } from "@/components/send-credentials-dialog";
 
 const ACCOUNTS_SELECTION_STORAGE_KEY = "accounts_selected_ids";
 
@@ -80,6 +82,11 @@ const priceDisplayOptions = [
   { value: "branch", label: "支局価格" },
   { value: "hidden", label: "非表示" },
 ];
+
+const renderPriceTypeLabel = (value: PriceType | null | undefined) => {
+  if (!value) return "—";
+  return PRICE_TYPE_OPTIONS.find((opt) => opt.value === value)?.label ?? value;
+};
 
 function createFormState(account?: AdminAccount): AccountFormState {
   return {
@@ -125,6 +132,16 @@ export function AccountClient({
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   const isEditing = drawerState.mode === "edit";
+
+  const roleMap = React.useMemo(() => {
+    const map = new Map<string, RoleRecord>();
+    roles.forEach((role) => {
+      if (role.code) {
+        map.set(role.code, role);
+      }
+    });
+    return map;
+  }, [roles]);
 
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const pageSizeOptions = [20, 50, 100];
@@ -357,6 +374,47 @@ export function AccountClient({
     }
   };
 
+  const [credentialsDialogOpen, setCredentialsDialogOpen] = React.useState(false);
+  const [credentialsDialogMode, setCredentialsDialogMode] = React.useState<"all" | "selected">("selected");
+
+  const handleOpenCredentialsDialog = (mode: "all" | "selected") => {
+    if (mode === "selected" && !selectedIds.length) return;
+    setCredentialsDialogMode(mode);
+    setCredentialsDialogOpen(true);
+  };
+
+  const handleSendCredentialsConfirm = async () => {
+    const body = credentialsDialogMode === "selected" ? { ids: selectedIds } : { all: true };
+    const response = await fetch("/api/internal/accounts/send-credentials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = (await response.json().catch(() => null)) as {
+      ok?: boolean;
+      error?: string;
+      message?: string;
+      results?: { accountId: string; email: string | null; success: boolean; error?: string }[];
+      successCount?: number;
+      failCount?: number;
+    } | null;
+
+    if (!response.ok || !data?.ok) {
+      return {
+        ok: false,
+        message: data?.error || `送信に失敗しました (status ${response.status})`,
+      };
+    }
+
+    return {
+      ok: true,
+      message: data.message || "メール送信が完了しました",
+      results: data.results || [],
+      successCount: data.successCount || 0,
+      failCount: data.failCount || 0,
+    };
+  };
+
   const handleBulkDelete = async () => {
     if (!selectedIds.length) return;
 
@@ -465,10 +523,6 @@ export function AccountClient({
               有効のみ
             </Button>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10">
-                <Download className="h-4 w-4" />
-                一括操作
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -515,12 +569,38 @@ export function AccountClient({
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Send Credentials Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    ログイン情報を送信
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleOpenCredentialsDialog("all")}>
+                    全てのアカウントに送信
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!selectedIds.length}
+                    className={!selectedIds.length ? "text-[#9ca3af]" : undefined}
+                    onClick={() => handleOpenCredentialsDialog("selected")}
+                  >
+                    選択中のアカウントに送信
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
 
-        <Table className="[&_th]:py-3 [&_td]:py-3">
-          <TableHeader>
+        {/* Table with sticky header */}
+        <Table stickyHeader maxHeight="calc(100vh - 380px)" className="[&_th]:py-3 [&_td]:py-3">
+          <TableHeader sticky>
             <TableRow className="border-b border-border text-sm text-foreground">
               <TableHead className="w-[36px] pl-6 pr-3">
                 <Checkbox
@@ -548,23 +628,25 @@ export function AccountClient({
                 氏名
               </SortableTableHead>
               <SortableTableHead
-                sortKey="email"
-                currentSortKey={pagination.sortKey}
-                currentSortOrder={pagination.sortOrder}
-                onSort={handleSort}
-                className="w-[240px]"
-              >
-                メールアドレス
-              </SortableTableHead>
-              <SortableTableHead
                 sortKey="department_name"
                 currentSortKey={pagination.sortKey}
                 currentSortOrder={pagination.sortOrder}
                 onSort={handleSort}
-                className="w-[180px]"
+                className="w-[260px]"
               >
                 所属部署
               </SortableTableHead>
+              <SortableTableHead
+                sortKey="role_code"
+                currentSortKey={pagination.sortKey}
+                currentSortOrder={pagination.sortOrder}
+                onSort={handleSort}
+                className="w-[140px]"
+              >
+                ロール
+              </SortableTableHead>
+              <TableHead className="w-[140px]">ストアアクセス</TableHead>
+              <TableHead className="w-[140px]">表示価格</TableHead>
               <SortableTableHead
                 sortKey="last_login_at"
                 currentSortKey={pagination.sortKey}
@@ -589,6 +671,9 @@ export function AccountClient({
           <TableBody>
             {accounts.map((account) => {
               const statusBadge = getStatusBadge(account.status);
+              const roleInfo = account.role_code ? roleMap.get(account.role_code) : null;
+              const canAccessStorefront = roleInfo?.can_access_storefront ?? false;
+              const priceType = roleInfo?.default_price_type ?? null;
               return (
                 <TableRow key={account.id} className="border-b border-border text-sm">
                   <TableCell className="pl-6 pr-3">
@@ -620,10 +705,7 @@ export function AccountClient({
                   <TableCell className="text-foreground">
                     <HighlightText text={account.display_name} searchTerm={pagination.search} />
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <HighlightText text={account.email ?? '—'} searchTerm={pagination.search} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-foreground">
                     {(() => {
                       const deptInfo = getDepartmentDisplay(account.department_id, account.department_name);
                       if (!deptInfo) return '—';
@@ -639,8 +721,35 @@ export function AccountClient({
                       );
                     })()}
                   </TableCell>
+                  <TableCell className="text-foreground">
+                    {roleInfo ? (
+                      <Badge
+                        className={`border-none px-3 py-1 text-[12px] ${getBadgeStyle(roleInfo.badge_color).bg} ${getBadgeStyle(roleInfo.badge_color).text}`}
+                      >
+                        {roleInfo.name}
+                      </Badge>
+                    ) : account.role_code ? (
+                      <Badge variant="secondary" className="px-3 py-1 text-[12px]">
+                        {account.role_code}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    {canAccessStorefront ? (
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+                        ログイン可
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">ログイン不可</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    {canAccessStorefront ? renderPriceTypeLabel(priceType) : "—"}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {account.last_login_at ? new Date(account.last_login_at).toLocaleString('ja-JP') : '未ログイン'}
+                    {account.last_login_at ? new Date(account.last_login_at).toLocaleString("ja-JP") : "—"}
                   </TableCell>
                   <TableCell>
                     <Badge className={`border-none px-3 py-1 text-[12px] ${statusBadge.className}`}>{statusBadge.label}</Badge>
@@ -665,7 +774,7 @@ export function AccountClient({
             })}
             {!accounts.length ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={10} className="py-12 text-center text-sm text-muted-foreground">
                   アカウントデータがありません。
                 </TableCell>
               </TableRow>
@@ -964,6 +1073,15 @@ export function AccountClient({
           </div>
         </div>
       </ManagementDrawer>
+
+      <SendCredentialsDialog
+        open={credentialsDialogOpen}
+        onOpenChange={setCredentialsDialogOpen}
+        mode={credentialsDialogMode}
+        selectedCount={selectedIds.length}
+        selectedIds={selectedIds}
+        onConfirm={handleSendCredentialsConfirm}
+      />
     </>
   );
 }

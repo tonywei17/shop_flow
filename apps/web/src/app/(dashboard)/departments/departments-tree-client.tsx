@@ -37,7 +37,10 @@ import {
   User,
   Phone,
   Percent,
+  Plus,
+  Edit,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -221,6 +224,33 @@ function getCategoryColor(category: string | null): string {
   }
 }
 
+// 部署类型选项
+const DEPARTMENT_TYPE_OPTIONS = [
+  { value: "本部", label: "本部" },
+  { value: "支局", label: "支局" },
+  { value: "教室", label: "教室" },
+  { value: "部署", label: "部署" },
+];
+
+// 初始表单状态
+const createInitialFormState = () => ({
+  name: "",
+  type: "教室",
+  code: "",
+  parentId: null as string | null,
+  managerName: "",
+  phonePrimary: "",
+  postalCode: "",
+  prefecture: "",
+  city: "",
+  addressLine1: "",
+  addressLine2: "",
+  status: "有効",
+  isIndependent: false,
+  allowProxyBilling: false,
+  commissionRate: "",
+});
+
 export function DepartmentsTreeClient({
   departments,
 }: {
@@ -236,6 +266,105 @@ export function DepartmentsTreeClient({
   const [detailDepartment, setDetailDepartment] = React.useState<DepartmentWithParent | null>(null);
   const [editingCommissionId, setEditingCommissionId] = React.useState<string | null>(null);
   const [editingCommissionValue, setEditingCommissionValue] = React.useState<string>("");
+
+  // 新增/编辑部署的状态
+  const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
+  const [editingDepartmentId, setEditingDepartmentId] = React.useState<string | null>(null);
+  const [formState, setFormState] = React.useState(createInitialFormState());
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+
+  // 打开新增表单
+  const handleOpenCreateForm = (parentId?: string) => {
+    setFormMode("create");
+    setEditingDepartmentId(null);
+    setFormState({
+      ...createInitialFormState(),
+      parentId: parentId ?? null,
+    });
+    setSubmitError(null);
+    setIsFormOpen(true);
+  };
+
+  // 打开编辑表单
+  const handleOpenEditForm = (dept: DepartmentWithParent) => {
+    setFormMode("edit");
+    setEditingDepartmentId(dept.id);
+    setFormState({
+      name: dept.name,
+      type: dept.type,
+      code: dept.code ?? "",
+      parentId: dept.parent_id,
+      managerName: dept.manager_name ?? "",
+      phonePrimary: dept.phone_primary ?? "",
+      postalCode: dept.postal_code ?? "",
+      prefecture: dept.prefecture ?? "",
+      city: dept.city ?? "",
+      addressLine1: dept.address_line1 ?? "",
+      addressLine2: dept.address_line2 ?? "",
+      status: dept.status ?? "有効",
+      isIndependent: dept.is_independent,
+      allowProxyBilling: dept.allow_proxy_billing,
+      commissionRate: dept.commission_rate?.toString() ?? "",
+    });
+    setSubmitError(null);
+    setIsFormOpen(true);
+  };
+
+  // 提交表单
+  const handleSubmitForm = async () => {
+    if (!formState.name.trim() || !formState.type) {
+      setSubmitError("部署名と種別は必須です");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const payload = {
+        mode: formMode,
+        id: editingDepartmentId,
+        name: formState.name.trim(),
+        type: formState.type,
+        code: formState.code.trim() || null,
+        parent_id: formState.parentId,
+        manager_name: formState.managerName.trim() || null,
+        phone_primary: formState.phonePrimary.trim() || null,
+        postal_code: formState.postalCode.trim() || null,
+        prefecture: formState.prefecture.trim() || null,
+        city: formState.city.trim() || null,
+        address_line1: formState.addressLine1.trim() || null,
+        address_line2: formState.addressLine2.trim() || null,
+        status: formState.status,
+        is_independent: formState.isIndependent,
+        allow_proxy_billing: formState.allowProxyBilling,
+        commission_rate: formState.commissionRate ? parseFloat(formState.commissionRate) : null,
+      };
+
+      const response = await fetch("/api/internal/departments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json() as { ok?: boolean; error?: string; department?: unknown };
+
+      if (!response.ok) {
+        throw new Error(data.error || "保存に失敗しました");
+      }
+
+      toast.success(formMode === "create" ? "部署を作成しました" : "部署を更新しました");
+      setIsFormOpen(false);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "保存に失敗しました";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // 更新代行請求设置
   const handleToggleProxyBilling = async (id: string, currentValue: boolean) => {
@@ -533,7 +662,23 @@ export function DepartmentsTreeClient({
   return (
     <Card className="rounded-xl border bg-card shadow-sm">
       <CardContent className="p-0">
-        {/* ヘッダー */}
+        {/* タイトル行 */}
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium leading-none text-foreground">部署一覧</h2>
+            <p className="text-xs text-muted-foreground">部署を検索・フィルタし、エクスポートできます。</p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => handleOpenCreateForm()}
+            className="gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            新規追加
+          </Button>
+        </div>
+
+        {/* フィルター行 */}
         <div className="flex flex-col gap-3 border-b border-border px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 text-sm">
@@ -630,8 +775,8 @@ export function DepartmentsTreeClient({
           </div>
         </div>
 
-        {/* ツリーリスト */}
-        <div className="divide-y divide-border">
+        {/* ツリーリスト - Scrollable */}
+        <div className="max-h-[calc(100vh-380px)] overflow-auto divide-y divide-border">
           {flatNodes.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
               {searchTerm ? '検索結果がありません' : '部署データがありません'}
@@ -917,6 +1062,233 @@ export function DepartmentsTreeClient({
               </div>
             </div>
           )}
+        </SheetContent>
+      </Sheet>
+
+      {/* 新規追加/編集フォーム */}
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>
+              {formMode === "create" ? "部署を新規追加" : "部署を編集"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-6">
+            {submitError && (
+              <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
+                {submitError}
+              </div>
+            )}
+
+            {/* 基本情報 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground border-b pb-2">基本情報</h3>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-name" className="text-xs">部署名 *</Label>
+                  <Input
+                    id="form-name"
+                    value={formState.name}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="例: リトミック教室"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-type" className="text-xs">種別 *</Label>
+                  <Select
+                    value={formState.type}
+                    onValueChange={(value) => setFormState((prev) => ({ ...prev, type: value }))}
+                  >
+                    <SelectTrigger id="form-type">
+                      <SelectValue placeholder="種別を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEPARTMENT_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-code" className="text-xs">店番</Label>
+                  <Input
+                    id="form-code"
+                    value={formState.code}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, code: e.target.value }))}
+                    placeholder="例: 001"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-parent" className="text-xs">上位部署</Label>
+                  <Select
+                    value={formState.parentId ?? "__none__"}
+                    onValueChange={(value) => setFormState((prev) => ({ ...prev, parentId: value === "__none__" ? null : value }))}
+                  >
+                    <SelectTrigger id="form-parent">
+                      <SelectValue placeholder="上位部署を選択" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px] overflow-y-auto">
+                      <SelectItem value="__none__">なし</SelectItem>
+                      {departments
+                        .filter((d) => d.id !== editingDepartmentId && (d.type === "本部" || d.type === "支局"))
+                        .map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-status" className="text-xs">ステータス</Label>
+                  <Select
+                    value={formState.status}
+                    onValueChange={(value) => setFormState((prev) => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger id="form-status">
+                      <SelectValue placeholder="ステータスを選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="有効">有効</SelectItem>
+                      <SelectItem value="無効">無効</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* 責任者情報 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground border-b pb-2">責任者情報</h3>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-manager" className="text-xs">責任者名</Label>
+                  <Input
+                    id="form-manager"
+                    value={formState.managerName}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, managerName: e.target.value }))}
+                    placeholder="例: 山田 太郎"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-phone" className="text-xs">電話番号</Label>
+                  <Input
+                    id="form-phone"
+                    value={formState.phonePrimary}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, phonePrimary: e.target.value }))}
+                    placeholder="例: 03-1234-5678"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 所在地情報 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground border-b pb-2">所在地</h3>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-postal" className="text-xs">郵便番号</Label>
+                  <Input
+                    id="form-postal"
+                    value={formState.postalCode}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, postalCode: e.target.value }))}
+                    placeholder="例: 100-0001"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="form-prefecture" className="text-xs">都道府県</Label>
+                    <Input
+                      id="form-prefecture"
+                      value={formState.prefecture}
+                      onChange={(e) => setFormState((prev) => ({ ...prev, prefecture: e.target.value }))}
+                      placeholder="例: 東京都"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="form-city" className="text-xs">市区町村</Label>
+                    <Input
+                      id="form-city"
+                      value={formState.city}
+                      onChange={(e) => setFormState((prev) => ({ ...prev, city: e.target.value }))}
+                      placeholder="例: 千代田区"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-address1" className="text-xs">住所1</Label>
+                  <Input
+                    id="form-address1"
+                    value={formState.addressLine1}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, addressLine1: e.target.value }))}
+                    placeholder="例: 丸の内1-1-1"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="form-address2" className="text-xs">住所2</Label>
+                  <Input
+                    id="form-address2"
+                    value={formState.addressLine2}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, addressLine2: e.target.value }))}
+                    placeholder="例: ○○ビル 3F"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 設定 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground border-b pb-2">設定</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="form-proxy" className="text-sm">代行請求を許可</Label>
+                  <Switch
+                    id="form-proxy"
+                    checked={formState.allowProxyBilling}
+                    onCheckedChange={(checked) => setFormState((prev) => ({ ...prev, allowProxyBilling: checked }))}
+                  />
+                </div>
+                {formState.type === "支局" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="form-commission" className="text-xs">マージン率 (%)</Label>
+                    <Input
+                      id="form-commission"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={formState.commissionRate}
+                      onChange={(e) => setFormState((prev) => ({ ...prev, commissionRate: e.target.value }))}
+                      placeholder="例: 10.00"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 送信ボタン */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsFormOpen(false)}
+                disabled={isSubmitting}
+              >
+                キャンセル
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={handleSubmitForm}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "保存中..." : "保存"}
+              </Button>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     </Card>

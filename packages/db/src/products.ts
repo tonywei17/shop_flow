@@ -11,6 +11,12 @@ export type Product = {
   description: string | null;
   category_id: string | null;
   category_name?: string | null;
+  primary_image_url?: string | null;
+  images?: {
+    url: string;
+    is_primary: boolean;
+    display_order: number | null;
+  }[];
   price_hq: number;
   price_branch: number;
   price_classroom: number;
@@ -101,16 +107,19 @@ export async function listProducts(
         display_order,
         created_at,
         updated_at,
-        product_categories(name)
+        product_categories(name),
+        product_images (
+          url,
+          is_primary,
+          display_order
+        )
       `,
       { count: "exact" },
     );
 
   // 搜索
   if (params.search) {
-    query = query.or(
-      `code.ilike.%${params.search}%,name.ilike.%${params.search}%`,
-    );
+    query = query.or(`code.ilike.%${params.search}%,name.ilike.%${params.search}%`);
   }
 
   // 分类筛选
@@ -124,9 +133,10 @@ export async function listProducts(
   }
 
   // 排序
-  const sortKey = params.sortKey && VALID_SORT_KEYS.includes(params.sortKey as typeof VALID_SORT_KEYS[number])
-    ? params.sortKey
-    : "display_order";
+  const sortKey =
+    params.sortKey && VALID_SORT_KEYS.includes(params.sortKey as (typeof VALID_SORT_KEYS)[number])
+      ? params.sortKey
+      : "display_order";
   const ascending = params.sortKey ? params.sortOrder !== "desc" : true;
   query = query.order(sortKey, { ascending });
 
@@ -139,10 +149,7 @@ export async function listProducts(
   }
 
   const { data, count, error } = await query;
-
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   type ProductRecord = {
     id: string;
@@ -167,34 +174,54 @@ export async function listProducts(
     created_at: string | null;
     updated_at: string | null;
     product_categories: { name: string } | null;
+    product_images:
+      | {
+          url: string;
+          is_primary: boolean;
+          display_order: number | null;
+        }[]
+      | null;
   };
 
   const records = (data ?? []) as unknown as ProductRecord[];
 
-  const products: Product[] = records.map((record) => ({
-    id: record.id,
-    code: record.code,
-    name: record.name,
-    description: record.description,
-    category_id: record.category_id,
-    category_name: record.product_categories?.name ?? null,
-    price_hq: record.price_hq,
-    price_branch: record.price_branch,
-    price_classroom: record.price_classroom,
-    price_retail: record.price_retail,
-    stock: record.stock,
-    stock_alert_threshold: record.stock_alert_threshold,
-    is_active: record.is_active,
-    is_taxable: record.is_taxable,
-    tax_rate: record.tax_rate,
-    min_order_quantity: record.min_order_quantity,
-    max_order_quantity: record.max_order_quantity,
-    order_unit: record.order_unit,
-    external_id: record.external_id,
-    display_order: record.display_order,
-    created_at: record.created_at,
-    updated_at: record.updated_at,
-  }));
+  const products: Product[] = records.map((record) => {
+    const images = record.product_images ?? [];
+    const primaryImage =
+      images.find((img) => img.is_primary) ??
+      [...images].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))[0];
+
+    return {
+      id: record.id,
+      code: record.code,
+      name: record.name,
+      description: record.description,
+      category_id: record.category_id,
+      category_name: record.product_categories?.name ?? null,
+      primary_image_url: primaryImage?.url ?? null,
+      images: images.map((img) => ({
+        url: img.url,
+        is_primary: img.is_primary,
+        display_order: img.display_order,
+      })),
+      price_hq: record.price_hq,
+      price_branch: record.price_branch,
+      price_classroom: record.price_classroom,
+      price_retail: record.price_retail,
+      stock: record.stock,
+      stock_alert_threshold: record.stock_alert_threshold,
+      is_active: record.is_active,
+      is_taxable: record.is_taxable,
+      tax_rate: record.tax_rate,
+      min_order_quantity: record.min_order_quantity,
+      max_order_quantity: record.max_order_quantity,
+      order_unit: record.order_unit,
+      external_id: record.external_id,
+      display_order: record.display_order,
+      created_at: record.created_at,
+      updated_at: record.updated_at,
+    };
+  });
 
   return { products, count: typeof count === "number" ? count : products.length };
 }
@@ -206,7 +233,12 @@ export async function getProduct(id: string): Promise<Product | null> {
     .select(
       `
         *,
-        product_categories(name)
+        product_categories(name),
+        product_images (
+          url,
+          is_primary,
+          display_order
+        )
       `,
     )
     .eq("id", id)
@@ -238,11 +270,49 @@ export async function getProduct(id: string): Promise<Product | null> {
     created_at: string | null;
     updated_at: string | null;
     product_categories: { name: string } | null;
+    product_images:
+      | {
+          url: string;
+          is_primary: boolean;
+          display_order: number | null;
+        }[]
+      | null;
   };
 
+  const images = record.product_images ?? [];
+  const primaryImage =
+    images.find((img) => img.is_primary) ??
+    [...images].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))[0];
+
   return {
-    ...record,
+    id: record.id,
+    code: record.code,
+    name: record.name,
+    description: record.description,
+    category_id: record.category_id,
     category_name: record.product_categories?.name ?? null,
+    primary_image_url: primaryImage?.url ?? null,
+    images: images.map((img) => ({
+      url: img.url,
+      is_primary: img.is_primary,
+      display_order: img.display_order,
+    })),
+    price_hq: record.price_hq,
+    price_branch: record.price_branch,
+    price_classroom: record.price_classroom,
+    price_retail: record.price_retail,
+    stock: record.stock,
+    stock_alert_threshold: record.stock_alert_threshold,
+    is_active: record.is_active,
+    is_taxable: record.is_taxable,
+    tax_rate: record.tax_rate,
+    min_order_quantity: record.min_order_quantity,
+    max_order_quantity: record.max_order_quantity,
+    order_unit: record.order_unit,
+    external_id: record.external_id,
+    display_order: record.display_order,
+    created_at: record.created_at,
+    updated_at: record.updated_at,
   };
 }
 

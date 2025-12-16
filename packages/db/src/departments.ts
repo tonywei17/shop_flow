@@ -193,6 +193,110 @@ export async function updateDepartmentCommissionRate(
  * @param classroomId Classroom department ID
  * @returns Branch department with commission rate, or null if not found
  */
+export type CreateDepartmentInput = {
+  external_id?: number | null;
+  parent_id?: string | null;
+  parent_external_id?: number | null;
+  name: string;
+  type: string;
+  category?: string | null;
+  code?: string | null;
+  level?: number;
+  manager_name?: string | null;
+  phone_primary?: string | null;
+  status?: string | null;
+  postal_code?: string | null;
+  prefecture?: string | null;
+  city?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  is_independent?: boolean;
+  allow_proxy_billing?: boolean;
+  commission_rate?: number | null;
+};
+
+export type UpdateDepartmentInput = Partial<CreateDepartmentInput>;
+
+/**
+ * Create a new department
+ */
+export async function createDepartment(
+  input: CreateDepartmentInput
+): Promise<DepartmentRecord> {
+  const sb = getSupabaseAdmin();
+  
+  const { data, error } = await sb
+    .from("departments")
+    .insert({
+      external_id: input.external_id ?? null,
+      parent_id: input.parent_id ?? null,
+      parent_external_id: input.parent_external_id ?? null,
+      name: input.name,
+      type: input.type,
+      category: input.category ?? null,
+      code: input.code ?? null,
+      level: input.level ?? 1,
+      manager_name: input.manager_name ?? null,
+      phone_primary: input.phone_primary ?? null,
+      status: input.status ?? "有効",
+      postal_code: input.postal_code ?? null,
+      prefecture: input.prefecture ?? null,
+      city: input.city ?? null,
+      address_line1: input.address_line1 ?? null,
+      address_line2: input.address_line2 ?? null,
+      is_independent: input.is_independent ?? false,
+      allow_proxy_billing: input.allow_proxy_billing ?? false,
+      commission_rate: input.commission_rate ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as DepartmentRecord;
+}
+
+/**
+ * Update an existing department
+ */
+export async function updateDepartment(
+  id: string,
+  input: UpdateDepartmentInput
+): Promise<DepartmentRecord> {
+  const sb = getSupabaseAdmin();
+  
+  const updateData: Record<string, unknown> = {};
+  
+  if (input.external_id !== undefined) updateData.external_id = input.external_id;
+  if (input.parent_id !== undefined) updateData.parent_id = input.parent_id;
+  if (input.parent_external_id !== undefined) updateData.parent_external_id = input.parent_external_id;
+  if (input.name !== undefined) updateData.name = input.name;
+  if (input.type !== undefined) updateData.type = input.type;
+  if (input.category !== undefined) updateData.category = input.category;
+  if (input.code !== undefined) updateData.code = input.code;
+  if (input.level !== undefined) updateData.level = input.level;
+  if (input.manager_name !== undefined) updateData.manager_name = input.manager_name;
+  if (input.phone_primary !== undefined) updateData.phone_primary = input.phone_primary;
+  if (input.status !== undefined) updateData.status = input.status;
+  if (input.postal_code !== undefined) updateData.postal_code = input.postal_code;
+  if (input.prefecture !== undefined) updateData.prefecture = input.prefecture;
+  if (input.city !== undefined) updateData.city = input.city;
+  if (input.address_line1 !== undefined) updateData.address_line1 = input.address_line1;
+  if (input.address_line2 !== undefined) updateData.address_line2 = input.address_line2;
+  if (input.is_independent !== undefined) updateData.is_independent = input.is_independent;
+  if (input.allow_proxy_billing !== undefined) updateData.allow_proxy_billing = input.allow_proxy_billing;
+  if (input.commission_rate !== undefined) updateData.commission_rate = input.commission_rate;
+
+  const { data, error } = await sb
+    .from("departments")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as DepartmentRecord;
+}
+
 export async function getBranchForClassroom(
   classroomId: string
 ): Promise<{ id: string; name: string; commission_rate: number } | null> {

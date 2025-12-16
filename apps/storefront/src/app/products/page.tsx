@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { listProducts, listProductCategories } from "@enterprise/db";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -130,8 +131,19 @@ export default async function ProductsPage({
               <Link key={product.id} href={`/products/${product.id}`}>
                 <Card className="h-full hover:shadow-lg transition-shadow">
                   <CardContent className="p-4">
-                    <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
-                      <Package className="h-12 w-12 text-muted-foreground" />
+                    <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden relative">
+                      {product.primary_image_url ? (
+                        <Image
+                          src={product.primary_image_url}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                          priority={false}
+                        />
+                      ) : (
+                        <Package className="h-12 w-12 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground">{product.code}</p>

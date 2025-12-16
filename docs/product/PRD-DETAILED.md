@@ -39,11 +39,33 @@ Shop Flow 是一个面向教育培训机构的综合管理平台，整合了：
 
 ### 2.1 账号与权限管理
 
+#### 段階的なリリース計画
+
+1. **フェーズ1**: 管理画面の基本 CRUD、閲覧・編集、認証と権限、監査ログ
+2. **フェーズ2**: 通知、メール配信、テンプレート、ジョブスケジューリング
+3. **フェーズ3**: BI/ダッシュボード、集計、レポート、自動アラート
+
+## 2025-12-16 更新: 商品画像エンドツーエンド対応
+
+- ストレージ/DB
+  - Supabase bucket `product-images` を使用、`product_images` テーブルを一覧・詳細で JOIN。
+  - `primary_image_url` を is_primary 優先（なければ display_order 最小）で算出。
+  - `images` 配列を API から返却し、フロントでギャラリーに利用。
+- 管理画面
+  - 商品画像マネージャで最大10枚/5MB、アップロード・主画像設定・並び替え・削除・ALT編集をサポート。
+  - Next.js 15 params 非同期問題を修正（`commerce/[id]`）。
+- ストアフロント
+  - `products` 一覧カードで `primary_image_url` を表示（`next/image`、溢れ防止の relative + overflow-hidden）。
+  - `products/[id]` でメイン画像＋サムネイルグリッドを表示（複数枚対応）。
+  - `next.config.ts` に `supabase-api.nexus-tech.cloud` を remotePatterns で許可。
+- 環境/運用
+  - `.env.local` を全アプリで統一（Supabase/MEDUSA/Admin）。dev サーバーは 3000(web)/3001(storefront)/3002(learning)。
+- **批量导入**：CSV 导入账号数据
+
 #### 2.1.1 账号管理
 - **账号列表**：分页展示、搜索过滤、批量操作
 - **账号详情**：基本信息、角色分配、部门归属
 - **账号状态**：有效/无效切换、最后登录时间
-- **批量导入**：CSV 导入账号数据
 
 #### 2.1.2 角色管理
 - **角色定义**：角色名称、描述、权限配置

@@ -4,6 +4,8 @@ import {
   updateAdminAccount,
   deleteAdminAccount,
   listDepartments,
+  createDepartment,
+  updateDepartment,
   deleteDepartment,
   updateDepartmentProxyBilling,
   updateDepartmentCommissionRate,
@@ -13,12 +15,15 @@ import {
   deleteRole,
   type AdminAccount,
   type DepartmentWithParent,
+  type DepartmentRecord,
   type RoleRecord,
   type ListAdminAccountsParams,
   type ListDepartmentsParams,
   type ListRolesParams,
   type CreateAdminAccountInput,
   type UpdateAdminAccountInput,
+  type CreateDepartmentInput,
+  type UpdateDepartmentInput,
   type CreateRoleInput,
   type UpdateRoleInput,
   type DataScopeContext,
@@ -117,4 +122,17 @@ export async function updateDepartmentCommissionRateService(
   commissionRate: number
 ): Promise<void> {
   return updateDepartmentCommissionRate(id, commissionRate);
+}
+
+export async function createDepartmentService(
+  input: CreateDepartmentInput,
+): Promise<DepartmentRecord> {
+  return createDepartment(input);
+}
+
+export async function updateDepartmentService(
+  id: string,
+  input: UpdateDepartmentInput,
+): Promise<DepartmentRecord> {
+  return updateDepartment(id, input);
 }

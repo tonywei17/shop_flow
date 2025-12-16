@@ -60,10 +60,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <UserProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex h-screen w-full overflow-hidden bg-background">
         <Sidebar allowedFeatureIds={allowedFeatureIds} />
-        <main className="flex-1 min-w-0 px-0 pb-12 pt-4 md:px-8 md:ml-[268px]">
-          <FeatureGuard allowedFeatureIds={allowedFeatureIds}>{children}</FeatureGuard>
+        <main className="flex flex-1 flex-col min-w-0 overflow-y-auto md:ml-[268px]">
+          <div className="flex-1 px-0 pb-12 pt-4 md:px-8">
+            <FeatureGuard allowedFeatureIds={allowedFeatureIds}>{children}</FeatureGuard>
+          </div>
         </main>
         <AIChatTrigger />
       </div>

@@ -15,6 +15,8 @@ export const roleCreateSchema = z.object({
   description: z.string().optional().nullable(),
   feature_permissions: z.array(z.string()).optional(),
   badge_color: z.string().optional().nullable(),
+  can_access_storefront: z.boolean().optional().default(false),
+  default_price_type: z.enum(["hq", "branch", "classroom", "retail"]).optional().default("retail"),
 });
 
 export type RoleCreateInput = z.infer<typeof roleCreateSchema>;

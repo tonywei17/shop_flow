@@ -61,12 +61,12 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
   return (
     <aside
       className={cn(
-        "flex w-[256px] min-w-[256px] flex-col border-r border-sidebar-border bg-sidebar",
+        "flex w-[256px] min-w-[256px] flex-col bg-sidebar shadow-sm",
         isMobile ? "" : "hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-screen",
         className,
       )}
     >
-      <div className="border-b border-sidebar-border px-6 pb-5 pt-6">
+      <div className="px-6 pb-5 pt-6">
         <Image
           src="/eu_logo.png"
           alt="リトミック研究センター ロゴ"
@@ -79,7 +79,7 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
       </div>
       <div className="flex flex-1 min-h-0 flex-col px-4 pb-5 pt-4">
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="h-full overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar pb-3 pr-1">
+          <div className="h-full overflow-y-auto pb-3 pr-1">
             {filteredSections.map((section, index) => (
               <Fragment key={section.label}>
                 <SidebarSection
@@ -89,7 +89,7 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
                   currentPath={normalizedPath}
                   onNavigate={onNavigate}
                 />
-                {index < navSections.length - 1 && <div className="mx-4 h-px bg-sidebar-border/20" />}
+                {index < filteredSections.length - 1 && <div className="mx-4 my-2" />}
               </Fragment>
             ))}
           </div>
@@ -99,7 +99,7 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
           target="_blank"
           rel="noreferrer"
           onClick={onNavigate}
-          className="mt-4 flex items-center justify-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent px-4 py-3 text-sm font-semibold text-sidebar-accent-foreground transition-colors hover:bg-sidebar-accent/80"
+          className="mt-4 flex items-center justify-center gap-2 rounded-md bg-sidebar-accent px-4 py-3 text-sm font-semibold text-sidebar-accent-foreground transition-colors hover:bg-sidebar-accent/80"
         >
           <GraduationCap className="h-4 w-4" />
           <span>学習プラットフォームへ</span>

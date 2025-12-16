@@ -347,10 +347,6 @@ export function CounterpartiesClient({
               className="w-[220px]"
             />
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10">
-                <Download className="h-4 w-4" />
-                一括操作
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -401,8 +397,9 @@ export function CounterpartiesClient({
           </div>
         </div>
 
-        <Table className="[&_th]:py-3 [&_td]:py-3">
-          <TableHeader>
+        {/* Table with sticky header */}
+        <Table stickyHeader maxHeight="calc(100vh - 380px)" className="[&_th]:py-3 [&_td]:py-3">
+          <TableHeader sticky>
             <TableRow className="border-b border-border text-sm text-foreground">
               <TableHead className="w-[36px] pl-6 pr-3">
                 <Checkbox

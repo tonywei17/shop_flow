@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
           avatar_url: dataUrl,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", adminAccountId);
+        .eq("account_id", adminAccountId);
 
       if (updateError) {
         console.error("[auth/avatar] Failed to update account:", updateError);
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", adminAccountId);
+      .eq("account_id", adminAccountId);
 
     if (updateError) {
       console.error("[auth/avatar] Failed to update account:", updateError);

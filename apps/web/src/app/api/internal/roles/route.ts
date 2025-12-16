@@ -49,6 +49,8 @@ export async function POST(req: NextRequest) {
     const description = data.description ? data.description.trim() : null;
     const featurePermissions = data.feature_permissions ?? [];
     const badgeColor = data.badge_color ?? null;
+    const canAccessStorefront = data.can_access_storefront ?? false;
+    const defaultPriceType = data.default_price_type ?? "retail";
 
     if (!name || !code) {
       return NextResponse.json({ error: "Missing name or code" }, { status: 400 });
@@ -77,6 +79,8 @@ export async function POST(req: NextRequest) {
         description,
         feature_permissions: featurePermissions,
         badge_color: badgeColor,
+        can_access_storefront: canAccessStorefront,
+        default_price_type: defaultPriceType as any,
       });
 
       return NextResponse.json({ role: updated, mode: "edit" }, { status: 200 });
@@ -93,6 +97,8 @@ export async function POST(req: NextRequest) {
       description,
       feature_permissions: featurePermissions,
       badge_color: badgeColor,
+      can_access_storefront: canAccessStorefront,
+      default_price_type: defaultPriceType as any,
     });
 
     return NextResponse.json({ role: created, mode: "create" }, { status: 201 });

@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
       },
       {
+        protocol: "https",
+        hostname: "supabase-api.nexus-tech.cloud",
+      },
+      {
         protocol: "http",
         hostname: "127.0.0.1",
       },

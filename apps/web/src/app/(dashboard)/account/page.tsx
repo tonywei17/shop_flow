@@ -44,7 +44,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       return { roles: [], count: 0 };
     }),
     // 部署列表：应用数据权限过滤（只能看到可访问的部署）
-    getDepartmentsWithScope({ limit: 1000 }).catch((error: unknown) => {
+    // 增加限制以包含所有教室（约1300+）
+    getDepartmentsWithScope({ limit: 5000 }).catch((error: unknown) => {
       console.error("Failed to load departments from Supabase on account page", error);
       return { departments: [], count: 0 };
     }),

@@ -111,7 +111,7 @@ export function DashboardHeader({
     );
 
   return (
-    <div className="sticky top-0 z-20 space-y-3 bg-background/95">
+    <div className="sticky top-0 z-20 space-y-3 bg-background pb-3">
       <div className="space-y-3">
         <div className="flex items-center justify-between rounded-lg border-b border-border bg-card pl-9 pr-6 py-3 shadow-sm">
           <div className="flex items-center gap-3">

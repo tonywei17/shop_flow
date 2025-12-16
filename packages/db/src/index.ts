@@ -17,8 +17,8 @@ export type {
 } from "./products";
 export { listRoles, createRole, updateRole, deleteRole } from "./roles";
 export type { RoleRecord, CreateRoleInput, UpdateRoleInput, ListRolesParams, DataScopeType, PriceType } from "./roles";
-export { listDepartments, deleteDepartment, updateDepartmentProxyBilling, updateDepartmentCommissionRate, getBranchForClassroom } from "./departments";
-export type { DepartmentWithParent, ListDepartmentsParams } from "./departments";
+export { listDepartments, createDepartment, updateDepartment, deleteDepartment, updateDepartmentProxyBilling, updateDepartmentCommissionRate, getBranchForClassroom } from "./departments";
+export type { DepartmentWithParent, DepartmentRecord, ListDepartmentsParams, CreateDepartmentInput, UpdateDepartmentInput } from "./departments";
 export { listAdminAccounts, createAdminAccount, updateAdminAccount, deleteAdminAccount } from "./accounts";
 export type {
   AdminAccount,

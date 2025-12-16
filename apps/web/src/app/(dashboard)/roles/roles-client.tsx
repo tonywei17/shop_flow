@@ -445,6 +445,33 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
 
       <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
+          {/* タイトル行 */}
+          <div className="flex items-center justify-between border-b border-border px-6 py-4">
+            <div className="space-y-1">
+              <h2 className="text-sm font-medium leading-none text-foreground">ロール一覧</h2>
+              <p className="text-xs text-muted-foreground">ロールを検索・フィルタし、エクスポートできます。</p>
+            </div>
+            <Button
+              onClick={() => {
+                setEditingRole(null);
+                setDialogMode("create");
+                setStatus("有効");
+                setSelectedFeatures(ALL_FEATURE_IDS);
+                setDataScopeType("all");
+                setAllowedDepartmentIds([]);
+                setCanAccessStorefront(false);
+                setDefaultPriceType("retail");
+                setBadgeColor(null);
+                setOpen(true);
+              }}
+              className="gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              新規追加
+            </Button>
+          </div>
+
+          {/* フィルター行 */}
           <div className="flex flex-col gap-3 border-b border-border px-6 py-3 text-sm text-foreground md:flex-row md:items-center md:justify-between">
             <label htmlFor="select-all" className="flex items-center gap-3">
               <Checkbox
@@ -456,10 +483,6 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
               <span>全て選択</span>
             </label>
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="ghost" className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10">
-                <Download className="h-4 w-4" />
-                一括操作
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -507,15 +530,6 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
                 </DropdownMenuContent>
               </DropdownMenu>
               <Sheet open={open} onOpenChange={setOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    className="flex items-center gap-3 rounded-[4px] px-4 py-[6px] text-sm font-medium"
-                    onClick={handleOpenCreate}
-                  >
-                    <Plus className="h-[14px] w-[14px]" />
-                    <span className="text-[12px] font-medium">新規追加</span>
-                  </Button>
-                </SheetTrigger>
                 <SheetContent className="flex w-full max-w-[440px] flex-col overflow-y-auto p-0 sm:w-[420px]">
                   <div className="flex flex-1 flex-col">
                     <SheetHeader className="border-b border-border px-6 py-4">
@@ -821,8 +835,9 @@ export function RolesClient({ roles, departments, pagination }: RolesClientProps
             </div>
           </div>
 
-          <Table className="[&_th]:py-3 [&_td]:py-3">
-            <TableHeader>
+          {/* Table with sticky header */}
+          <Table stickyHeader maxHeight="calc(100vh - 380px)" className="[&_th]:py-3 [&_td]:py-3">
+            <TableHeader sticky>
               <TableRow className="border-b border-border text-sm text-foreground">
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox

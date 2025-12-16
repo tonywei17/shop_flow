@@ -2,26 +2,44 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Table = React.forwardRef<
-  HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
-    <table
-      ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props}
-    />
-  </div>
-))
+type TableProps = React.HTMLAttributes<HTMLTableElement> & {
+  stickyHeader?: boolean;
+  maxHeight?: string;
+};
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  ({ className, stickyHeader, maxHeight, ...props }, ref) => (
+    <div
+      className="relative w-full overflow-auto"
+      style={stickyHeader && maxHeight ? { maxHeight } : undefined}
+    >
+      <table
+        ref={ref}
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
+    </div>
+  )
+);
 Table.displayName = "Table"
 
-const TableHeader = React.forwardRef<
-  HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
-))
+type TableHeaderProps = React.HTMLAttributes<HTMLTableSectionElement> & {
+  sticky?: boolean;
+};
+
+const TableHeader = React.forwardRef<HTMLTableSectionElement, TableHeaderProps>(
+  ({ className, sticky, ...props }, ref) => (
+    <thead
+      ref={ref}
+      className={cn(
+        "[&_tr]:border-b",
+        sticky && "sticky top-0 z-10 bg-card [&_th]:bg-card [&_tr]:bg-card",
+        className
+      )}
+      {...props}
+    />
+  )
+);
 TableHeader.displayName = "TableHeader"
 
 const TableBody = React.forwardRef<

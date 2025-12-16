@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProduct } from "@enterprise/db";
@@ -58,8 +59,41 @@ export default async function ProductPage({ params }: ProductPageProps): Promise
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Product Image */}
-        <div className="aspect-square bg-muted rounded-xl flex items-center justify-center">
-          <Package className="h-24 w-24 text-muted-foreground" />
+        <div className="space-y-3">
+          <div className="aspect-square bg-muted rounded-xl flex items-center justify-center overflow-hidden relative">
+            {product.primary_image_url ? (
+              <Image
+                src={product.primary_image_url}
+                alt={product.name}
+                fill
+                className="object-cover"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                priority
+              />
+            ) : (
+              <Package className="h-24 w-24 text-muted-foreground" />
+            )}
+          </div>
+
+          {product.images && product.images.length > 1 && (
+            <div className="grid grid-cols-5 gap-2">
+              {product.images.map((img, idx) => (
+                <div
+                  key={`${img.url}-${idx}`}
+                  className="aspect-square bg-muted rounded-md overflow-hidden border"
+                >
+                  <Image
+                    src={img.url}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="100px"
+                    priority={false}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Info */}

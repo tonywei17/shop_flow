@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
-import { getDepartmentsWithScope, deleteDepartmentService, updateDepartmentProxyBillingService, updateDepartmentCommissionRateService } from "@/lib/services/org";
+import { getDepartmentsWithScope, deleteDepartmentService, updateDepartmentProxyBillingService, updateDepartmentCommissionRateService, createDepartmentService, updateDepartmentService } from "@/lib/services/org";
+import { departmentUpsertSchema } from "@/lib/validation/departments";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -32,6 +33,83 @@ export async function DELETE(req: NextRequest) {
   try {
     await deleteDepartmentService(id);
     return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const rawBody = await req.json().catch(() => ({}));
+    const parsed = departmentUpsertSchema.safeParse(rawBody);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid department payload",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const data = parsed.data;
+    const mode = data.mode ?? "create";
+    const id = data.id?.trim();
+
+    const name = data.name.trim();
+    const type = data.type.trim();
+
+    if (!name || !type) {
+      return NextResponse.json({ error: "Missing name or type" }, { status: 400 });
+    }
+
+    const externalId = typeof data.external_id === "number" 
+      ? data.external_id 
+      : typeof data.external_id === "string" && data.external_id.trim()
+        ? Number(data.external_id)
+        : null;
+
+    const parentExternalId = typeof data.parent_external_id === "number"
+      ? data.parent_external_id
+      : typeof data.parent_external_id === "string" && data.parent_external_id.trim()
+        ? Number(data.parent_external_id)
+        : null;
+
+    const departmentInput = {
+      external_id: externalId,
+      parent_id: data.parent_id ?? null,
+      parent_external_id: parentExternalId,
+      name,
+      type,
+      category: data.category ?? null,
+      code: data.code ?? null,
+      level: data.level ?? 1,
+      manager_name: data.manager_name ?? null,
+      phone_primary: data.phone_primary ?? null,
+      status: data.status ?? "有効",
+      postal_code: data.postal_code ?? null,
+      prefecture: data.prefecture ?? null,
+      city: data.city ?? null,
+      address_line1: data.address_line1 ?? null,
+      address_line2: data.address_line2 ?? null,
+      is_independent: data.is_independent ?? false,
+      allow_proxy_billing: data.allow_proxy_billing ?? false,
+      commission_rate: data.commission_rate ?? null,
+    };
+
+    if (mode === "edit") {
+      if (!id) {
+        return NextResponse.json({ error: "Missing id for edit mode" }, { status: 400 });
+      }
+
+      const department = await updateDepartmentService(id, departmentInput);
+      return NextResponse.json({ department, mode: "edit" }, { status: 200 });
+    }
+
+    const department = await createDepartmentService(departmentInput);
+    return NextResponse.json({ department, mode: "create" }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

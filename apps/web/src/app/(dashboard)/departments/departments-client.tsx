@@ -288,8 +288,8 @@ export function DepartmentsClient({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
-                    className="flex items-center gap-2 px-2 py-1 text-primary hover:bg-primary/10"
+                    variant="outline"
+                    className="flex items-center gap-2 border-primary text-primary bg-white hover:text-green-600 hover:font-bold"
                     disabled={isExporting}
                   >
                     <Download className="h-4 w-4" />

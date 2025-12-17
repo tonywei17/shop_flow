@@ -181,7 +181,7 @@ export default function ExperiencesManagementPage() {
                 <Download className="h-4 w-4" />
                 一括操作
               </Button>
-              <Button variant="outline" size="sm" className="gap-1">
+              <Button variant="outline" size="sm" className="gap-1 border-primary text-primary bg-white hover:text-green-600 hover:font-bold">
                 <Download className="h-4 w-4" />
                 エクスポート
               </Button>

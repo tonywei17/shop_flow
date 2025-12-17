@@ -531,7 +531,7 @@ export function AccountClient({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-primary text-primary bg-white hover:text-green-600 hover:font-bold"
                     disabled={isExporting}
                   >
                     <Download className="h-4 w-4" />

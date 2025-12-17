@@ -730,9 +730,9 @@ export function DepartmentsTreeClient({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="gap-2 text-primary hover:bg-primary/10"
+                  className="gap-2 border-primary text-primary bg-white hover:text-green-600 hover:font-bold"
                   disabled={isExporting}
                 >
                   <Download className="h-4 w-4" />

@@ -2,6 +2,18 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { getSupabaseAdmin } from "@enterprise/db";
 import { OrdersClient } from "./orders-client";
 
+export type Product = {
+  id: string;
+  code: string;
+  name: string;
+  price_hq: number;
+  price_branch: number;
+  price_classroom: number;
+  price_retail: number;
+  tax_rate: number;
+  is_active: boolean;
+};
+
 export type Order = {
   id: string;
   order_number: string;
@@ -30,6 +42,30 @@ export type Order = {
   customer_email?: string;
   item_count?: number;
 };
+
+async function getProducts(): Promise<Product[]> {
+  try {
+    const sb = getSupabaseAdmin();
+    const { data: products, error } = await sb
+      .from("products")
+      .select("id, code, name, price_hq, price_branch, price_classroom, price_retail, tax_rate, is_active")
+      .eq("is_active", true)
+      .order("name");
+
+    if (error) {
+      console.error("[commerce/orders] Failed to fetch products:", error);
+      return [];
+    }
+
+    return (products || []).map((p: any) => ({
+      ...p,
+      tax_rate: Number(p.tax_rate) || 10,
+    }));
+  } catch (err) {
+    console.error("[commerce/orders] Unexpected error fetching products:", err);
+    return [];
+  }
+}
 
 async function getOrders(): Promise<{ orders: Order[]; error: string | null }> {
   try {
@@ -111,12 +147,15 @@ async function getOrders(): Promise<{ orders: Order[]; error: string | null }> {
 }
 
 export default async function OrdersListPage() {
-  const { orders, error } = await getOrders();
+  const [{ orders, error }, products] = await Promise.all([
+    getOrders(),
+    getProducts(),
+  ]);
 
   return (
     <div className="space-y-6">
       <DashboardHeader title="注文管理" />
-      <OrdersClient orders={orders} error={error} />
+      <OrdersClient orders={orders} error={error} products={products} />
     </div>
   );
 }

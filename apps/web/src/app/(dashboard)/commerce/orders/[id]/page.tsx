@@ -49,9 +49,11 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>;
 }): Promise<ReactElement> {
   const { id } = await params;
+  
   const supabase = getSupabaseAdmin();
-
-  const { data: order, error } = await supabase
+  
+  // Fetch order with all available fields
+  const { data: order, error: orderError } = await supabase
     .from("orders")
     .select(`
       id,
@@ -67,27 +69,44 @@ export default async function OrderDetailPage({
       payment_status,
       payment_method,
       created_at,
+      updated_at,
       paid_at,
       shipped_at,
       delivered_at,
-      cancelled_at,
-      order_items (
-        id,
-        product_id,
-        product_code,
-        product_name,
-        quantity,
-        unit_price,
-        tax_rate,
-        subtotal
-      )
+      cancelled_at
     `)
     .eq("id", id)
     .single();
 
-  if (error || !order) {
+  if (orderError || !order) {
+    console.error("Failed to fetch order:", orderError);
     notFound();
   }
 
-  return <OrderDetailClient order={order as Order} />;
+  // Fetch order items separately (to avoid foreign key relationship issues)
+  const { data: orderItems, error: itemsError } = await supabase
+    .from("order_items")
+    .select(`
+      id,
+      product_id,
+      product_code,
+      product_name,
+      quantity,
+      unit_price,
+      tax_rate,
+      subtotal
+    `)
+    .eq("order_id", id);
+
+  if (itemsError) {
+    console.error("Failed to fetch order items:", itemsError);
+  }
+
+  // Combine order with items
+  const enrichedOrder: Order = {
+    ...order,
+    order_items: orderItems || [],
+  };
+
+  return <OrderDetailClient order={enrichedOrder} />;
 }

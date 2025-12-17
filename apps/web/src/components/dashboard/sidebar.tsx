@@ -66,7 +66,7 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
         className,
       )}
     >
-      <div className="px-6 pb-5 pt-6">
+      <div className="px-6 pt-4">
         <Image
           src="/eu_logo.png"
           alt="リトミック研究センター ロゴ"

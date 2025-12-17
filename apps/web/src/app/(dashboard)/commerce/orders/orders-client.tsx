@@ -22,11 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Download, Eye, MoreHorizontal, Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
-import type { Order } from "./page";
+import type { Order, Product } from "./page";
+import { CreateOrderDialog } from "./create-order-dialog";
 
 type OrdersClientProps = {
   orders: Order[];
   error: string | null;
+  products: Product[];
 };
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
@@ -65,7 +67,7 @@ function formatCurrency(amount: number): string {
   return `¥${amount.toLocaleString()}`;
 }
 
-export function OrdersClient({ orders, error }: OrdersClientProps) {
+export function OrdersClient({ orders, error, products }: OrdersClientProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [paymentFilter, setPaymentFilter] = React.useState<string>("all");
@@ -212,10 +214,14 @@ export function OrdersClient({ orders, error }: OrdersClientProps) {
                   <SelectItem value="refunded">返金済</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 border-primary text-primary bg-white hover:text-green-600 hover:font-bold">
                 <Download className="h-4 w-4" />
                 エクスポート
               </Button>
+              <CreateOrderDialog 
+                products={products} 
+                onOrderCreated={() => window.location.reload()} 
+              />
             </div>
           </div>
 

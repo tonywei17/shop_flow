@@ -351,7 +351,7 @@ export function ProductCategoriesClient({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="h-9"
+                    className="h-9 border-primary text-primary bg-white hover:text-green-600 hover:font-bold"
                     disabled={isExporting}
                   >
                     <Download className="h-4 w-4" />

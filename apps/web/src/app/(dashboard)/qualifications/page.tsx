@@ -176,7 +176,7 @@ export default function QualificationsManagementPage() {
                     <Button variant="outline" size="sm">検索</Button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="gap-1">
+                    <Button variant="outline" size="sm" className="gap-1 border-primary text-primary bg-white hover:text-green-600 hover:font-bold">
                       <Download className="h-4 w-4" />
                       エクスポート
                     </Button>

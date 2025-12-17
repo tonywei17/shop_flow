@@ -8,7 +8,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Loader2, Plus, Minus } from "lucide-react";
 
 type InventoryPagination = {
   page: number;
@@ -23,6 +41,20 @@ type InventoryClientProps = {
   pagination: InventoryPagination;
 };
 
+type AdjustmentDialogState = {
+  open: boolean;
+  item: InventoryRow | null;
+  type: "add" | "subtract";
+};
+
+const ADJUSTMENT_REASONS = [
+  { value: "purchase", label: "仕入れ" },
+  { value: "return", label: "返品" },
+  { value: "damage", label: "破損・廃棄" },
+  { value: "correction", label: "棚卸調整" },
+  { value: "other", label: "その他" },
+];
+
 export function InventoryClient({ items, pagination }: InventoryClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,6 +62,76 @@ export function InventoryClient({ items, pagination }: InventoryClientProps) {
   const [searchTerm, setSearchTerm] = React.useState(pagination.search);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const lastSearchRef = React.useRef(pagination.search);
+
+  // Adjustment dialog state
+  const [adjustDialog, setAdjustDialog] = React.useState<AdjustmentDialogState>({
+    open: false,
+    item: null,
+    type: "add",
+  });
+  const [adjustAmount, setAdjustAmount] = React.useState("");
+  const [adjustReason, setAdjustReason] = React.useState("");
+  const [adjustNote, setAdjustNote] = React.useState("");
+  const [isAdjusting, setIsAdjusting] = React.useState(false);
+  const [adjustError, setAdjustError] = React.useState<string | null>(null);
+
+  const openAdjustDialog = (item: InventoryRow, type: "add" | "subtract") => {
+    setAdjustDialog({ open: true, item, type });
+    setAdjustAmount("");
+    setAdjustReason("");
+    setAdjustNote("");
+    setAdjustError(null);
+  };
+
+  const closeAdjustDialog = () => {
+    setAdjustDialog({ open: false, item: null, type: "add" });
+  };
+
+  const handleAdjustSubmit = async () => {
+    if (!adjustDialog.item || !adjustAmount || !adjustReason) return;
+
+    const amount = parseInt(adjustAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      setAdjustError("有効な数量を入力してください");
+      return;
+    }
+
+    const delta = adjustDialog.type === "add" ? amount : -amount;
+
+    // Check if subtracting more than available
+    if (delta < 0 && Math.abs(delta) > adjustDialog.item.stock) {
+      setAdjustError("在庫数を超える数量は減らせません");
+      return;
+    }
+
+    setIsAdjusting(true);
+    setAdjustError(null);
+
+    try {
+      const response = await fetch("/api/internal/inventory/adjust", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: adjustDialog.item.id,
+          delta,
+          reason: adjustReason,
+          note: adjustNote || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "在庫調整に失敗しました");
+      }
+
+      closeAdjustDialog();
+      router.refresh();
+    } catch (err) {
+      setAdjustError(err instanceof Error ? err.message : "エラーが発生しました");
+    } finally {
+      setIsAdjusting(false);
+    }
+  };
 
   const totalPages = Math.max(1, Math.ceil(pagination.count / pagination.limit));
   const hasNextPage = pagination.page < totalPages;
@@ -102,6 +204,7 @@ export function InventoryClient({ items, pagination }: InventoryClientProps) {
   }, [items]);
 
   return (
+    <>
     <Card className="rounded-xl border bg-card shadow-sm">
       <CardContent className="p-0">
         {/* ヘッダー：検索 + 件数 */}
@@ -135,12 +238,13 @@ export function InventoryClient({ items, pagination }: InventoryClientProps) {
               <TableHead className="w-[120px] text-right">在庫数</TableHead>
               <TableHead className="w-[140px] text-right">在庫警告閾値</TableHead>
               <TableHead className="w-[120px] text-center">在庫ステータス</TableHead>
+              <TableHead className="w-[100px] text-right pr-6">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   在庫データがありません。
                 </TableCell>
               </TableRow>
@@ -187,6 +291,29 @@ export function InventoryClient({ items, pagination }: InventoryClientProps) {
                         {statusLabel}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-right pr-6">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => openAdjustDialog(item, "add")}
+                          title="在庫を増やす"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => openAdjustDialog(item, "subtract")}
+                          title="在庫を減らす"
+                          disabled={item.stock === 0}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })
@@ -220,5 +347,80 @@ export function InventoryClient({ items, pagination }: InventoryClientProps) {
         </div>
       </CardContent>
     </Card>
+
+    {/* Adjustment Dialog */}
+    <Dialog open={adjustDialog.open} onOpenChange={(open) => !open && closeAdjustDialog()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {adjustDialog.type === "add" ? "在庫を増やす" : "在庫を減らす"}
+          </DialogTitle>
+          <DialogDescription>
+            {adjustDialog.item?.name} ({adjustDialog.item?.code})
+            <br />
+            現在の在庫: {adjustDialog.item?.stock}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="adjust-amount">数量</Label>
+            <Input
+              id="adjust-amount"
+              type="number"
+              min="1"
+              value={adjustAmount}
+              onChange={(e) => setAdjustAmount(e.target.value)}
+              placeholder="調整する数量を入力"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="adjust-reason">理由</Label>
+            <Select value={adjustReason} onValueChange={setAdjustReason}>
+              <SelectTrigger id="adjust-reason">
+                <SelectValue placeholder="理由を選択" />
+              </SelectTrigger>
+              <SelectContent>
+                {ADJUSTMENT_REASONS.map((reason) => (
+                  <SelectItem key={reason.value} value={reason.value}>
+                    {reason.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="adjust-note">備考（任意）</Label>
+            <Textarea
+              id="adjust-note"
+              value={adjustNote}
+              onChange={(e) => setAdjustNote(e.target.value)}
+              placeholder="備考を入力"
+              rows={2}
+            />
+          </div>
+
+          {adjustError && (
+            <p className="text-sm text-destructive">{adjustError}</p>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={closeAdjustDialog} disabled={isAdjusting}>
+            キャンセル
+          </Button>
+          <Button
+            onClick={handleAdjustSubmit}
+            disabled={isAdjusting || !adjustAmount || !adjustReason}
+          >
+            {isAdjusting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {adjustDialog.type === "add" ? "増やす" : "減らす"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

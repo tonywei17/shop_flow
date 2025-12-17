@@ -175,6 +175,7 @@ export type CreateAdminAccountInput = {
   role_id?: string | null;
   role_code?: string | null;
   account_scope?: string;
+  password_hash?: string | null;
 };
 
 export type UpdateAdminAccountInput = {
@@ -187,6 +188,7 @@ export type UpdateAdminAccountInput = {
   role_id?: string | null;
   role_code?: string | null;
   account_scope?: string;
+  password_hash?: string | null;
 };
 
 export async function createAdminAccount(
@@ -194,7 +196,7 @@ export async function createAdminAccount(
 ): Promise<{ id: string }> {
   const sb = getSupabaseAdmin();
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     account_id: input.account_id,
     display_name: input.display_name,
     email: input.email ?? null,
@@ -206,6 +208,10 @@ export async function createAdminAccount(
     role_code: input.role_code ?? null,
     account_scope: input.account_scope ?? "admin_portal",
   };
+
+  if (input.password_hash !== undefined) {
+    payload.password_hash = input.password_hash ?? null;
+  }
 
   const { data, error } = await sb
     .from("admin_accounts")
@@ -255,6 +261,9 @@ export async function updateAdminAccount(
   }
   if (typeof input.account_scope === "string") {
     payload.account_scope = input.account_scope;
+  }
+  if (input.password_hash !== undefined) {
+    payload.password_hash = input.password_hash ?? null;
   }
 
   if (Object.keys(payload).length === 0) {

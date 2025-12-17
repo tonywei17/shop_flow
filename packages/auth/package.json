@@ -9,7 +9,12 @@
     "dev": "tsc -w -p tsconfig.json",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^20",
     "typescript": "^5.4.0"
   }
 }

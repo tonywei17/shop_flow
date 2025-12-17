@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
+import { hashPassword } from "@enterprise/auth";
 import {
   getAdminAccountsWithScope,
   createAdminAccountService,
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
     const displayName = data.display_name.trim();
     const email = (data.email ?? "").trim();
     const phone = (data.phone ?? "").trim();
+    const password = (data.password ?? "").trim();
 
     const statusRaw = data.status;
     const status =
@@ -67,12 +69,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing account_id or display_name" }, { status: 400 });
     }
 
+    let passwordHash: string | null = null;
+    if (password) {
+      passwordHash = await hashPassword(password);
+    }
+
     if (mode === "edit") {
       if (!id) {
         return NextResponse.json({ error: "Missing id for edit mode" }, { status: 400 });
       }
 
-      await updateAdminAccountService(id, {
+      const updatePayload: Record<string, unknown> = {
         display_name: displayName,
         email: email || null,
         phone: phone || null,
@@ -82,12 +89,18 @@ export async function POST(req: NextRequest) {
         role_id: roleId,
         role_code: roleCode || null,
         account_scope: accountScope,
-      });
+      };
+
+      if (passwordHash) {
+        updatePayload.password_hash = passwordHash;
+      }
+
+      await updateAdminAccountService(id, updatePayload as any);
 
       return NextResponse.json({ ok: true, mode: "edit" }, { status: 200 });
     }
 
-    const { id: newId } = await createAdminAccountService({
+    const createPayload: Record<string, unknown> = {
       account_id: accountId,
       display_name: displayName,
       email: email || null,
@@ -98,7 +111,13 @@ export async function POST(req: NextRequest) {
       role_id: roleId,
       role_code: roleCode || null,
       account_scope: accountScope,
-    });
+    };
+
+    if (passwordHash) {
+      createPayload.password_hash = passwordHash;
+    }
+
+    const { id: newId } = await createAdminAccountService(createPayload as any);
 
     return NextResponse.json({ ok: true, mode: "create", id: newId }, { status: 201 });
   } catch (error) {

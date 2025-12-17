@@ -1,15 +1,15 @@
 import { cookies } from "next/headers";
+import { signSessionPayload, encodeSignedSession, decodeSignedSession, verifySessionPayload } from "@enterprise/auth";
 import type { AuthSession, StorefrontUser } from "./types";
 
 const SESSION_COOKIE_NAME = "storefront_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-// Simple session encoding (in production, use proper JWT or encrypted cookies)
 function encodeSession(session: AuthSession): string {
   return Buffer.from(JSON.stringify(session)).toString("base64");
 }
 
-function decodeSession(encoded: string): AuthSession | null {
+function decodeSessionPayload(encoded: string): AuthSession | null {
   try {
     const decoded = Buffer.from(encoded, "base64").toString("utf-8");
     return JSON.parse(decoded) as AuthSession;
@@ -24,8 +24,17 @@ export async function createSession(user: StorefrontUser): Promise<void> {
     expiresAt: Date.now() + SESSION_MAX_AGE * 1000,
   };
 
+  const sessionSecret = process.env.STOREFRONT_SESSION_SECRET;
+  if (!sessionSecret) {
+    throw new Error("STOREFRONT_SESSION_SECRET is not configured");
+  }
+
+  const sessionPayload = encodeSession(session);
+  const signed = await signSessionPayload(sessionPayload, sessionSecret);
+  const encodedSession = encodeSignedSession(signed);
+
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, encodeSession(session), {
+  cookieStore.set(SESSION_COOKIE_NAME, encodedSession, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -42,7 +51,18 @@ export async function getSession(): Promise<AuthSession | null> {
     return null;
   }
 
-  const session = decodeSession(sessionCookie.value);
+  const sessionSecret = process.env.STOREFRONT_SESSION_SECRET;
+  if (!sessionSecret) {
+    return null;
+  }
+
+  const decoded = decodeSignedSession(sessionCookie.value);
+  if (!decoded || !(await verifySessionPayload(decoded, sessionSecret))) {
+    await destroySession();
+    return null;
+  }
+
+  const session = decodeSessionPayload(decoded.payload);
 
   if (!session) {
     return null;

@@ -111,3 +111,12 @@ export type {
   ListInventoryParams,
   ListInventoryAdjustmentsParams,
 } from "./inventory";
+
+// Audit logging
+export { createAuditLog, listAuditLogs } from "./audit-log";
+export type {
+  AuditAction,
+  AuditLogEntry,
+  CreateAuditLogInput,
+  ListAuditLogsParams,
+} from "./audit-log";

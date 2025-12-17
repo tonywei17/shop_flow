@@ -38,66 +38,44 @@ export async function POST(request: NextRequest) {
     const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
     const orderNumber = `ORD-${dateStr}-${randomStr}`;
 
-    // Create order
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        order_number: orderNumber,
-        user_id: user.id,
-        status: "pending",
-        subtotal: subtotal,
-        tax_amount: taxAmount,
-        shipping_fee: 0,
-        total_amount: total,
-        price_type: user.priceType,
-        shipping_address: shippingAddress,
-        payment_status: "unpaid",
-        payment_method: "stripe",
-      })
-      .select("id, order_number")
-      .single();
+    // Create order with stock adjustment in a single transaction
+    const { data: result, error: txError } = await supabase.rpc(
+      "create_order_with_stock_adjustment",
+      {
+        p_order_number: orderNumber,
+        p_user_id: user.id,
+        p_subtotal: subtotal,
+        p_tax_amount: taxAmount,
+        p_shipping_fee: 0,
+        p_total_amount: total,
+        p_price_type: user.priceType || "retail",
+        p_shipping_address: shippingAddress,
+        p_payment_method: "stripe",
+        p_items: items,
+      }
+    );
 
-    if (orderError) {
-      console.error("Failed to create order:", orderError);
+    if (txError) {
+      console.error("Failed to create order:", txError);
+      
+      // Check for specific error types
+      if (txError.message?.includes("Insufficient stock")) {
+        return NextResponse.json(
+          { error: "在庫が不足しています。カートの内容を確認してください。" },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { error: "注文の作成に失敗しました" },
         { status: 500 }
       );
     }
 
-    // Create order items
-    const orderItems = items.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.productId,
-      product_code: item.productCode,
-      product_name: item.productName,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      tax_rate: item.taxRate,
-      subtotal: item.unitPrice * item.quantity,
-    }));
-
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .insert(orderItems);
-
-    if (itemsError) {
-      console.error("Failed to create order items:", itemsError);
-      // Rollback order
-      await supabase.from("orders").delete().eq("id", order.id);
-      return NextResponse.json(
-        { error: "注文商品の登録に失敗しました" },
-        { status: 500 }
-      );
-    }
-
-    // TODO: Create Stripe checkout session and redirect
-    // For now, just return success
-
     return NextResponse.json({
       success: true,
-      orderId: order.order_number,
-      orderUuid: order.id,
+      orderId: result.order_number,
+      orderUuid: result.order_id,
     });
   } catch (error) {
     console.error("Order creation error:", error);

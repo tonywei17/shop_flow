@@ -309,6 +309,10 @@ export function AccountClient({
         account_scope: pagination.scope || "admin_portal",
       };
 
+      if (formState.password) {
+        payload.password = formState.password;
+      }
+
       const response = await fetch("/api/internal/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { decodeSignedSession, verifySessionPayload } from "@enterprise/auth";
 
 // Routes that require authentication
 const protectedRoutes = ["/products", "/cart", "/checkout", "/account"];
@@ -7,10 +8,19 @@ const protectedRoutes = ["/products", "/cart", "/checkout", "/account"];
 // Routes that should redirect to home if already authenticated
 const authRoutes = ["/login"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get("storefront_session");
-  const isAuthenticated = !!sessionCookie?.value;
+  const sessionSecret = process.env.STOREFRONT_SESSION_SECRET;
+
+  let isAuthenticated = false;
+
+  if (sessionCookie?.value && sessionSecret) {
+    const decoded = decodeSignedSession(sessionCookie.value);
+    if (decoded && await verifySessionPayload(decoded, sessionSecret)) {
+      isAuthenticated = true;
+    }
+  }
 
   // Check if trying to access protected route without auth
   const isProtectedRoute = protectedRoutes.some(

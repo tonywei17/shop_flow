@@ -7,6 +7,7 @@ export const accountUpsertSchema = z.object({
   display_name: z.string().min(1),
   email: z.string().optional(),
   phone: z.string().optional(),
+  password: z.string().optional(),
   status: z.union([z.boolean(), z.string()]).optional(),
   department_id: z.string().nullable().optional(),
   department_name: z.string().optional(),

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@enterprise/db";
+import { verifyPassword } from "@enterprise/auth";
 import { createSession } from "@/lib/auth/session";
 import type { StorefrontUser, PriceType } from "@/lib/auth/types";
 
@@ -29,7 +30,8 @@ export async function POST(request: NextRequest) {
         department_id,
         department_name,
         role_id,
-        role_code
+        role_code,
+        password_hash
       `)
       .eq("account_id", accountId)
       .single();
@@ -47,6 +49,18 @@ export async function POST(request: NextRequest) {
         { error: "このアカウントは無効です" },
         { status: 401 }
       );
+    }
+
+    // Check if account is locked
+    const lockedUntil = (account as any).locked_until as string | null;
+    if (lockedUntil) {
+      const lockTime = new Date(lockedUntil);
+      if (lockTime > new Date()) {
+        return NextResponse.json(
+          { error: "このアカウントはロックされています。しばらく後に再度お試しください。" },
+          { status: 429 }
+        );
+      }
     }
 
     // Get the role to check storefront access
@@ -84,12 +98,37 @@ export async function POST(request: NextRequest) {
     }
     // Note: If no role_id, allow access with default retail price (for demo)
 
-    // TODO: In production, implement proper password verification
-    // For now, we'll use a simple check (password === account_id for demo)
-    // In production, you should:
-    // 1. Store hashed passwords in the database
-    // 2. Use bcrypt or similar to verify passwords
-    if (password !== accountId) {
+    // Verify password using bcrypt
+    const passwordHash = (account as any).password_hash as string | null;
+    if (!passwordHash) {
+      return NextResponse.json(
+        { error: "このアカウントはパスワードが設定されていません" },
+        { status: 401 }
+      );
+    }
+
+    const passwordMatch = await verifyPassword(password, passwordHash);
+    if (!passwordMatch) {
+      // Increment failed login attempts
+      const failedAttempts = ((account as any).failed_login_attempts as number) || 0;
+      const newFailedAttempts = failedAttempts + 1;
+      const MAX_FAILED_ATTEMPTS = 5;
+      const LOCK_DURATION_MINUTES = 15;
+
+      const updatePayload: Record<string, unknown> = {
+        failed_login_attempts: newFailedAttempts,
+        last_failed_login_at: new Date().toISOString(),
+      };
+
+      // Lock account if max attempts exceeded
+      if (newFailedAttempts >= MAX_FAILED_ATTEMPTS) {
+        const lockUntil = new Date();
+        lockUntil.setMinutes(lockUntil.getMinutes() + LOCK_DURATION_MINUTES);
+        updatePayload.locked_until = lockUntil.toISOString();
+      }
+
+      await supabase.from("admin_accounts").update(updatePayload).eq("id", account.id);
+
       return NextResponse.json(
         { error: "アカウントIDまたはパスワードが正しくありません" },
         { status: 401 }
@@ -111,10 +150,15 @@ export async function POST(request: NextRequest) {
 
     await createSession(user);
 
-    // Update last login
+    // Reset failed login attempts and clear lock on successful login
     await supabase
       .from("admin_accounts")
-      .update({ last_login_at: new Date().toISOString() })
+      .update({
+        last_login_at: new Date().toISOString(),
+        failed_login_attempts: 0,
+        locked_until: null,
+        last_failed_login_at: null,
+      })
       .eq("id", account.id);
 
     return NextResponse.json({ success: true, user });

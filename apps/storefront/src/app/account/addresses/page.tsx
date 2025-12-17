@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { MapPin, Plus, Home, Building, Phone, Trash2 } from "lucide-react";
+import { MapPin, Plus, Home, Building, Phone, Trash2, Pencil, Star } from "lucide-react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,16 @@ type AddressRecord = {
   created_at: string | null;
 };
 
+function validatePostalCode(postal: string | null): boolean {
+  if (!postal) return true;
+  return /^\d{3}-?\d{4}$/.test(postal);
+}
+
+function validatePhone(phone: string | null): boolean {
+  if (!phone) return true;
+  return /^[\d\-+()]{10,15}$/.test(phone.replace(/\s/g, ""));
+}
+
 async function addAddress(formData: FormData): Promise<void> {
   "use server";
   const authed = await isAuthenticated();
@@ -46,6 +57,19 @@ async function addAddress(formData: FormData): Promise<void> {
   const address2 = (formData.get("address2") as string) || null;
   const isDefault = formData.get("is_default") === "on";
 
+  if (!recipient.trim()) {
+    throw new Error("受取人は必須です");
+  }
+  if (!address1.trim()) {
+    throw new Error("番地・町名は必須です");
+  }
+  if (!validatePostalCode(postal)) {
+    throw new Error("郵便番号の形式が正しくありません（例: 100-0001）");
+  }
+  if (!validatePhone(phone)) {
+    throw new Error("電話番号の形式が正しくありません");
+  }
+
   const sb = getSupabaseAdmin();
   if (isDefault) {
     await sb.from("addresses").update({ is_default: false }).eq("user_id", user.id);
@@ -54,15 +78,93 @@ async function addAddress(formData: FormData): Promise<void> {
   await sb.from("addresses").insert({
     user_id: user.id,
     label,
-    recipient_name: recipient,
-    phone,
-    postal_code: postal,
-    prefecture,
-    city,
-    address_line1: address1,
-    address_line2: address2,
+    recipient_name: recipient.trim(),
+    phone: phone?.trim() || null,
+    postal_code: postal?.trim() || null,
+    prefecture: prefecture?.trim() || null,
+    city: city?.trim() || null,
+    address_line1: address1.trim(),
+    address_line2: address2?.trim() || null,
     is_default: isDefault,
   });
+
+  revalidatePath("/account/addresses");
+}
+
+async function updateAddress(formData: FormData): Promise<void> {
+  "use server";
+  const authed = await isAuthenticated();
+  if (!authed) {
+    redirect("/login?redirect=/account/addresses");
+  }
+  const user = await getCurrentUser();
+  if (!user?.id) {
+    redirect("/login?redirect=/account/addresses");
+  }
+
+  const id = formData.get("id") as string;
+  if (!id) return;
+
+  const label = (formData.get("label") as string) || null;
+  const recipient = (formData.get("recipient") as string) || "";
+  const phone = (formData.get("phone") as string) || null;
+  const postal = (formData.get("postal") as string) || null;
+  const prefecture = (formData.get("prefecture") as string) || null;
+  const city = (formData.get("city") as string) || null;
+  const address1 = (formData.get("address1") as string) || "";
+  const address2 = (formData.get("address2") as string) || null;
+  const isDefault = formData.get("is_default") === "on";
+
+  if (!recipient.trim()) {
+    throw new Error("受取人は必須です");
+  }
+  if (!address1.trim()) {
+    throw new Error("番地・町名は必須です");
+  }
+  if (!validatePostalCode(postal)) {
+    throw new Error("郵便番号の形式が正しくありません（例: 100-0001）");
+  }
+  if (!validatePhone(phone)) {
+    throw new Error("電話番号の形式が正しくありません");
+  }
+
+  const sb = getSupabaseAdmin();
+  if (isDefault) {
+    await sb.from("addresses").update({ is_default: false }).eq("user_id", user.id);
+  }
+
+  await sb.from("addresses").update({
+    label,
+    recipient_name: recipient.trim(),
+    phone: phone?.trim() || null,
+    postal_code: postal?.trim() || null,
+    prefecture: prefecture?.trim() || null,
+    city: city?.trim() || null,
+    address_line1: address1.trim(),
+    address_line2: address2?.trim() || null,
+    is_default: isDefault,
+  }).eq("id", id).eq("user_id", user.id);
+
+  revalidatePath("/account/addresses");
+}
+
+async function setDefaultAddress(formData: FormData): Promise<void> {
+  "use server";
+  const authed = await isAuthenticated();
+  if (!authed) {
+    redirect("/login?redirect=/account/addresses");
+  }
+  const user = await getCurrentUser();
+  if (!user?.id) {
+    redirect("/login?redirect=/account/addresses");
+  }
+
+  const id = formData.get("id") as string;
+  if (!id) return;
+
+  const sb = getSupabaseAdmin();
+  await sb.from("addresses").update({ is_default: false }).eq("user_id", user.id);
+  await sb.from("addresses").update({ is_default: true }).eq("id", id).eq("user_id", user.id);
 
   revalidatePath("/account/addresses");
 }
@@ -146,11 +248,26 @@ export default async function AccountAddressesPage(): Promise<ReactElement> {
                   {addr.phone || "未設定"}
                 </p>
               </div>
-              <div className="flex gap-3">
-                <form action={deleteAddress} className="flex-1">
+              <div className="flex gap-2 flex-wrap">
+                {!addr.is_default && (
+                  <form action={setDefaultAddress}>
+                    <input type="hidden" name="id" value={addr.id} />
+                    <Button variant="outline" size="sm">
+                      <Star className="h-4 w-4 mr-1" />
+                      デフォルトに設定
+                    </Button>
+                  </form>
+                )}
+                <Link href={`/account/addresses/${addr.id}/edit`}>
+                  <Button variant="outline" size="sm">
+                    <Pencil className="h-4 w-4 mr-1" />
+                    編集
+                  </Button>
+                </Link>
+                <form action={deleteAddress}>
                   <input type="hidden" name="id" value={addr.id} />
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Trash2 className="h-4 w-4 mr-2" />
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-1" />
                     削除
                   </Button>
                 </form>

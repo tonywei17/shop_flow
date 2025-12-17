@@ -221,6 +221,32 @@
 
 ## 10. 开发里程碑与变更记录
 
+### 2025-12-17 里程碑：安全加固与订单事务
+
+- **登录安全强化**：
+  - bcrypt 密码哈希（@enterprise/auth）
+  - 失败登录保护（5次失败锁定15分钟）
+  - HMAC-SHA256 签名会话（Web Crypto API）
+  - HttpOnly/SameSite/Secure Cookie
+  - 审计日志记录登录事件
+
+- **订单与库存事务**：
+  - 原子性订单创建（RPC 函数）
+  - 自动库存扣减与恢复
+  - 订单状态流（pending→paid→processing→shipped→delivered）
+  - 订单详情页（用户端 + 管理端）
+
+- **功能完善**：
+  - 库存调整 UI 与 API
+  - 地址簿输入校验与编辑
+  - 审计日志表与工具
+
+### 2025-12-16 里程碑：商品画像エンドツーエンド対応
+
+- Supabase bucket `product-images`、`product_images` テーブル
+- 商品画像マネージャ（最大10枚/5MB）
+- ストアフロント商品一覧・詳細で画像表示
+
 ### 2025-12-04 里程碑：shadcn/ui 组件库正式导入
 
 - **UI 组件标准化**：

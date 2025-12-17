@@ -19,18 +19,18 @@ type MonthPickerProps = {
 };
 
 const MONTHS = [
-  { value: "01", label: "1月" },
-  { value: "02", label: "2月" },
-  { value: "03", label: "3月" },
-  { value: "04", label: "4月" },
-  { value: "05", label: "5月" },
-  { value: "06", label: "6月" },
-  { value: "07", label: "7月" },
-  { value: "08", label: "8月" },
-  { value: "09", label: "9月" },
-  { value: "10", label: "10月" },
-  { value: "11", label: "11月" },
-  { value: "12", label: "12月" },
+  { value: "01", label: "1月分" },
+  { value: "02", label: "2月分" },
+  { value: "03", label: "3月分" },
+  { value: "04", label: "4月分" },
+  { value: "05", label: "5月分" },
+  { value: "06", label: "6月分" },
+  { value: "07", label: "7月分" },
+  { value: "08", label: "8月分" },
+  { value: "09", label: "9月分" },
+  { value: "10", label: "10月分" },
+  { value: "11", label: "11月分" },
+  { value: "12", label: "12月分" },
 ];
 
 export function MonthPicker({ value, onChange, minYear = 2020, maxYear }: MonthPickerProps) {
@@ -149,7 +149,7 @@ export function MonthPicker({ value, onChange, minYear = 2020, maxYear }: MonthP
         onClick={handleCurrentMonth}
       >
         <Calendar className="h-3.5 w-3.5" />
-        今月
+        今月分
       </Button>
     </div>
   );
@@ -161,8 +161,17 @@ export function getCurrentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-// Helper function to format month for display
+// Helper function to get previous month in YYYY-MM format (for billing periods)
+export function getPreviousMonth(): string {
+  const now = new Date();
+  const prevMonth = now.getMonth(); // 0-indexed, so current getMonth() gives previous month number
+  const year = prevMonth === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  const month = prevMonth === 0 ? 12 : prevMonth;
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+// Helper function to format month for display (billing period)
 export function formatMonthDisplay(yearMonth: string): string {
   const [year, month] = yearMonth.split("-");
-  return `${year}年${parseInt(month, 10)}月`;
+  return `${year}年${parseInt(month, 10)}月分`;
 }

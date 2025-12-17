@@ -38,7 +38,8 @@ type DashboardHeaderProps = {
 const labelMap: Record<string, string> = {
   // 請求書関連
   billing: "請求書関連",
-  invoices: "請求一覧",
+  generate: "請求書生成",
+  invoices: "請求書一覧",
   "cc-fees": "CC会費管理",
   expenses: "その他費用管理",
   // オンラインストア管理
@@ -59,7 +60,6 @@ const labelMap: Record<string, string> = {
   "information-requests": "資料請求管理",
   notifications: "通知管理",
   "course-videos": "コース動画",
-  // 会場関連
   venues: "会場一覧",
   // システム管理
   departments: "部署管理",
@@ -82,7 +82,7 @@ const labelMap: Record<string, string> = {
 
 const tooltipMap: Record<string, string> = {
   billing: "請求書発行と費用精算を管理します",
-  invoices: "請求一覧の確認とステータス管理を行います",
+  invoices: "請求書一覧の確認とステータス管理を行います",
   "cc-fees": "CC会費の計上・管理を行います",
   expenses: "その他費用の登録と管理を行います",
   commerce: "商品カタログと価格を管理します",

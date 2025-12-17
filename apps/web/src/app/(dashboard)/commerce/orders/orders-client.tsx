@@ -24,6 +24,8 @@ import {
 import { Download, Eye, MoreHorizontal, Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
 import type { Order, Product } from "./page";
 import { CreateOrderDialog } from "./create-order-dialog";
+import { MonthPicker, getCurrentMonth, formatMonthDisplay } from "@/components/billing/month-picker";
+import { ClientSortableTableHead, useClientSort } from "@/components/ui/client-sortable-table-head";
 
 type OrdersClientProps = {
   orders: Order[];
@@ -71,11 +73,19 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [paymentFilter, setPaymentFilter] = React.useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = React.useState<string>(getCurrentMonth());
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
 
   // Filter orders
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
+      // Month filter
+      if (selectedMonth) {
+        const orderDate = new Date(order.created_at);
+        const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, "0")}`;
+        if (orderMonth !== selectedMonth) return false;
+      }
+
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -99,7 +109,7 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
 
       return true;
     });
-  }, [orders, searchQuery, statusFilter, paymentFilter]);
+  }, [orders, searchQuery, statusFilter, paymentFilter, selectedMonth]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -121,18 +131,46 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
 
   const isAllSelected = filteredOrders.length > 0 && selectedIds.size === filteredOrders.length;
 
-  // Stats
+  // Sorting
+  const { sortConfig, handleSort, sortedData: sortedOrders } = useClientSort(filteredOrders, "created_at", "desc");
+
+  // Stats - based on month-filtered orders
+  const monthFilteredOrders = React.useMemo(() => {
+    return orders.filter((order) => {
+      if (selectedMonth) {
+        const orderDate = new Date(order.created_at);
+        const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, "0")}`;
+        if (orderMonth !== selectedMonth) return false;
+      }
+      return true;
+    });
+  }, [orders, selectedMonth]);
+
   const stats = React.useMemo(() => {
-    const total = orders.length;
-    const pending = orders.filter((o) => o.status === "pending").length;
-    const processing = orders.filter((o) => o.status === "processing").length;
-    const shipped = orders.filter((o) => o.status === "shipped").length;
-    const totalAmount = orders.reduce((sum, o) => sum + o.total_amount, 0);
+    const total = monthFilteredOrders.length;
+    const pending = monthFilteredOrders.filter((o) => o.status === "pending").length;
+    const processing = monthFilteredOrders.filter((o) => o.status === "processing").length;
+    const shipped = monthFilteredOrders.filter((o) => o.status === "shipped").length;
+    const totalAmount = monthFilteredOrders.reduce((sum, o) => sum + o.total_amount, 0);
     return { total, pending, processing, shipped, totalAmount };
-  }, [orders]);
+  }, [monthFilteredOrders]);
 
   return (
     <div className="space-y-6">
+      {/* Month Picker */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium text-muted-foreground">対象月分:</span>
+          <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+          <span className="text-sm text-muted-foreground">
+            {formatMonthDisplay(selectedMonth)} のデータを表示中
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground ml-1">
+          ※「月分」は該当月内に発生したデータの請求期間を指します
+        </p>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
@@ -232,14 +270,30 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
                 <TableHead className="w-[40px] pl-6">
                   <Checkbox aria-label="行を選択" checked={isAllSelected} onCheckedChange={handleSelectAll} />
                 </TableHead>
-                <TableHead className="w-[160px]">注文番号</TableHead>
-                <TableHead className="w-[180px]">顧客名</TableHead>
-                <TableHead className="w-[100px]">商品数</TableHead>
-                <TableHead className="w-[120px]">合計金額</TableHead>
-                <TableHead className="w-[100px]">価格タイプ</TableHead>
-                <TableHead className="w-[120px]">ステータス</TableHead>
-                <TableHead className="w-[100px]">支払状況</TableHead>
-                <TableHead className="w-[160px]">注文日時</TableHead>
+                <ClientSortableTableHead sortKey="order_number" sortConfig={sortConfig} onSort={handleSort} className="w-[160px]">
+                  注文番号
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="customer_name" sortConfig={sortConfig} onSort={handleSort} className="w-[180px]">
+                  顧客名
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="item_count" sortConfig={sortConfig} onSort={handleSort} className="w-[100px]">
+                  商品数
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="total_amount" sortConfig={sortConfig} onSort={handleSort} className="w-[120px]">
+                  合計金額
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="price_type" sortConfig={sortConfig} onSort={handleSort} className="w-[100px]">
+                  価格タイプ
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="status" sortConfig={sortConfig} onSort={handleSort} className="w-[120px]">
+                  ステータス
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="payment_status" sortConfig={sortConfig} onSort={handleSort} className="w-[100px]">
+                  支払状況
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} className="w-[160px]">
+                  注文日時
+                </ClientSortableTableHead>
                 <TableHead className="w-[80px] pr-6 text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -250,8 +304,8 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
                     {error}
                   </TableCell>
                 </TableRow>
-              ) : filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => {
+              ) : sortedOrders.length > 0 ? (
+                sortedOrders.map((order) => {
                   const statusInfo = STATUS_MAP[order.status] || { label: order.status, variant: "secondary" as const, icon: null };
                   const paymentInfo = PAYMENT_STATUS_MAP[order.payment_status || "unpaid"] || { label: order.payment_status || "-", variant: "secondary" as const };
 

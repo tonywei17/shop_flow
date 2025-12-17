@@ -12,3 +12,4 @@ docs/platforms/Google/*.json
 .env
 .env.local
 .env.production
+docs/data/eurhythmics_2025-12-17_13-59-40_mysql_data_ThWd7.sql

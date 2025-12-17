@@ -57,6 +57,7 @@ import { CreateExpenseDialog } from "./create-expense-dialog";
 import { ImportExpenseDialog } from "./import-expense-dialog";
 import { MonthPicker, getCurrentMonth, formatMonthDisplay } from "@/components/billing/month-picker";
 import { buildVisiblePages } from "@/lib/pagination";
+import { ClientSortableTableHead, useClientSort } from "@/components/ui/client-sortable-table-head";
 import { useUser } from "@/contexts/user-context";
 
 type Reviewer = {
@@ -236,12 +237,15 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
     return { total, pending, approved, rejected, count: filteredExpenses.length };
   }, [filteredExpenses]);
 
+  // Sorting
+  const { sortConfig, handleSort, sortedData: sortedExpenses } = useClientSort(filteredExpenses, "expense_date", "desc");
+
   // Pagination calculations
-  const totalPages = Math.ceil(filteredExpenses.length / pageSize);
+  const totalPages = Math.ceil(sortedExpenses.length / pageSize);
   const paginatedExpenses = React.useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
-    return filteredExpenses.slice(startIndex, startIndex + pageSize);
-  }, [filteredExpenses, currentPage, pageSize]);
+    return sortedExpenses.slice(startIndex, startIndex + pageSize);
+  }, [sortedExpenses, currentPage, pageSize]);
 
   const visiblePages = buildVisiblePages(currentPage, totalPages);
 
@@ -622,9 +626,14 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
     <div className="space-y-4">
       {/* Month Picker */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-muted-foreground">対象月:</span>
-          <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">対象月分:</span>
+            <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+          </div>
+          <p className="text-xs text-muted-foreground ml-1">
+            ※「月分」は該当月内に発生したデータの請求期間を指します
+          </p>
         </div>
         <p className="text-sm text-muted-foreground">
           {formatMonthDisplay(selectedMonth)} のデータを表示中
@@ -735,12 +744,24 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
                 <TableHead className="w-[36px] pl-6 pr-3">
                   <Checkbox aria-label="行を選択" checked={isAllSelected} onCheckedChange={handleSelectAll} />
                 </TableHead>
-                <TableHead className="w-[240px] text-sm">店番/店名</TableHead>
-                <TableHead className="w-[85px] text-sm">発生日</TableHead>
-                <TableHead className="w-[240px] text-sm">勘定項目/項目名</TableHead>
-                <TableHead className="w-[70px] text-sm">費用タイプ</TableHead>
-                <TableHead className="w-[100px] text-right text-sm">金額</TableHead>
-                <TableHead className="w-[100px] text-sm">ステータス</TableHead>
+                <ClientSortableTableHead sortKey="store_code" sortConfig={sortConfig} onSort={handleSort} className="w-[240px] text-sm">
+                  店番/店名
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="expense_date" sortConfig={sortConfig} onSort={handleSort} className="w-[85px] text-sm">
+                  発生日
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="account_item_code" sortConfig={sortConfig} onSort={handleSort} className="w-[240px] text-sm">
+                  勘定項目/項目名
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="expense_type" sortConfig={sortConfig} onSort={handleSort} className="w-[70px] text-sm">
+                  費用タイプ
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="amount" sortConfig={sortConfig} onSort={handleSort} className="w-[100px] text-right text-sm">
+                  金額
+                </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="review_status" sortConfig={sortConfig} onSort={handleSort} className="w-[100px] text-sm">
+                  ステータス
+                </ClientSortableTableHead>
                 <TableHead className="w-[60px] pr-3 text-right text-sm">操作</TableHead>
               </TableRow>
             </TableHeader>

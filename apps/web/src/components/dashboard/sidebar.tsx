@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { Fragment, type ComponentType } from "react";
-import { GraduationCap, ShoppingBag } from "lucide-react";
+import React, { Fragment, useState, type ComponentType } from "react";
+import { GraduationCap, ShoppingBag, ChevronDown, ChevronRight } from "lucide-react";
 
 import { navSections } from "./nav-items";
 import { cn } from "@/lib/utils";
@@ -125,23 +125,49 @@ type SidebarSectionProps = {
   normalize: (value: string | null | undefined) => string;
   currentPath: string;
   onNavigate?: () => void;
+  defaultExpanded?: boolean;
 };
 
-function SidebarSection({ section, activeHref, normalize, currentPath, onNavigate }: SidebarSectionProps) {
+function SidebarSection({ section, activeHref, normalize, currentPath, onNavigate, defaultExpanded = true }: SidebarSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  
+  // Check if any item in this section is active
+  const hasActiveItem = section.items.some((item) => normalize(item.href) === activeHref);
+  
+  // Auto-expand if there's an active item
+  React.useEffect(() => {
+    if (hasActiveItem && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [hasActiveItem, isExpanded]);
+
   return (
-    <div className="px-2 pb-3 pt-4">
-      <p className="px-3 text-[12px] font-medium tracking-wide text-muted-foreground">{section.label}</p>
-      <div className="mt-2 space-y-1">
-        {section.items.map((item) => (
-          <SidebarNavItem
-            key={item.href}
-            item={item}
-            active={normalize(item.href) === activeHref}
-            currentPath={currentPath}
-            onNavigate={onNavigate}
-          />
-        ))}
-      </div>
+    <div className="px-2 pb-1 pt-2">
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center justify-between px-3 py-1.5 text-[12px] font-medium tracking-wide text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-sidebar-accent/30"
+      >
+        <span>{section.label}</span>
+        {isExpanded ? (
+          <ChevronDown className="h-3.5 w-3.5" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5" />
+        )}
+      </button>
+      {isExpanded && (
+        <div className="mt-1 space-y-1">
+          {section.items.map((item) => (
+            <SidebarNavItem
+              key={item.href}
+              item={item}
+              active={normalize(item.href) === activeHref}
+              currentPath={currentPath}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -223,6 +249,11 @@ function SidebarNavItem({ item, active, currentPath, onNavigate }: SidebarNavIte
     >
       <Icon className={cn("h-4 w-4 shrink-0", active ? "text-sidebar-primary" : "text-muted-foreground")} />
       <span className="truncate">{item.label}</span>
+      {item.badge && (
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">
+          {item.badge}
+        </span>
+      )}
     </Link>
   );
 }

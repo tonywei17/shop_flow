@@ -25,6 +25,7 @@ export type NavItem = {
   label: string;
   href: string;
   icon: ComponentType<{ className?: string }>;
+  badge?: string;
 };
 
 export type NavSection = {
@@ -36,7 +37,8 @@ export const navSections: NavSection[] = [
   {
     label: "請求書関連",
     items: [
-      { label: "請求一覧", href: "/billing/invoices", icon: ReceiptText },
+      { label: "請求書生成", href: "/billing/generate", icon: FileText },
+      { label: "請求書一覧", href: "/billing/invoices", icon: ReceiptText },
       { label: "CC会費管理", href: "/billing/cc-fees", icon: CreditCard },
       { label: "その他費用管理", href: "/billing/expenses", icon: Wallet },
     ],
@@ -53,21 +55,18 @@ export const navSections: NavSection[] = [
   {
     label: "学習プラットフォーム",
     items: [
-      { label: "会員管理", href: "/members", icon: Users },
-      { label: "データ分析", href: "/learning-analytics", icon: BarChart3 },
-      { label: "注文一覧", href: "/learning-orders", icon: CreditCard },
-      { label: "研修管理", href: "/trainings", icon: Calendar },
-      { label: "見学・体験管理", href: "/experiences", icon: Users },
-      { label: "資格一覧", href: "/qualifications", icon: Award },
-      { label: "試験管理", href: "/exams", icon: Award },
-      { label: "申込一覧", href: "/applications", icon: ClipboardList },
-      { label: "資料請求管理", href: "/information-requests", icon: FileText },
-      { label: "通知管理", href: "/notifications", icon: Bell },
+      { label: "会員管理", href: "/members", icon: Users, badge: "developing" },
+      { label: "データ分析", href: "/learning-analytics", icon: BarChart3, badge: "developing" },
+      { label: "注文一覧", href: "/learning-orders", icon: CreditCard, badge: "developing" },
+      { label: "研修管理", href: "/trainings", icon: Calendar, badge: "developing" },
+      { label: "見学・体験管理", href: "/experiences", icon: Users, badge: "developing" },
+      { label: "資格一覧", href: "/qualifications", icon: Award, badge: "developing" },
+      { label: "試験管理", href: "/exams", icon: Award, badge: "developing" },
+      { label: "申込一覧", href: "/applications", icon: ClipboardList, badge: "developing" },
+      { label: "資料請求管理", href: "/information-requests", icon: FileText, badge: "developing" },
+      { label: "通知管理", href: "/notifications", icon: Bell, badge: "developing" },
+      { label: "会場一覧", href: "/venues", icon: MapPin, badge: "developing" },
     ],
-  },
-  {
-    label: "会場関連",
-    items: [{ label: "会場一覧", href: "/venues", icon: MapPin }],
   },
   {
     label: "システム管理",

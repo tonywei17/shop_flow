@@ -10,11 +10,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-react";
+import { FileInput } from "@/components/ui/file-input";
+import { Upload, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import type { AccountItem } from "./expenses-client";
 
@@ -39,7 +39,6 @@ export function ImportExpenseDialog({ accountItems, onImportComplete }: ImportEx
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [result, setResult] = React.useState<ImportResult | null>(null);
   const [autoApprove, setAutoApprove] = React.useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const resetState = () => {
     setStatus("idle");
@@ -47,27 +46,6 @@ export function ImportExpenseDialog({ accountItems, onImportComplete }: ImportEx
     setSelectedFile(null);
     setResult(null);
     setAutoApprove(false);
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validTypes = [
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.ms-excel",
-      "text/csv",
-    ];
-    const validExtensions = [".xlsx", ".xls", ".csv"];
-    const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
-
-    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-      toast.error("xlsx または csv ファイルを選択してください");
-      return;
-    }
-
-    setSelectedFile(file);
-    setResult(null);
   };
 
   const handleImport = async () => {
@@ -170,15 +148,30 @@ export function ImportExpenseDialog({ accountItems, onImportComplete }: ImportEx
 
           {/* File Input */}
           <div className="space-y-2">
-            <Label htmlFor="expense-file-input">ファイル選択</Label>
-            <Input
-              id="expense-file-input"
-              ref={fileInputRef}
-              type="file"
+            <Label>ファイル選択</Label>
+            <FileInput
               accept=".xlsx,.xls,.csv"
-              onChange={handleFileSelect}
+              selectedFile={selectedFile}
+              onFileSelect={(file) => {
+                if (file) {
+                  const validTypes = [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/vnd.ms-excel",
+                    "text/csv",
+                  ];
+                  const validExtensions = [".xlsx", ".xls", ".csv"];
+                  const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+                  if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+                    toast.error("xlsx または csv ファイルを選択してください");
+                    return;
+                  }
+                }
+                setSelectedFile(file);
+                setResult(null);
+              }}
               disabled={status === "uploading" || status === "processing"}
-              className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+              buttonText="ファイルを選択"
+              noFileText="ファイルが選択されていません"
             />
           </div>
 

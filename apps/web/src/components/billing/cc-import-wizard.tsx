@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { FileInput } from "@/components/ui/file-input";
 import { Badge } from "@/components/ui/badge";
 import {
   Upload,
@@ -345,12 +345,13 @@ export function CcImportWizard({ billingMonth, onComplete, onClose }: CcImportWi
                 ) : (
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <Input
-                        type="file"
+                      <FileInput
                         accept=".xlsx,.xls,.csv"
                         disabled={isDisabled}
-                        onChange={(e) => handleFileSelect(step.id, e.target.files?.[0] || null)}
-                        className="cursor-pointer"
+                        selectedFile={status.file || null}
+                        onFileSelect={(file) => handleFileSelect(step.id, file)}
+                        buttonText="ファイルを選択"
+                        noFileText="ファイルが選択されていません"
                       />
                       <p className="text-xs text-muted-foreground mt-1">{step.fileHint}</p>
                     </div>

@@ -78,6 +78,7 @@
 
 | 文件 | 说明 |
 |------|------|
+| `DEVLOG-2025-12-18-bulk-approval-fix.md` | ⭐ **一括承認修正** - SuperAdmin权限、UUID类型、URI长度限制问题修复 |
 | `DEVLOG-2025-12-18.md` | ⭐ **请求书PDF生成** - HTML+Puppeteer方案、布局模板、API端点 |
 | `DEVLOG-2025-12-17-evening.md` | ⭐ **请求书版本管理、SuperAdmin权限、月分概念** |
 | `DEVLOG-2025-12-17-expenses.md` | ⭐ **其他費用管理** - 导出、详情、编辑、新增功能完整实现 |

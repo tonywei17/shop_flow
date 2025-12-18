@@ -4,6 +4,7 @@ import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FileInput } from "@/components/ui/file-input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -428,17 +429,25 @@ export function InvoiceGeneratorClient() {
     });
 
     // Start simulated progress animation
-    let simulatedProgress = 0;
+    // Estimate ~1.5 seconds per invoice for realistic progress
+    const estimatedTimePerInvoice = 1500; // ms
+    const totalEstimatedTime = totalCount * estimatedTimePerInvoice;
+    const updateInterval = 300; // ms
+    const startTime = Date.now();
+    
     const progressInterval = setInterval(() => {
-      simulatedProgress += Math.random() * 3 + 1; // Random increment between 1-4
-      if (simulatedProgress >= totalCount * 0.9) {
-        simulatedProgress = Math.floor(totalCount * 0.9); // Cap at 90% until complete
-      }
+      const elapsed = Date.now() - startTime;
+      // Use logarithmic curve for smoother progress that slows down near the end
+      // This prevents the jarring stop at 90%
+      const progress = Math.min(
+        totalCount * (1 - Math.exp(-elapsed / (totalEstimatedTime * 0.5))),
+        totalCount * 0.95 // Cap at 95% until complete
+      );
       setGenerationProgress((prev) => ({
         ...prev,
-        current: Math.min(Math.floor(simulatedProgress), totalCount - 1),
+        current: Math.floor(progress),
       }));
-    }, 200);
+    }, updateInterval);
 
     try {
       const response = await fetch("/api/invoices/generate-batch", {
@@ -694,12 +703,13 @@ export function InvoiceGeneratorClient() {
                 ) : (
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <Input
-                        type="file"
+                      <FileInput
                         accept=".xlsx,.xls,.csv"
                         disabled={isDisabled}
-                        onChange={(e) => handleFileSelect(step.id, e.target.files?.[0] || null)}
-                        className="cursor-pointer"
+                        selectedFile={status.file || null}
+                        onFileSelect={(file) => handleFileSelect(step.id, file)}
+                        buttonText="ファイルを選択"
+                        noFileText="ファイルが選択されていません"
                       />
                       <p className="text-xs text-muted-foreground mt-1">{step.fileHint}</p>
                     </div>

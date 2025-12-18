@@ -91,8 +91,13 @@ async function getMaterialOrders(
     };
   }
 
+  // Stripe paid orders
   const stripeOrders = orders.filter((o) => o.payment_method === "stripe" && o.payment_status === "paid");
-  const invoiceOrders = orders.filter((o) => o.payment_method === "invoice");
+  // Invoice orders (請求書) - unpaid
+  const invoiceOrders = orders.filter((o) => 
+    (o.payment_method === "invoice" || o.payment_method === "請求書") && 
+    o.payment_status === "unpaid"
+  );
 
   return {
     count: orders.length,
@@ -142,13 +147,13 @@ async function getOtherExpenses(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   billingMonth: string
 ) {
-  // Get approved expenses that haven't been invoiced yet
+  // Get all approved expenses for this billing month (regardless of invoice_id)
+  // This shows the total expenses for the month, not just unassigned ones
   const { data: expenses } = await supabase
     .from("expenses")
     .select("id, amount")
     .eq("invoice_month", billingMonth)
-    .eq("review_status", "approved")
-    .is("invoice_id", null);
+    .eq("review_status", "approved");
 
   return {
     count: expenses?.length || 0,

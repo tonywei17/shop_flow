@@ -13,6 +13,7 @@ export interface InvoicePDFData {
     address: string;
     name: string;
     storeCode: string;
+    managerName?: string; // 責任者名（XX様方）
   };
   
   // 請求元（发件人）- 总部信息
@@ -55,24 +56,28 @@ export interface InvoicePDFData {
 
 export interface CCMemberDetail {
   className: string; // 教室名
+  classroomCode: string; // 教室コード（店番）
   count: number; // 口数
   unitPrice: number; // 単価
   amount: number; // 金額
-  deliveryDate: string; // 納入先
+  deliveryDate: string; // 納入先（店番後三位）
   invoiceAmount: number; // ご請求金額
   deductionAmount: number; // 控除し額
+  isAigran: boolean; // アイグラン教室かどうか
+  rebateAmount: number; // 割戻し額（アイグラン用：人数×600）
+  isBankTransfer: boolean; // 口座振替教室かどうか
 }
 
 export interface MaterialDetail {
-  date: string; // 日付
-  slipNumber: string; // 伝票番号
+  date: string; // 日付 (MM/DD格式)
+  slipNumber: string; // 伝票番号 (只显示数字部分)
   productName: string; // 品名または摘要
   unitPrice: number; // 単価
   quantity: number; // 数量
-  amount: number; // 金額
-  deliveryDate: string; // 納入先
-  invoiceAmount: number; // ご請求金額
-  deductionAmount: number; // 控除し額
+  amount: number; // 納入額
+  deliveryTo: string; // 納入先 (支局购买"00"，教室购买显示店番后三位)
+  invoiceAmount: number; // ご請求額 (只有支局购买才计算)
+  deductionAmount: number; // 割戻し額(-) (所有订单都计算返现)
 }
 
 export interface OtherExpenseDetail {

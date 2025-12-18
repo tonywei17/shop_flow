@@ -65,9 +65,12 @@ function getSealBase64(): string {
   return sealBase64;
 }
 
-// 格式化金额
+// 格式化金额（正数正常显示，负数显示为带括号的红色）
 function formatCurrency(amount: number): string {
-  return `¥${Math.abs(amount).toLocaleString()}`;
+  if (amount < 0) {
+    return `<span class="negative-amount">(¥${Math.abs(amount).toLocaleString()})</span>`;
+  }
+  return `¥${amount.toLocaleString()}`;
 }
 
 // 格式化期间
@@ -633,8 +636,8 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
       <div class="recipient">
         <div class="recipient-address">
           〒${data.recipient.postalCode || "530-0001"}<br>
-          ${data.recipient.address || "北海道札幌市西区平和三条7-1-14"}<br>
-          武井様方
+          ${data.recipient.address || ""}<br>
+          ${data.recipient.managerName ? `${data.recipient.managerName.split(/\s+/)[0]}様方` : ""}
         </div>
         <div class="recipient-name">
           ${data.recipient.name}様
@@ -775,7 +778,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
           <div class="price-number"></div>
           <div class="price-card">
             <div class="price-card-header">
-              <span class="price-card-header-text">その他</span>
+              <span class="price-card-header-text">そ　の　他</span>
             </div>
             <div class="price-card-body">
               <span class="price-card-value">${formatCurrency(otherTotal)}</span>
@@ -885,6 +888,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
   const otherTotal = data.details.otherExpenses.reduce((sum: number, o: OtherExpenseDetail) => sum + o.amount, 0);
 
   // 动态分页：控制单页最大行数（含小计行等）
+  // 行高固定28px后，每页约能容纳26行
   const maxRowsPerPage = 26;
   const pages: string[] = [];
   let currentRows: string[] = [];
@@ -961,10 +965,12 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     }
   };
 
-  const addRow = (rowHtml: string, rows = 1) => {
-    ensureSpace(rows);
+  const addRow = (rowHtml: string, rows = 1, countInPagination = true) => {
+    if (countInPagination) {
+      ensureSpace(rows);
+      rowCount += rows;
+    }
     currentRows.push(rowHtml);
-    rowCount += rows;
   };
 
   // 开始构建表格行
@@ -1050,33 +1056,47 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
   };
 
   addSectionHeader("＊チャイルドクラブ会費＊", "#FFFCF3");
+  // アイグラン教室の割戻し総額を計算
+  const aigranRebateTotal = data.details.ccMembers.reduce((sum: number, m: CCMemberDetail) => sum + (m.rebateAmount || 0), 0);
   data.details.ccMembers.forEach((m) => {
+    // アイグラン教室の場合は割戻し額を表示
+    const rebateDisplay = m.isAigran && m.rebateAmount > 0 ? formatCurrency(m.rebateAmount) : "";
+    // 納入先は店番の後三位（例：1110002 → 002）
+    const deliveryCode = m.deliveryDate || "";
+    // 0人教室の場合はcc-zero-memberクラスを追加（デフォルトで非表示）
+    const isZeroMember = m.count === 0;
+    const zeroMemberClass = isZeroMember ? " cc-zero-member" : "";
+    // 口座振替教室の場合は教室名に(口座振替)を追加
+    const classNameDisplay = m.isBankTransfer ? `${m.className}(口座振替)` : m.className;
+    // 0人教室は分页計算に含めない（デフォルトで非表示のため）
     addRow(`
-      <tr class="detail-row">
+      <tr class="detail-row${zeroMemberClass}">
         <td class="cell center"></td>
         <td class="cell center"></td>
-        <td class="cell">${m.className}</td>
+        <td class="cell">${classNameDisplay}</td>
         <td class="cell center"></td>
         <td class="cell center">${m.count}</td>
         <td class="cell right">${formatCurrency(m.unitPrice)}</td>
         <td class="cell right">${formatCurrency(m.amount)}</td>
-        <td class="cell center">001</td>
+        <td class="cell center">${deliveryCode}</td>
         <td class="cell right">${formatCurrency(m.amount)}</td>
-        <td class="cell right">${formatCurrency(0)}</td>
+        <td class="cell right">${rebateDisplay}</td>
       </tr>
-    `);
+    `, 1, !isZeroMember);
   });
+  // CC会費の小計：ご請求額 = 納入額（割戻し額は別計算）
   addSubtotalRow(
     {
       qty: `${ccMemberCount}`,
       amount: formatCurrency(ccMemberTotal),
-      invoice: formatCurrency(ccMemberTotal),
-      rebate: formatCurrency(0),
+      invoice: formatCurrency(ccMemberTotal), // ご請求額 = 納入額
+      rebate: aigranRebateTotal > 0 ? formatCurrency(aigranRebateTotal) : "",
     },
     "#FFFCF3"
   );
 
   // Material Section
+  // 请求额只计算支局购买的订单，教室购买的不计算请求额但计算返现
   addSectionHeader("＊教材お取引＊", "#F2FBF6");
   data.details.materials.forEach((material: MaterialDetail) => {
     addRow(`
@@ -1088,18 +1108,21 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
         <td class="cell center">${material.quantity}</td>
         <td class="cell right">${formatCurrency(material.unitPrice)}</td>
         <td class="cell right">${formatCurrency(material.amount)}</td>
-        <td class="cell center">001</td>
-        <td class="cell right">${formatCurrency(material.amount)}</td>
-        <td class="cell right">${formatCurrency(Math.floor(material.amount * 0.1))}</td>
+        <td class="cell center">${material.deliveryTo}</td>
+        <td class="cell right">${material.invoiceAmount > 0 ? formatCurrency(material.invoiceAmount) : ""}</td>
+        <td class="cell right">${formatCurrency(material.deductionAmount)}</td>
       </tr>
     `);
   });
+  // 计算教材总额：纳入额是所有订单的总额，请求额只计算支局购买的
+  const materialInvoiceTotal = data.details.materials.reduce((sum: number, m: MaterialDetail) => sum + m.invoiceAmount, 0);
+  const materialDeductionTotal = data.details.materials.reduce((sum: number, m: MaterialDetail) => sum + m.deductionAmount, 0);
   addSubtotalRow(
     {
       qty: "",
       amount: formatCurrency(materialTotal),
-      invoice: formatCurrency(materialTotal),
-      rebate: formatCurrency(materialRebate),
+      invoice: formatCurrency(materialInvoiceTotal),
+      rebate: formatCurrency(materialDeductionTotal),
     },
     "#F2FBF6"
   );
@@ -1328,34 +1351,37 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     .detail-table th {
       background: #00AC4D;
       color: #fff;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 500;
       text-align: center;
-      padding: 6px 10px;
+      padding: 4px 5px;
       white-space: nowrap;
     }
     
-    .detail-table th.col-date { width: 50px; }
-    .detail-table th.col-slip { width: 60px; }
-    .detail-table th.col-name { }
-    .detail-table th.col-code { width: 80px; }
-    .detail-table th.col-qty { width: 40px; }
-    .detail-table th.col-price { width: 80px; }
-    .detail-table th.col-amount { width: 100px; }
-    .detail-table th.col-dest { width: 40px; }
-    .detail-table th.col-invoice { width: 100px; }
-    .detail-table th.col-rebate { width: 80px; }
+    .detail-table th.col-date { width: 35px; }
+    .detail-table th.col-slip { width: 40px; }
+    .detail-table th.col-name { min-width: 200px; }
+    .detail-table th.col-code { width: 30px; }
+    .detail-table th.col-qty { width: 25px; }
+    .detail-table th.col-price { width: 45px; }
+    .detail-table th.col-amount { width: 55px; }
+    .detail-table th.col-dest { width: 30px; }
+    .detail-table th.col-invoice { width: 55px; }
+    .detail-table th.col-rebate { width: 50px; }
     
     .detail-table .cell {
       border: 1px solid #eee;
-      padding: 6px 10px;
-      font-size: 12.5px;
+      padding: 4px 5px;
+      font-size: 11px;
       font-weight: 500;
       color: #111;
+      height: 28px;
+      line-height: 20px;
     }
     
     .detail-table .cell.center { text-align: center; }
     .detail-table .cell.right { text-align: right; }
+    .negative-amount { color: #dc2626; }
     
     .detail-row:nth-child(odd) {
       background: rgba(65, 144, 255, 0.05);
@@ -1364,21 +1390,29 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     .section-header-row td {
       background: #f9f9f9;
       font-weight: 700;
-      padding: 6px 10px;
+      padding: 4px 5px;
       border: 1px solid #eee;
+      font-size: 11px;
+      height: 28px;
+      line-height: 20px;
     }
     
     .subtotal-row td {
       background: #f5f5f5;
       font-weight: 700;
-      padding: 6px 10px;
+      padding: 4px 5px;
       border: 1px solid #eee;
+      font-size: 11px;
+      height: 28px;
+      line-height: 20px;
     }
     
     .balance-row td {
-      padding: 6px 10px;
+      padding: 4px 5px;
       border: 1px solid #eee;
-      font-size: 12.5px;
+      font-size: 11px;
+      height: 28px;
+      line-height: 20px;
     }
     
     /* ===== Footer Bar ===== */

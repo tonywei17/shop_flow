@@ -134,9 +134,10 @@ async function getOrders(): Promise<{ orders: Order[]; error: string | null }> {
     // Combine data
     const enrichedOrders: Order[] = (orders || []).map((o: any) => ({
       ...o,
-      customer_name: customerMap[o.user_id]?.name || o.shipping_address?.recipientName || "不明",
+      customer_name: customerMap[o.user_id]?.name || o.shipping_address?.storeName || o.shipping_address?.recipientName || "不明",
       customer_email: customerMap[o.user_id]?.email || null,
-      item_count: itemCountMap[o.id] || 0,
+      // Get item_count from order_items table, or from shipping_address.itemCount for imported orders
+      item_count: itemCountMap[o.id] || o.shipping_address?.itemCount || 0,
     }));
 
     return { orders: enrichedOrders, error: null };

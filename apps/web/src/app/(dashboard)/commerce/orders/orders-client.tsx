@@ -31,6 +31,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { FileInput } from "@/components/ui/file-input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Download, Eye, MoreHorizontal, Package, Truck, CheckCircle, XCircle, Clock, Trash2, Upload, AlertTriangle, Loader2 } from "lucide-react";
@@ -50,6 +51,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
   processing: { label: "準備中", variant: "default", icon: <Package className="h-3 w-3" /> },
   shipped: { label: "発送済", variant: "default", icon: <Truck className="h-3 w-3" /> },
   delivered: { label: "配達完了", variant: "outline", icon: <CheckCircle className="h-3 w-3" /> },
+  completed: { label: "完了", variant: "outline", icon: <CheckCircle className="h-3 w-3" /> },
   cancelled: { label: "キャンセル", variant: "destructive", icon: <XCircle className="h-3 w-3" /> },
 };
 
@@ -64,6 +66,13 @@ const PRICE_TYPE_MAP: Record<string, string> = {
   branch: "支局",
   classroom: "教室",
   retail: "一般",
+};
+
+const PAYMENT_METHOD_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  "請求書": { label: "請求書", variant: "outline" },
+  "invoice": { label: "請求書", variant: "outline" },
+  "stripe": { label: "カード", variant: "default" },
+  "bank_transfer": { label: "振込", variant: "secondary" },
 };
 
 function formatDate(dateString: string): string {
@@ -111,7 +120,8 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
     errors?: string[];
   } | null>(null);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [importYear, setImportYear] = React.useState(new Date().getFullYear());
+  const [importMonth, setImportMonth] = React.useState(new Date().getMonth() + 1);
 
   // Check if user has permission to clear/import data
   React.useEffect(() => {
@@ -171,25 +181,6 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
     }
   };
 
-  // Handle file select
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validExtensions = [".xlsx", ".xls", ".csv"];
-    const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
-
-    if (!validExtensions.includes(fileExtension)) {
-      setImportResult({
-        success: false,
-        message: "xlsx または csv ファイルを選択してください",
-      });
-      return;
-    }
-
-    setSelectedFile(file);
-    setImportResult(null);
-  };
 
   // Handle import
   const handleImport = async () => {
@@ -226,6 +217,8 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
       formData.append("file", selectedFile);
       formData.append("password", importPassword);
       formData.append("operator_name", importOperatorName);
+      formData.append("target_year", importYear.toString());
+      formData.append("target_month", importMonth.toString());
 
       setImportProgress(30);
 
@@ -249,9 +242,6 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
         setSelectedFile(null);
         setImportPassword("");
         setImportOperatorName("");
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
         setTimeout(() => window.location.reload(), 2000);
       } else {
         setImportResult({
@@ -474,9 +464,6 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
                 setImportResult(null);
                 setSelectedFile(null);
                 setImportProgress(0);
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = "";
-                }
               }
             }}>
               <DialogTrigger asChild>
@@ -504,19 +491,42 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
                     </ul>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="import-order-file">ファイル選択</Label>
-                    <Input
-                      id="import-order-file"
-                      type="file"
+                    <Label>インポート先の月分 <span className="text-red-500">*</span></Label>
+                    <div className="flex gap-2">
+                      <Select value={importYear.toString()} onValueChange={(v) => setImportYear(parseInt(v))}>
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[2024, 2025, 2026].map((y) => (
+                            <SelectItem key={y} value={y.toString()}>{y}年</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={importMonth.toString()} onValueChange={(v) => setImportMonth(parseInt(v))}>
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                            <SelectItem key={m} value={m.toString()}>{m}月分</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      インポートされた注文データはこの月分として登録されます
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ファイル選択</Label>
+                    <FileInput
                       accept=".xlsx,.xls,.csv"
-                      ref={fileInputRef}
-                      onChange={handleFileSelect}
+                      selectedFile={selectedFile}
+                      onFileSelect={(file) => setSelectedFile(file)}
+                      buttonText="ファイルを選択"
+                      noFileText="ファイルが選択されていません"
                     />
-                    {selectedFile && (
-                      <p className="text-sm text-muted-foreground">
-                        選択中: {selectedFile.name}
-                      </p>
-                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="import-order-operator-name">操作者氏名（実名） <span className="text-red-500">*</span></Label>
@@ -712,6 +722,9 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
                 <ClientSortableTableHead sortKey="payment_status" sortConfig={sortConfig} onSort={handleSort} className="w-[100px]">
                   支払状況
                 </ClientSortableTableHead>
+                <ClientSortableTableHead sortKey="payment_method" sortConfig={sortConfig} onSort={handleSort} className="w-[100px]">
+                  支払方法
+                </ClientSortableTableHead>
                 <ClientSortableTableHead sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} className="w-[160px]">
                   注文日時
                 </ClientSortableTableHead>
@@ -721,7 +734,7 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
             <TableBody>
               {error ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-10 text-center text-sm text-destructive">
+                  <TableCell colSpan={11} className="py-10 text-center text-sm text-destructive">
                     {error}
                   </TableCell>
                 </TableRow>
@@ -774,6 +787,15 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
                       </TableCell>
                       <TableCell>
                         <Badge variant={paymentInfo.variant}>{paymentInfo.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {order.payment_method ? (
+                          <Badge variant={PAYMENT_METHOD_MAP[order.payment_method]?.variant || "outline"}>
+                            {PAYMENT_METHOD_MAP[order.payment_method]?.label || order.payment_method}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(order.created_at)}

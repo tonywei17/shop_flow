@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed - 2025-12-18
+
+#### Billing - Bulk Expense Approval Fix
+
+**Bug Fixes**
+- 🐛 Fixed SuperAdmin bulk approval failing with "審査者が見つかりません" (Reviewer not found)
+  - Root cause: Environment variable admin account's `user.id` returns `ADMIN_LOGIN_ID` string, not a database UUID
+  - Solution: Added special handling to grant permission directly when `reviewer_account_id` matches `ADMIN_LOGIN_ID`
+  
+- 🐛 Fixed bulk approval failing with "審査の更新に失敗しました" (Update failed)
+  - Root cause: `reviewer_account_id` field is UUID type, but env admin passes string "admin"
+  - Solution: Set `reviewer_account_id` to `null` for env admin, add review note "システム管理者による承認"
+
+- 🐛 Fixed bulk approval failing with "URI too long" when approving many records
+  - Root cause: Supabase `.in()` query generates URL that exceeds limit when processing 300+ records
+  - Solution: Implemented batch processing with 50 records per batch
+
+**Files Modified**
+- `apps/web/src/app/api/expenses/review/route.ts`
+  - Added env admin detection and special permission handling
+  - Added batch processing for bulk updates (BATCH_SIZE = 50)
+  - Improved error logging with detailed context
+
+---
+
 ### Added - 2025-11-10
 
 #### Learning Platform - Code Health Improvements

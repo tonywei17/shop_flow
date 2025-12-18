@@ -94,6 +94,11 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null;
     const password = formData.get("password") as string | null;
     const operatorName = formData.get("operator_name") as string | null;
+    const targetYear = parseInt(formData.get("target_year") as string) || new Date().getFullYear();
+    const targetMonth = parseInt(formData.get("target_month") as string) || (new Date().getMonth() + 1);
+    
+    // Calculate target date (first day of the specified month)
+    const targetDate = new Date(targetYear, targetMonth - 1, 15, 12, 0, 0); // 15th of month at noon
     
     if (!file) {
       return NextResponse.json(
@@ -242,12 +247,33 @@ export async function POST(request: NextRequest) {
           const subtotal = Math.round(getNumber(row, "注文金額（税抜）"));
           const totalAmount = Math.round(getNumber(row, "注文金額（税込）"));
           const taxAmount = Math.round(totalAmount - subtotal);
-          const paymentMethod = getString(row, "支払い方法") || "請求書";
           const orderDate = parseExcelDate(findValue(row, "注文発生日"));
           
-          // Determine price type based on store code
-          // Store codes starting with certain prefixes indicate different price types
-          const priceType = "hq"; // Default to HQ price for B2B orders
+          // Determine price type based on store code or customer name
+          // Store codes starting with certain patterns indicate different price types
+          let priceType = "hq"; // Default to HQ price for B2B orders
+          const customerNameLower = customerName.toLowerCase();
+          const storeCodeStr = String(storeCode);
+          
+          // Check if this is a classroom order (教室)
+          if (customerNameLower.includes("教室") || 
+              customerNameLower.includes("classroom") ||
+              storeCodeStr.startsWith("9") ||  // Classroom store codes often start with 9
+              storeCodeStr.length === 7) {     // 7-digit codes are typically classrooms
+            priceType = "classroom";
+          } else if (customerNameLower.includes("支局") || customerNameLower.includes("branch")) {
+            priceType = "branch";
+          }
+          
+          // For classroom orders, default to invoice payment (請求書/未払い)
+          // For other orders, use the payment method from CSV or default to 請求書
+          const csvPaymentMethod = getString(row, "支払い方法");
+          let paymentMethod = csvPaymentMethod || "請求書";
+          
+          // Classroom purchases always use invoice payment
+          if (priceType === "classroom") {
+            paymentMethod = "請求書";
+          }
           
           // Create order (matching actual table structure)
           const { data: order, error: orderError } = await supabase
@@ -261,6 +287,7 @@ export async function POST(request: NextRequest) {
                 customerName: customerName,
                 paymentMethod: paymentMethod,
                 originalOrderId: orderId,
+                priceType: priceType,
               },
               status: "completed",
               payment_status: paymentMethod === "請求書" ? "unpaid" : "paid",
@@ -270,7 +297,7 @@ export async function POST(request: NextRequest) {
               tax_amount: taxAmount,
               shipping_fee: 0,
               total_amount: totalAmount,
-              created_at: orderDate.toISOString(),
+              created_at: targetDate.toISOString(), // Use target month instead of Excel date
             })
             .select("id")
             .single();
@@ -293,26 +320,52 @@ export async function POST(request: NextRequest) {
               const productName = getString(item, "商品名");
               const product = productCode ? productMap.get(productCode) : null;
               
+              // Skip items without product_id since it's NOT NULL in the table
+              // Or create a placeholder product if needed
+              if (!product) {
+                console.warn(`Product not found for code: ${productCode}, skipping item`);
+                // Still count the quantity for display purposes
+                itemCount += quantity;
+                continue;
+              }
+              
               itemCount += quantity;
               
               itemsToInsert.push({
                 order_id: order.id,
-                product_id: product?.id || null,
-                product_name: productName,
+                product_id: product.id,
+                product_name: productName || product.name,
                 product_code: productCode,
                 quantity: quantity,
                 unit_price: unitPrice,
-                total_price: itemTotal,
+                subtotal: itemTotal,
               });
             }
             
             // Batch insert all items at once
-            await supabase.from("order_items").insert(itemsToInsert);
-            
-            // Update order item_count
+            if (itemsToInsert.length > 0) {
+              const { error: itemError } = await supabase.from("order_items").insert(itemsToInsert);
+              if (itemError) {
+                console.error(`Failed to insert order items for order ${orderId}:`, itemError);
+              }
+            }
+          }
+          
+          // Update shipping_address with item_count (since orders table doesn't have item_count column)
+          if (itemCount > 0) {
             await supabase
               .from("orders")
-              .update({ item_count: itemCount })
+              .update({ 
+                shipping_address: {
+                  storeCode: storeCode,
+                  storeName: customerName,
+                  customerName: customerName,
+                  paymentMethod: paymentMethod,
+                  originalOrderId: orderId,
+                  priceType: priceType,
+                  itemCount: itemCount,
+                }
+              })
               .eq("id", order.id);
           }
           
@@ -362,13 +415,8 @@ export async function POST(request: NextRequest) {
           const shippingFee = row.shipping_fee || 0;
           const totalAmount = row.total_amount || (subtotal + taxAmount + shippingFee);
           
-          let createdAt = new Date().toISOString();
-          if (row.created_at) {
-            const parsed = new Date(row.created_at);
-            if (!isNaN(parsed.getTime())) {
-              createdAt = parsed.toISOString();
-            }
-          }
+          // Use target date for the specified month
+          const createdAt = targetDate.toISOString();
           
           // Use a fixed system UUID for imported orders
           const importUserId = "00000000-0000-0000-0000-000000000001";
@@ -426,10 +474,17 @@ export async function POST(request: NextRequest) {
               }
             }
             
+            // Update shipping_address with item_count
             if (itemCount > 0) {
+              const currentShippingAddress = shippingAddress || { customerName: row.customer_name || "テスト顧客" };
               await supabase
                 .from("orders")
-                .update({ item_count: itemCount })
+                .update({ 
+                  shipping_address: {
+                    ...currentShippingAddress,
+                    itemCount: itemCount,
+                  }
+                })
                 .eq("id", order.id);
             }
           }

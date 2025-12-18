@@ -618,9 +618,9 @@ export function InvoicesClient() {
                             size="sm"
                             className="text-primary hover:bg-primary/10"
                             onClick={() => {
-                              window.open(`/api/invoices/${invoice.id}/pdf`, "_blank");
+                              window.open(`/api/invoices/${invoice.id}/preview`, "_blank");
                             }}
-                            title="PDFプレビュー"
+                            title="プレビュー"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

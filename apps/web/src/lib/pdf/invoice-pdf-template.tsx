@@ -587,7 +587,7 @@ const InvoiceDetailPage: React.FC<{ data: InvoicePDFData; pageNumber: number }> 
                 <Text style={[styles.detailTableCell, { flex: 1 }]}>{formatCurrency(material.unitPrice)}</Text>
                 <Text style={[styles.detailTableCell, { flex: 1 }]}>{material.quantity}</Text>
                 <Text style={[styles.detailTableCell, { flex: 1 }]}>{formatCurrency(material.amount)}</Text>
-                <Text style={[styles.detailTableCell, { flex: 1 }]}>{material.deliveryDate}</Text>
+                <Text style={[styles.detailTableCell, { flex: 1 }]}>{material.deliveryTo}</Text>
                 <Text style={[styles.detailTableCell, { flex: 1 }]}>{formatCurrency(material.invoiceAmount)}</Text>
                 <Text style={[styles.detailTableCellLast, { flex: 1 }]}>{formatCurrency(material.deductionAmount)}</Text>
               </View>

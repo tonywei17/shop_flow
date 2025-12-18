@@ -21,9 +21,8 @@ export default function NewVideoPage() {
 
   const [uploadMethod, setUploadMethod] = useState<"vimeo" | "direct">("vimeo");
 
-  const handleSubmit = (status: "draft" | "published") => {
-    console.log("Submit:", { ...formData, status });
-    // 实际应该调用API保存数据
+  const handleSubmit = (_status: "draft" | "published") => {
+    // TODO: 调用API保存数据
   };
 
   return (

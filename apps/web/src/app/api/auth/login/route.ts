@@ -4,6 +4,18 @@ import { signSessionPayload, encodeSignedSession, verifyPassword } from "@enterp
 
 export const runtime = "nodejs";
 
+// Type for admin account data from Supabase
+type AdminAccountData = {
+  id: string;
+  account_id: string;
+  display_name: string | null;
+  status: string | null;
+  account_scope: string | null;
+  password_hash: string | null;
+  locked_until: string | null;
+  failed_login_attempts: number | null;
+};
+
 export async function POST(req: NextRequest) {
   const adminPassword = process.env.ADMIN_LOGIN_PASSWORD;
   const sessionSecret = process.env.ADMIN_SESSION_SECRET;
@@ -103,13 +115,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "アカウントが存在しません" }, { status: 401 });
     }
 
-    const status = (data as any).status as string | null;
+    const accountData = data as AdminAccountData;
+    const status = accountData.status;
     if (status && status !== "有効" && status !== "active") {
       return NextResponse.json({ error: "このアカウントは無効です" }, { status: 403 });
     }
 
     // Check if account is locked
-    const lockedUntil = (data as any).locked_until as string | null;
+    const lockedUntil = accountData.locked_until;
     if (lockedUntil) {
       const lockTime = new Date(lockedUntil);
       if (lockTime > new Date()) {
@@ -131,12 +144,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify password using bcrypt for database accounts
-    const passwordHash = (data as any).password_hash as string | null;
+    const passwordHash = accountData.password_hash;
     if (passwordHash) {
       const passwordMatch = await verifyPassword(password, passwordHash);
       if (!passwordMatch) {
         // Increment failed login attempts
-        const failedAttempts = ((data as any).failed_login_attempts as number) || 0;
+        const failedAttempts = accountData.failed_login_attempts || 0;
         const newFailedAttempts = failedAttempts + 1;
         const MAX_FAILED_ATTEMPTS = 5;
         const LOCK_DURATION_MINUTES = 15;
@@ -172,11 +185,11 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       ok: true,
-      accountId: (data as any).account_id,
-      displayName: (data as any).display_name,
+      accountId: accountData.account_id,
+      displayName: accountData.display_name,
     });
 
-    const sessionPayload = JSON.stringify({ admin_account_id: String((data as any).id) });
+    const sessionPayload = JSON.stringify({ admin_account_id: String(accountData.id) });
     const signed = await signSessionPayload(sessionPayload, sessionSecret);
     const encodedSession = encodeSignedSession(signed);
 
@@ -192,7 +205,7 @@ export async function POST(req: NextRequest) {
 
     res.cookies.set({
       name: "admin_account_id",
-      value: String((data as any).id),
+      value: String(accountData.id),
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -216,7 +229,7 @@ export async function POST(req: NextRequest) {
       actorType: "admin",
       targetType: "admin_account",
       targetId: data.id,
-      details: { account: (data as any).account_id },
+      details: { account: accountData.account_id },
       ipAddress,
       userAgent,
     });

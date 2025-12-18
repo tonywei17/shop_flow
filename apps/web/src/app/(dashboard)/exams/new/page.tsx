@@ -96,8 +96,8 @@ export default function NewExamPage() {
     venueId: null,
   });
 
-  const handleSubmit = (status: "draft" | "published") => {
-    console.log("Submit exam:", { ...formData, status });
+  const handleSubmit = (_status: "draft" | "published") => {
+    // TODO: 调用API保存考试数据
   };
 
   const handleCreateLevel = () => {

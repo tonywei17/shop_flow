@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 type Dot = {
   top: string;
@@ -13,24 +13,35 @@ type Dot = {
   duration: number;
 };
 
+// Generate dots outside component to avoid hydration mismatch
+function generateDots(): Dot[] {
+  return Array.from({ length: 6 }).map(() => ({
+    top: `${Math.random() * 80 + 10}%`,
+    left: `${Math.random() * 90 + 5}%`,
+    width: Math.random() * 15 + 5,
+    height: Math.random() * 15 + 5,
+    y: Math.random() * 30 - 15,
+    duration: Math.random() * 3 + 3,
+  }));
+}
+
+// Use useSyncExternalStore for hydration-safe mounting detection
+const emptySubscribe = () => () => {};
+
 export function HeroBackground() {
-  const [mounted, setMounted] = useState(false);
-  const [dots, setDots] = useState<Dot[]>([]);
+  // useSyncExternalStore is the recommended way to detect client-side mounting
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,  // Client: always true
+    () => false  // Server: always false
+  );
   const { theme } = useTheme();
 
-  useEffect(() => {
-    setMounted(true);
-    // Generate random values only once on client-side mount
-    const newDots = Array.from({ length: 6 }).map(() => ({
-      top: `${Math.random() * 80 + 10}%`,
-      left: `${Math.random() * 90 + 5}%`,
-      width: Math.random() * 15 + 5,
-      height: Math.random() * 15 + 5,
-      y: Math.random() * 30 - 15,
-      duration: Math.random() * 3 + 3,
-    }));
-    setDots(newDots);
-  }, []);
+  // Generate dots only on client-side using useMemo with mounted dependency
+  const dots = useMemo(() => {
+    if (!mounted) return [];
+    return generateDots();
+  }, [mounted]);
 
   if (!mounted) return null;
 

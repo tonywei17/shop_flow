@@ -35,9 +35,8 @@ export default function NewActivityPage() {
     { id: "online-zoom", name: "オンライン（Zoom会場）", type: "オンライン", address: "ZoomミーティングURL" },
   ];
 
-  const handleSubmit = (status: "draft" | "published") => {
-    console.log("Submit:", { ...formData, status });
-    // 实际应该调用API保存数据
+  const handleSubmit = (_status: "draft" | "published") => {
+    // TODO: 调用API保存数据
   };
 
   const handleSelectVenue = (venueId: string) => {

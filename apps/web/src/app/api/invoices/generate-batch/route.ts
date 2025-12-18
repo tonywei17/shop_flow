@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Non-streaming mode
     const results: InvoiceGenerationResult[] = [];
     const errors: string[] = [];
 

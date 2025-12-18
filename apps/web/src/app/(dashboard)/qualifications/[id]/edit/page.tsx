@@ -70,7 +70,7 @@ export default function EditQualificationPage({ params }: { params: { id: string
   }
 
   const handleSubmit = () => {
-    console.log("Update qualification:", formData);
+    // TODO: 调用API更新资格数据
   };
 
   return (

@@ -31,6 +31,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Sheet,
@@ -41,7 +43,7 @@ import {
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Upload, PlusCircle, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
+import { Download, Upload, PlusCircle, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle, XCircle, Clock, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Pagination,
@@ -162,6 +164,75 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
   const [editAccountItemInput, setEditAccountItemInput] = React.useState("");
   const [editShowAccountItemDropdown, setEditShowAccountItemDropdown] = React.useState(false);
   const editAccountItemInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Clear data dialog state
+  const [clearDialogOpen, setClearDialogOpen] = React.useState(false);
+  const [clearPassword, setClearPassword] = React.useState("");
+  const [clearOperatorName, setClearOperatorName] = React.useState("");
+  const [clearing, setClearing] = React.useState(false);
+  const [clearResult, setClearResult] = React.useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+  const [hasClearPermission, setHasClearPermission] = React.useState(false);
+
+  // Check if user has permission to clear data
+  React.useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await fetch("/api/admin/clear-expenses");
+        if (response.ok) {
+          const data = await response.json();
+          setHasClearPermission(data.hasPermission);
+        }
+      } catch {
+        setHasClearPermission(false);
+      }
+    };
+    checkPermission();
+  }, []);
+
+  // Handle clear data
+  const handleClearData = async (clearAll: boolean) => {
+    setClearing(true);
+    setClearResult(null);
+
+    try {
+      const response = await fetch("/api/admin/clear-expenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: clearPassword,
+          billing_month: clearAll ? null : selectedMonth,
+          clear_all: clearAll,
+          operator_name: clearOperatorName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setClearResult({
+          success: true,
+          message: result.message,
+        });
+        setClearPassword("");
+        router.refresh();
+      } else {
+        setClearResult({
+          success: false,
+          message: result.error || "削除に失敗しました",
+        });
+      }
+    } catch {
+      setClearResult({
+        success: false,
+        message: "削除中にエラーが発生しました",
+      });
+    } finally {
+      setClearing(false);
+    }
+  };
 
   // Filter account items for edit form
   const editFilteredAccountItems = React.useMemo(() => {
@@ -470,6 +541,7 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
     }, 500);
 
     return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editForm.store_code, editSheetOpen, editingExpense]);
 
   // Edit form - account item handlers
@@ -624,7 +696,7 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
 
   return (
     <div className="space-y-4">
-      {/* Month Picker */}
+      {/* Month Picker & Actions */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
@@ -635,9 +707,114 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
             ※「月分」は該当月内に発生したデータの請求期間を指します
           </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {formatMonthDisplay(selectedMonth)} のデータを表示中
-        </p>
+        <div className="flex items-center gap-2">
+          {/* Clear Data Dialog - SuperAdmin Only */}
+          {hasClearPermission && (
+            <Dialog open={clearDialogOpen} onOpenChange={(open) => {
+              setClearDialogOpen(open);
+              if (!open) {
+                setClearPassword("");
+                setClearOperatorName("");
+                setClearResult(null);
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4" />
+                  データ削除
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-red-600">
+                    <AlertTriangle className="h-5 w-5" />
+                    その他費用データ削除（テスト用）
+                  </DialogTitle>
+                  <DialogDescription>
+                    この操作は取り消せません。削除されたデータは復元できません。
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>警告:</strong> この機能はシステムテスト期間中のみ使用してください。
+                      本番運用開始後は使用しないでください。
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clear-expense-operator-name">操作者氏名（実名） <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="clear-expense-operator-name"
+                      type="text"
+                      placeholder="山田 太郎"
+                      value={clearOperatorName}
+                      onChange={(e) => setClearOperatorName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clear-expense-password">管理者パスワード <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="clear-expense-password"
+                      type="password"
+                      placeholder="パスワードを入力"
+                      value={clearPassword}
+                      onChange={(e) => setClearPassword(e.target.value)}
+                    />
+                  </div>
+                  {clearResult && (
+                    <div
+                      className={`p-3 rounded-md text-sm ${
+                        clearResult.success
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                      }`}
+                    >
+                      {clearResult.message}
+                    </div>
+                  )}
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button variant="outline" onClick={() => setClearDialogOpen(false)}>
+                    キャンセル
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleClearData(false)}
+                    disabled={clearing || !clearPassword || !clearOperatorName || clearOperatorName.trim().length < 2}
+                  >
+                    {clearing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        削除中...
+                      </>
+                    ) : (
+                      `${formatMonthDisplay(selectedMonth)} のみ削除`
+                    )}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleClearData(true)}
+                    disabled={clearing || !clearPassword || !clearOperatorName || clearOperatorName.trim().length < 2}
+                    className="bg-red-700 hover:bg-red-800"
+                  >
+                    {clearing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        削除中...
+                      </>
+                    ) : (
+                      "全データ削除"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+          <ImportExpenseDialog 
+            accountItems={accountItems}
+            onImportComplete={() => router.refresh()}
+          />
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -726,10 +903,6 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <ImportExpenseDialog 
-                accountItems={accountItems}
-                onImportComplete={() => router.refresh()}
-              />
               <CreateExpenseDialog
                 accountItems={accountItems}
                 onExpenseCreated={() => router.refresh()}
@@ -890,7 +1063,7 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-8 px-3 text-xs text-green-600 border-green-600/40 hover:bg-green-50"
+                className="h-8 px-3 text-xs text-green-600 dark:text-green-400 border-green-600/40 dark:border-green-400/40 hover:bg-green-50 dark:hover:bg-green-950/50"
                 disabled={!hasPendingSelected}
                 onClick={() => handleBulkReview("approve")}
               >
@@ -901,7 +1074,7 @@ export function ExpensesClient({ expenses, accountItems, error }: ExpensesClient
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-8 px-3 text-xs text-orange-600 border-orange-600/40 hover:bg-orange-50"
+                className="h-8 px-3 text-xs text-orange-600 dark:text-orange-400 border-orange-600/40 dark:border-orange-400/40 hover:bg-orange-50 dark:hover:bg-orange-950/50"
                 disabled={!hasPendingSelected}
                 onClick={() => handleBulkReview("reject")}
               >

@@ -35,8 +35,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
   const transporter = createGmailTransporter();
 
   if (!transporter) {
-    console.log(`[Email Simulation] To: ${params.to}, Subject: ${params.subject}`);
-    console.log(`[Email Simulation] Content: ${params.html.substring(0, 200)}...`);
+    // Email simulation mode - credentials not configured
     return { success: true };
   }
 

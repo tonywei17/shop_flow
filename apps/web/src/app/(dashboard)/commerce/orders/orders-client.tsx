@@ -21,7 +21,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Eye, MoreHorizontal, Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Download, Eye, MoreHorizontal, Package, Truck, CheckCircle, XCircle, Clock, Trash2, Upload, AlertTriangle, Loader2 } from "lucide-react";
 import type { Order, Product } from "./page";
 import { CreateOrderDialog } from "./create-order-dialog";
 import { MonthPicker, getCurrentMonth, formatMonthDisplay } from "@/components/billing/month-picker";
@@ -75,6 +87,187 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
   const [paymentFilter, setPaymentFilter] = React.useState<string>("all");
   const [selectedMonth, setSelectedMonth] = React.useState<string>(getCurrentMonth());
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+
+  // Clear data dialog state
+  const [clearDialogOpen, setClearDialogOpen] = React.useState(false);
+  const [clearPassword, setClearPassword] = React.useState("");
+  const [clearOperatorName, setClearOperatorName] = React.useState("");
+  const [clearing, setClearing] = React.useState(false);
+  const [clearResult, setClearResult] = React.useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+  const [hasClearPermission, setHasClearPermission] = React.useState(false);
+
+  // Import dialog state
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
+  const [importPassword, setImportPassword] = React.useState("");
+  const [importOperatorName, setImportOperatorName] = React.useState("");
+  const [importing, setImporting] = React.useState(false);
+  const [importProgress, setImportProgress] = React.useState(0);
+  const [importResult, setImportResult] = React.useState<{
+    success: boolean;
+    message: string;
+    errors?: string[];
+  } | null>(null);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Check if user has permission to clear/import data
+  React.useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await fetch("/api/admin/clear-orders");
+        if (response.ok) {
+          const data = await response.json();
+          setHasClearPermission(data.hasPermission);
+        }
+      } catch {
+        setHasClearPermission(false);
+      }
+    };
+    checkPermission();
+  }, []);
+
+  // Handle clear data
+  const handleClearData = async (clearAll: boolean) => {
+    setClearing(true);
+    setClearResult(null);
+
+    try {
+      const response = await fetch("/api/admin/clear-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: clearPassword,
+          billing_month: clearAll ? null : selectedMonth,
+          clear_all: clearAll,
+          operator_name: clearOperatorName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setClearResult({
+          success: true,
+          message: result.message,
+        });
+        setClearPassword("");
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        setClearResult({
+          success: false,
+          message: result.error || "削除に失敗しました",
+        });
+      }
+    } catch {
+      setClearResult({
+        success: false,
+        message: "削除中にエラーが発生しました",
+      });
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  // Handle file select
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validExtensions = [".xlsx", ".xls", ".csv"];
+    const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+
+    if (!validExtensions.includes(fileExtension)) {
+      setImportResult({
+        success: false,
+        message: "xlsx または csv ファイルを選択してください",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    setImportResult(null);
+  };
+
+  // Handle import
+  const handleImport = async () => {
+    if (!selectedFile) {
+      setImportResult({
+        success: false,
+        message: "ファイルを選択してください",
+      });
+      return;
+    }
+
+    if (!importPassword) {
+      setImportResult({
+        success: false,
+        message: "パスワードを入力してください",
+      });
+      return;
+    }
+
+    if (!importOperatorName || importOperatorName.trim().length < 2) {
+      setImportResult({
+        success: false,
+        message: "操作者の氏名を入力してください（2文字以上）",
+      });
+      return;
+    }
+
+    setImporting(true);
+    setImportProgress(10);
+    setImportResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("password", importPassword);
+      formData.append("operator_name", importOperatorName);
+
+      setImportProgress(30);
+
+      const response = await fetch("/api/admin/import-orders", {
+        method: "POST",
+        body: formData,
+      });
+
+      setImportProgress(80);
+
+      const result = await response.json();
+
+      setImportProgress(100);
+
+      if (response.ok) {
+        setImportResult({
+          success: true,
+          message: result.message,
+          errors: result.errors,
+        });
+        setSelectedFile(null);
+        setImportPassword("");
+        setImportOperatorName("");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setImportResult({
+          success: false,
+          message: result.error || "インポートに失敗しました",
+        });
+      }
+    } catch {
+      setImportResult({
+        success: false,
+        message: "インポート中にエラーが発生しました",
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
 
   // Filter orders
   const filteredOrders = React.useMemo(() => {
@@ -157,18 +350,246 @@ export function OrdersClient({ orders, error, products }: OrdersClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Month Picker */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-muted-foreground">対象月分:</span>
-          <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
-          <span className="text-sm text-muted-foreground">
-            {formatMonthDisplay(selectedMonth)} のデータを表示中
-          </span>
+      {/* Month Picker & Actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">対象月分:</span>
+            <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+          </div>
+          <p className="text-xs text-muted-foreground ml-1">
+            ※「月分」は該当月内に発生したデータの請求期間を指します
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground ml-1">
-          ※「月分」は該当月内に発生したデータの請求期間を指します
-        </p>
+        <div className="flex items-center gap-2">
+          {/* Clear Data Dialog - SuperAdmin Only */}
+          {hasClearPermission && (
+            <Dialog open={clearDialogOpen} onOpenChange={(open) => {
+              setClearDialogOpen(open);
+              if (!open) {
+                setClearPassword("");
+                setClearOperatorName("");
+                setClearResult(null);
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4" />
+                  データ削除
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-red-600">
+                    <AlertTriangle className="h-5 w-5" />
+                    注文データ削除（テスト用）
+                  </DialogTitle>
+                  <DialogDescription>
+                    この操作は取り消せません。削除されたデータは復元できません。
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-md p-3">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                      <strong>警告:</strong> この機能はシステムテスト期間中のみ使用してください。
+                      本番運用開始後は使用しないでください。
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clear-order-operator-name">操作者氏名（実名） <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="clear-order-operator-name"
+                      type="text"
+                      placeholder="山田 太郎"
+                      value={clearOperatorName}
+                      onChange={(e) => setClearOperatorName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clear-order-password">管理者パスワード <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="clear-order-password"
+                      type="password"
+                      placeholder="パスワードを入力"
+                      value={clearPassword}
+                      onChange={(e) => setClearPassword(e.target.value)}
+                    />
+                  </div>
+                  {clearResult && (
+                    <div
+                      className={`p-3 rounded-md text-sm ${
+                        clearResult.success
+                          ? "bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                          : "bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                      }`}
+                    >
+                      {clearResult.message}
+                    </div>
+                  )}
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button variant="outline" onClick={() => setClearDialogOpen(false)}>
+                    キャンセル
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleClearData(false)}
+                    disabled={clearing || !clearPassword || !clearOperatorName || clearOperatorName.trim().length < 2}
+                  >
+                    {clearing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        削除中...
+                      </>
+                    ) : (
+                      `${formatMonthDisplay(selectedMonth)} のみ削除`
+                    )}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleClearData(true)}
+                    disabled={clearing || !clearPassword || !clearOperatorName || clearOperatorName.trim().length < 2}
+                    className="bg-red-700 hover:bg-red-800"
+                  >
+                    {clearing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        削除中...
+                      </>
+                    ) : (
+                      "全データ削除"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+          {/* Import Dialog - SuperAdmin Only */}
+          {hasClearPermission && (
+            <Dialog open={importDialogOpen} onOpenChange={(open) => {
+              setImportDialogOpen(open);
+              if (!open) {
+                setImportPassword("");
+                setImportOperatorName("");
+                setImportResult(null);
+                setSelectedFile(null);
+                setImportProgress(0);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  CSV インポート
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5" />
+                    注文データインポート
+                  </DialogTitle>
+                  <DialogDescription>
+                    xlsx ファイルから注文データを一括インポートします。
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                    <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-1">対応フォーマット:</p>
+                    <ul className="text-xs text-blue-700 dark:text-blue-400 list-disc list-inside space-y-0.5">
+                      <li>オンラインストア形式（注文情報 + 注文関連商品リスト の2シート）</li>
+                      <li>システム標準形式（単一シート）</li>
+                    </ul>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="import-order-file">ファイル選択</Label>
+                    <Input
+                      id="import-order-file"
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                    />
+                    {selectedFile && (
+                      <p className="text-sm text-muted-foreground">
+                        選択中: {selectedFile.name}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="import-order-operator-name">操作者氏名（実名） <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="import-order-operator-name"
+                      type="text"
+                      placeholder="山田 太郎"
+                      value={importOperatorName}
+                      onChange={(e) => setImportOperatorName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="import-order-password">管理者パスワード <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="import-order-password"
+                      type="password"
+                      placeholder="パスワードを入力"
+                      value={importPassword}
+                      onChange={(e) => setImportPassword(e.target.value)}
+                    />
+                  </div>
+                  {importing && (
+                    <div className="space-y-2">
+                      <Progress value={importProgress} />
+                      <p className="text-sm text-muted-foreground text-center">
+                        インポート中... {importProgress}%
+                      </p>
+                    </div>
+                  )}
+                  {importResult && (
+                    <div
+                      className={`p-3 rounded-md text-sm ${
+                        importResult.success
+                          ? "bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                          : "bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                      }`}
+                    >
+                      <p>{importResult.message}</p>
+                      {importResult.errors && importResult.errors.length > 0 && (
+                        <ul className="mt-2 text-xs list-disc list-inside">
+                          {importResult.errors.slice(0, 5).map((err, i) => (
+                            <li key={i}>{err}</li>
+                          ))}
+                          {importResult.errors.length > 5 && (
+                            <li>...他 {importResult.errors.length - 5} 件のエラー</li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
+                    キャンセル
+                  </Button>
+                  <Button
+                    onClick={handleImport}
+                    disabled={importing || !selectedFile || !importPassword || !importOperatorName || importOperatorName.trim().length < 2}
+                  >
+                    {importing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        インポート中...
+                      </>
+                    ) : (
+                      "インポート実行"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}

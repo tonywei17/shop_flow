@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Loader2, Zap, FileCheck, Send, CircleDollarSign, Trash2, AlertTriangle } from "lucide-react";
+import { Download, FileText, Loader2, Zap, FileCheck, Send, CircleDollarSign, Trash2, AlertTriangle, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MonthPicker, getCurrentMonth, formatMonthDisplay } from "@/components/billing/month-picker";
@@ -74,6 +74,7 @@ export function InvoicesClient() {
   // Clear data dialog state
   const [clearDialogOpen, setClearDialogOpen] = React.useState(false);
   const [clearPassword, setClearPassword] = React.useState("");
+  const [clearOperatorName, setClearOperatorName] = React.useState("");
   const [clearing, setClearing] = React.useState(false);
   const [clearResult, setClearResult] = React.useState<{
     success: boolean;
@@ -165,6 +166,7 @@ export function InvoicesClient() {
           password: clearPassword,
           billing_month: clearAll ? null : selectedMonth,
           clear_all: clearAll,
+          operator_name: clearOperatorName,
         }),
       });
 
@@ -247,6 +249,7 @@ export function InvoicesClient() {
               setClearDialogOpen(open);
               if (!open) {
                 setClearPassword("");
+                setClearOperatorName("");
                 setClearResult(null);
               }
             }}>
@@ -274,7 +277,17 @@ export function InvoicesClient() {
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="clear-password">管理者パスワード</Label>
+                    <Label htmlFor="clear-invoice-operator-name">操作者氏名（実名） <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="clear-invoice-operator-name"
+                      type="text"
+                      placeholder="山田 太郎"
+                      value={clearOperatorName}
+                      onChange={(e) => setClearOperatorName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clear-password">管理者パスワード <span className="text-red-500">*</span></Label>
                     <Input
                       id="clear-password"
                       type="password"
@@ -302,7 +315,7 @@ export function InvoicesClient() {
                   <Button
                     variant="destructive"
                     onClick={() => handleClearData(false)}
-                    disabled={clearing || !clearPassword}
+                    disabled={clearing || !clearPassword || !clearOperatorName || clearOperatorName.trim().length < 2}
                   >
                     {clearing ? (
                       <>
@@ -316,7 +329,7 @@ export function InvoicesClient() {
                   <Button
                     variant="destructive"
                     onClick={() => handleClearData(true)}
-                    disabled={clearing || !clearPassword}
+                    disabled={clearing || !clearPassword || !clearOperatorName || clearOperatorName.trim().length < 2}
                     className="bg-red-700 hover:bg-red-800"
                   >
                     {clearing ? (
@@ -457,6 +470,37 @@ export function InvoicesClient() {
               <span>全て選択</span>
             </label>
             <div className="flex items-center gap-2">
+              {selectedIds.size > 0 && (
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 border-primary text-primary bg-white hover:text-green-600 hover:font-bold"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch("/api/invoices/generate-pdf-batch", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ invoice_ids: Array.from(selectedIds) }),
+                      });
+                      if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `invoices_${selectedMonth}.zip`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                      }
+                    } catch (error) {
+                      console.error("PDF download error:", error);
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  PDF一括ダウンロード ({selectedIds.size}件)
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="flex items-center gap-2 border-primary text-primary bg-white hover:text-green-600 hover:font-bold"
@@ -534,13 +578,26 @@ export function InvoicesClient() {
                         {invoice.due_date || "-"}
                       </TableCell>
                       <TableCell className="pr-6 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-primary hover:bg-primary/10"
-                        >
-                          詳細
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-primary hover:bg-primary/10"
+                            onClick={() => {
+                              window.open(`/api/invoices/${invoice.id}/pdf`, "_blank");
+                            }}
+                            title="PDFプレビュー"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-primary hover:bg-primary/10"
+                          >
+                            詳細
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

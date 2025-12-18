@@ -142,7 +142,7 @@ export default function EditExamPage({ params }: { params: { id: string } }) {
   const [formData, setFormData] = useState<EditExamFormData>(() => getInitialFormData(params.id));
 
   const handleSubmit = () => {
-    console.log("Update exam:", { id: params.id, ...formData });
+    // TODO: 调用API更新考试数据
   };
 
   const handleCreateLevel = () => {

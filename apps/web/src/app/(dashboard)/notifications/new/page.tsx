@@ -86,9 +86,8 @@ export default function NewNotificationPage() {
     setNewCategoryName("");
   };
 
-  const handleSubmit = (action: "draft" | "send") => {
-    console.log("Submit:", { ...formData, action });
-    // 实际应该调用API保存/发送通知
+  const handleSubmit = (_action: "draft" | "send") => {
+    // TODO: 调用API保存/发送通知
   };
 
   const selectedCategory = categories.find((category) => category.id === formData.categoryId);

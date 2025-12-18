@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const autoApprove = formData.get("autoApprove") === "true";
 
     if (!file) {
       return NextResponse.json({ error: "ファイルを選択してください" }, { status: 400 });
@@ -147,7 +148,23 @@ export async function POST(request: NextRequest) {
     let successCount = 0;
     let failedCount = 0;
 
-    // Process each row
+    // Prepare all valid expenses for batch insert
+    const expensesToInsert: Array<{
+      store_code: string;
+      store_name: string;
+      expense_date: string;
+      account_item_code: string;
+      description: string;
+      expense_type: string;
+      amount: number;
+      import_source: string;
+      import_batch_id: string;
+      invoice_month: string;
+      review_status: string;
+      reviewer_account_id: string | null;
+    }> = [];
+
+    // Process each row and collect valid expenses
     for (let i = 0; i < dataRows.length; i++) {
       const row = dataRows[i] as unknown[];
       if (!row || row.length === 0 || row.every(cell => !cell)) {
@@ -173,29 +190,36 @@ export async function POST(request: NextRequest) {
       const expenseDate = new Date(expense.expense_date);
       const invoiceMonth = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, "0")}`;
 
-      // Insert expense
+      expensesToInsert.push({
+        store_code: expense.store_code,
+        store_name: expense.store_name,
+        expense_date: expense.expense_date,
+        account_item_code: expense.account_item_code,
+        description: expense.description,
+        expense_type: expense.expense_type || "課税分",
+        amount: expense.amount,
+        import_source: isCSV ? "csv" : "xlsx",
+        import_batch_id: batchId,
+        invoice_month: invoiceMonth,
+        review_status: autoApprove ? "approved" : "pending",
+        reviewer_account_id: expense.reviewer_account_id || null,
+      });
+    }
+
+    // Batch insert all expenses at once (in chunks of 100 to avoid payload limits)
+    const CHUNK_SIZE = 100;
+    for (let i = 0; i < expensesToInsert.length; i += CHUNK_SIZE) {
+      const chunk = expensesToInsert.slice(i, i + CHUNK_SIZE);
       const { error: insertError } = await supabase
         .from("expenses")
-        .insert({
-          store_code: expense.store_code,
-          store_name: expense.store_name,
-          expense_date: expense.expense_date,
-          account_item_code: expense.account_item_code,
-          description: expense.description,
-          expense_type: expense.expense_type || "課税分",
-          amount: expense.amount,
-          import_source: isCSV ? "csv" : "xlsx",
-          import_batch_id: batchId,
-          invoice_month: invoiceMonth,
-          review_status: "pending",
-          reviewer_account_id: expense.reviewer_account_id || null,
-        });
+        .insert(chunk);
 
       if (insertError) {
-        failedCount++;
-        errors.push(`行 ${i + 2}: ${insertError.message}`);
+        // If batch insert fails, count all as failed
+        failedCount += chunk.length;
+        errors.push(`バッチ ${Math.floor(i / CHUNK_SIZE) + 1}: ${insertError.message}`);
       } else {
-        successCount++;
+        successCount += chunk.length;
       }
     }
 

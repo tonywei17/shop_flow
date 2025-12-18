@@ -125,9 +125,7 @@ export async function POST(request: NextRequest) {
     // Handle payment method
     if (body.payment_method === "stripe_link" && body.customer_email) {
       // TODO: Create Stripe Payment Link and send email
-      // For now, we'll just log and return success
-      console.log(`[Stripe] Would create payment link for order ${orderNumber}`);
-      console.log(`[Email] Would send payment link to ${body.customer_email}`);
+      // Stripe payment link creation and email sending will be implemented here
       
       // In a real implementation:
       // 1. Create Stripe Payment Link using Stripe API
@@ -155,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     if (body.payment_method === "invoice") {
       // TODO: Record in invoice system when it's ready
-      console.log(`[Invoice] Order ${orderNumber} will be added to monthly invoice`);
+      // Order will be added to monthly invoice
     }
 
     return NextResponse.json({

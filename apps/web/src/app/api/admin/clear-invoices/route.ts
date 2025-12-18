@@ -10,7 +10,15 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     const body = await request.json();
     
-    const { password, billing_month, clear_all } = body;
+    const { password, billing_month, clear_all, operator_name } = body;
+    
+    // Validate operator name
+    if (!operator_name || operator_name.trim().length < 2) {
+      return NextResponse.json(
+        { error: "操作者の氏名を入力してください（2文字以上）" },
+        { status: 400 }
+      );
+    }
     
     // Validate password
     if (password !== CLEAR_DATA_PASSWORD) {
@@ -142,6 +150,7 @@ export async function POST(request: NextRequest) {
         billing_month: billing_month || "all",
         clear_all,
         deleted_invoice_ids: invoiceIds,
+        operator_name: operator_name.trim(),
       },
     });
     

@@ -28,6 +28,7 @@ import {
   Calendar,
   Mail,
   Clock,
+  Download,
   Zap,
   Package,
   Receipt,
@@ -417,12 +418,27 @@ export function InvoiceGeneratorClient() {
   };
 
   const handleGenerate = async () => {
+    const totalCount = summaryData?.invoiceCount || 0;
+    
     setGenerationProgress({
       status: "generating",
       current: 0,
-      total: summaryData?.invoiceCount || 0,
+      total: totalCount,
       results: { success: 0, error: 0, errors: [] },
     });
+
+    // Start simulated progress animation
+    let simulatedProgress = 0;
+    const progressInterval = setInterval(() => {
+      simulatedProgress += Math.random() * 3 + 1; // Random increment between 1-4
+      if (simulatedProgress >= totalCount * 0.9) {
+        simulatedProgress = Math.floor(totalCount * 0.9); // Cap at 90% until complete
+      }
+      setGenerationProgress((prev) => ({
+        ...prev,
+        current: Math.min(Math.floor(simulatedProgress), totalCount - 1),
+      }));
+    }, 200);
 
     try {
       const response = await fetch("/api/invoices/generate-batch", {
@@ -438,6 +454,7 @@ export function InvoiceGeneratorClient() {
         }),
       });
 
+      clearInterval(progressInterval);
       const result = await response.json();
 
       if (response.ok) {
@@ -462,6 +479,7 @@ export function InvoiceGeneratorClient() {
         }));
       }
     } catch (error) {
+      clearInterval(progressInterval);
       setGenerationProgress((prev) => ({
         ...prev,
         status: "error",
@@ -513,7 +531,7 @@ export function InvoiceGeneratorClient() {
               step.id === currentStep
                 ? "bg-primary text-primary-foreground"
                 : index < currentStepIndex
-                ? "bg-green-100 text-green-700 hover:bg-green-200"
+                ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/70"
                 : "bg-muted text-muted-foreground"
             }`}
           >
@@ -567,9 +585,9 @@ export function InvoiceGeneratorClient() {
               key={step.id}
               className={`transition-all ${
                 status.status === "success" || status.status === "existing"
-                  ? "border-green-200 bg-green-50/50"
+                  ? "border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30"
                   : status.status === "error"
-                  ? "border-red-200 bg-red-50/50"
+                  ? "border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/30"
                   : isDisabled
                   ? "opacity-50"
                   : ""
@@ -581,9 +599,9 @@ export function InvoiceGeneratorClient() {
                     <div
                       className={`p-2 rounded-lg ${
                         status.status === "success" || status.status === "existing"
-                          ? "bg-green-100 text-green-600"
+                          ? "bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400"
                           : status.status === "error"
-                          ? "bg-red-100 text-red-600"
+                          ? "bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
@@ -1179,19 +1197,19 @@ export function InvoiceGeneratorClient() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <span className="text-green-600">成功</span>
-                <span className="font-medium text-green-600">{generationProgress.results.success}</span>
+              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/50 rounded-lg">
+                <span className="text-green-600 dark:text-green-400">成功</span>
+                <span className="font-medium text-green-600 dark:text-green-400">{generationProgress.results.success}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                <span className="text-red-600">エラー</span>
-                <span className="font-medium text-red-600">{generationProgress.results.error}</span>
+              <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/50 rounded-lg">
+                <span className="text-red-600 dark:text-red-400">エラー</span>
+                <span className="font-medium text-red-600 dark:text-red-400">{generationProgress.results.error}</span>
               </div>
             </div>
           </CardContent>
         </Card>
       ) : generationProgress.status === "completed" ? (
-        <Card className="border-green-200 bg-green-50/50">
+        <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30">
           <CardContent className="pt-6 space-y-6">
             <div className="text-center">
               <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
@@ -1202,20 +1220,20 @@ export function InvoiceGeneratorClient() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center justify-between p-3 bg-green-100 rounded-lg">
-                <span className="text-green-700">成功</span>
-                <span className="font-bold text-green-700">{generationProgress.results.success} 件</span>
+              <div className="flex items-center justify-between p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                <span className="text-green-700 dark:text-green-400">成功</span>
+                <span className="font-bold text-green-700 dark:text-green-400">{generationProgress.results.success} 件</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-red-100 rounded-lg">
-                <span className="text-red-700">エラー</span>
-                <span className="font-bold text-red-700">{generationProgress.results.error} 件</span>
+              <div className="flex items-center justify-between p-3 bg-red-100 dark:bg-red-900/50 rounded-lg">
+                <span className="text-red-700 dark:text-red-400">エラー</span>
+                <span className="font-bold text-red-700 dark:text-red-400">{generationProgress.results.error} 件</span>
               </div>
             </div>
 
             {generationProgress.results.errors.length > 0 && (
-              <div className="p-3 bg-red-50 rounded-lg">
-                <p className="text-sm font-medium text-red-700 mb-2">エラー詳細:</p>
-                <ul className="text-xs text-red-600 space-y-1">
+              <div className="p-3 bg-red-50 dark:bg-red-950/50 rounded-lg">
+                <p className="text-sm font-medium text-red-700 dark:text-red-400 mb-2">エラー詳細:</p>
+                <ul className="text-xs text-red-600 dark:text-red-400 space-y-1">
                   {generationProgress.results.errors.map((error, i) => (
                     <li key={i}>• {error}</li>
                   ))}
@@ -1231,6 +1249,7 @@ export function InvoiceGeneratorClient() {
                 </a>
               </Button>
               <Button
+                variant="ghost"
                 className="flex-1"
                 onClick={() => {
                   setCurrentStep("upload");

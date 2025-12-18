@@ -74,7 +74,7 @@ export default function EditVenuePage({ params }: { params: { id: string } }) {
   }
 
   const handleSubmit = () => {
-    console.log("Update venue:", formData);
+    // TODO: 调用API更新会场数据
   };
 
   return (

@@ -26,9 +26,9 @@ shop_flow プロジェクトは Docker Compose を使用して本番環境にデ
 
 | サービス | コンテナ名 | ポート | URL |
 |----------|-----------|--------|-----|
-| **管理端 (web)** | shop_flow-web | 3009 | https://eurhythmics.nexus-tech.cloud |
-| **商店前端 (storefront)** | shop_flow-storefront | 3001 | https://eurhythmics-shop.nexus-tech.cloud |
-| **学習プラットフォーム (learning)** | shop_flow-learning | 3002 | https://e-learning.nexus-tech.cloud |
+| **管理端 (web)** | shop_flow-web | 3009 | https://eurhythmics.yohaku.cloud |
+| **商店前端 (storefront)** | shop_flow-storefront | 3001 | https://eurhythmics-shop.yohaku.cloud |
+| **学習プラットフォーム (learning)** | shop_flow-learning | 3002 | https://e-learning.yohaku.cloud |
 | **PostgreSQL** | shop_flow-postgres | 5432 | 内部のみ |
 | **Redis** | shop_flow-redis | 6379 | 内部のみ |
 
@@ -164,7 +164,7 @@ Traefik はラベルベースでルーティングを設定しています。
 ```yaml
 labels:
   - "traefik.enable=true"
-  - "traefik.http.routers.shop_flow_web.rule=Host(`eurhythmics.nexus-tech.cloud`)"
+  - "traefik.http.routers.shop_flow_web.rule=Host(`eurhythmics.yohaku.cloud`)"
   - "traefik.http.routers.shop_flow_web.tls=true"
   - "traefik.http.routers.shop_flow_web.entrypoints=websecure"
   - "traefik.http.routers.shop_flow_web.tls.certresolver=myresolver"
@@ -177,7 +177,7 @@ labels:
 ```yaml
 labels:
   - "traefik.enable=true"
-  - "traefik.http.routers.shop_flow_storefront.rule=Host(`eurhythmics-shop.nexus-tech.cloud`)"
+  - "traefik.http.routers.shop_flow_storefront.rule=Host(`eurhythmics-shop.yohaku.cloud`)"
   - "traefik.http.routers.shop_flow_storefront.tls=true"
   - "traefik.http.routers.shop_flow_storefront.entrypoints=websecure"
   - "traefik.http.routers.shop_flow_storefront.tls.certresolver=myresolver"
@@ -264,9 +264,9 @@ docker stats --filter 'name=shop_flow' --no-stream
 
 ```bash
 # 各サービスの HTTP 応答確認
-curl -s -o /dev/null -w '%{http_code}' https://eurhythmics.nexus-tech.cloud/
-curl -s -o /dev/null -w '%{http_code}' https://eurhythmics-shop.nexus-tech.cloud/
-curl -s -o /dev/null -w '%{http_code}' https://e-learning.nexus-tech.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://eurhythmics.yohaku.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://eurhythmics-shop.yohaku.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://e-learning.yohaku.cloud/
 ```
 
 ---

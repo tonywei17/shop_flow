@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Upload, RefreshCcw, Users, Building2, Banknote, Loader2, ChevronRight, ChevronDown, Trash2, AlertTriangle } from "lucide-react";
+import { Download, Upload, RefreshCcw, Users, Building2, Banknote, Loader2, ChevronRight, ChevronDown, Trash2, AlertTriangle, Search, X } from "lucide-react";
+import { HighlightText } from "@/components/ui/highlight-text";
 import { MonthPicker, getCurrentMonth, formatMonthDisplay } from "@/components/billing/month-picker";
 import { ClientSortableTableHead, useClientSort } from "@/components/ui/client-sortable-table-head";
 import {
@@ -73,6 +74,7 @@ export function CcFeesClient() {
   const [importDialogOpen, setImportDialogOpen] = React.useState(false);
   const [summary, setSummary] = React.useState<SummaryData | null>(null);
   const [branches, setBranches] = React.useState<BranchSummary[]>([]);
+  const [searchTerm, setSearchTerm] = React.useState("");
   const [expandedBranches, setExpandedBranches] = React.useState<Set<string>>(new Set());
   const [classroomsData, setClassroomsData] = React.useState<Record<string, Classroom[]>>({});
   const [loadingClassrooms, setLoadingClassrooms] = React.useState<Set<string>>(new Set());
@@ -210,8 +212,19 @@ export function CcFeesClient() {
     }
   };
 
+  // Filter branches based on search term
+  const filteredBranches = React.useMemo(() => {
+    if (!searchTerm.trim()) return branches;
+    const term = searchTerm.toLowerCase().trim();
+    return branches.filter((branch) => {
+      const branchCode = branch.branch_code?.toLowerCase() || "";
+      const branchName = branch.branch_name?.toLowerCase() || "";
+      return branchCode.includes(term) || branchName.includes(term);
+    });
+  }, [branches, searchTerm]);
+
   // Sorting
-  const { sortConfig, handleSort, sortedData: sortedBranches } = useClientSort(branches, "branch_code", "asc");
+  const { sortConfig, handleSort, sortedData: sortedBranches } = useClientSort(filteredBranches, "branch_code", "asc");
 
   // Selection handlers
   const isAllSelected = sortedBranches.length > 0 && sortedBranches.every((b) => selectedIds.has(b.branch_code));
@@ -421,7 +434,7 @@ export function CcFeesClient() {
       {/* Main Table Card */}
       <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
+          <div className="flex flex-col gap-3 px-6 py-3 text-sm text-foreground lg:flex-row lg:items-center lg:justify-between">
             <label htmlFor="cc-select-all" className="flex items-center gap-3">
               <Checkbox
                 id="cc-select-all"
@@ -431,7 +444,27 @@ export function CcFeesClient() {
               />
               <span>全て選択</span>
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
+              {/* Search Input */}
+              <div className="relative w-full min-w-[260px] max-w-[360px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="支局コード・支局名で検索"
+                  className="pl-9 pr-9"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
               <Button
                 variant="outline"
                 className="flex items-center gap-2 border-primary text-primary bg-white hover:text-green-600 hover:font-bold"
@@ -510,10 +543,12 @@ export function CcFeesClient() {
                           ) : (
                             <ChevronRight className="h-4 w-4 text-muted-foreground" />
                           )}
-                          {branch.branch_code}000
+                          <HighlightText text={`${branch.branch_code}000`} searchTerm={searchTerm} />
                         </div>
                       </TableCell>
-                      <TableCell className="text-foreground font-medium">{branch.branch_name || "-"}</TableCell>
+                      <TableCell className="text-foreground font-medium">
+                        <HighlightText text={branch.branch_name || "-"} searchTerm={searchTerm} />
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{branch.classroom_count}</TableCell>
                       <TableCell>
                         <span className="font-medium">{branch.total_members}</span>
@@ -601,7 +636,7 @@ export function CcFeesClient() {
 
           {/* Footer */}
           <div className="border-t border-border px-6 py-3 text-sm text-muted-foreground">
-            全 {branches.length} 支局
+            全 {branches.length} 支局{searchTerm && ` (検索結果: ${filteredBranches.length} 支局)`}
             {selectedIds.size > 0 && ` (${selectedIds.size} 件選択中)`}
           </div>
         </CardContent>

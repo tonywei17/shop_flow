@@ -462,22 +462,23 @@ export function CommerceClient({
       <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
           {/* テーブルヘッダー（全選択 + 検索 + 操作ボタン） */}
-          <div className="flex items-center justify-between border-b border-border px-6 py-3">
+          <div className="flex flex-col gap-3 px-6 py-3 text-sm text-foreground lg:flex-row lg:items-center lg:justify-between">
             {/* 左側：全選択 */}
-            <div className="flex items-center gap-2">
+            <label htmlFor="products-select-all" className="flex items-center gap-3">
               <Checkbox
+                id="products-select-all"
                 checked={selectedIds.length === products.length && products.length > 0}
                 onCheckedChange={handleSelectAll}
                 aria-label="全て選択"
               />
-              <span className="text-sm text-muted-foreground">全て選択</span>
-            </div>
+              <span>全て選択</span>
+            </label>
 
-            {/* 中央：検索とフィルター */}
-            <div className="flex items-center gap-2">
+            {/* 右側：検索とフィルターと操作ボタン */}
+            <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
               <SearchInput
                 placeholder="商品コード・商品名で検索"
-                className="w-[240px]"
+                className="w-full min-w-[260px] max-w-[360px]"
               />
               <Select
                 value={pagination.category || "__all__"}
@@ -508,10 +509,6 @@ export function CommerceClient({
                   <SelectItem value="inactive">非公開</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* 右側：操作ボタン */}
-            <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="gap-1">
                 <Download className="h-4 w-4" />
                 一括操作

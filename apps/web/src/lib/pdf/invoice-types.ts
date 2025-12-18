@@ -27,19 +27,22 @@ export interface InvoicePDFData {
   
   // 金额汇总
   amounts: {
-    previousBalance: number; // 前月請求額 ①
-    payment: number; // ご入金 ②
-    remainingBalance: number; // ご入金後残額
-    ccMembershipFee: number; // チャイルドクラブ会費 ③
-    materialDelivery: number; // 教材お届け分 ④
+    previousBalance: number; // 前月請求額 a
+    payment: number; // ご入金額 b
+    remainingBalance: number; // ご入金後残額 ①=a-b
+    ccMembershipFee: number; // チャイルドクラブ会費 ②
+    materialDelivery: number; // 教材お買い上げ ③
     materialShipping: number; // 教材発送費用
     unitPrice: number; // 単価×口数
-    other: number; // その他 ⑤
-    headquartersDeduction: number; // 本部発分 ⑥
-    bankTransferDeduction: number; // 口座振替分 ⑦
-    subtotal: number; // 差引き合計額
-    taxAmount: number; // 消費税額
-    totalAmount: number; // ご請求額合計
+    other: number; // その他 ④
+    materialReturn: number; // 教材販売割戻し ⑤
+    adjustment: number; // 調整・ご返金 ⑥
+    nonTaxable: number; // 非課税分 ⑦
+    headquartersDeduction: number; // 本部発分
+    bankTransferDeduction: number; // 口座振替分
+    subtotal: number; // 差引き合計額 ⑧
+    taxAmount: number; // 消費税額 ⑨
+    totalAmount: number; // ご請求額合計 ⑧+⑨
   };
   
   // 明细数据

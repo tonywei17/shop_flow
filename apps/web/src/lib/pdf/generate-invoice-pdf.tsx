@@ -78,23 +78,27 @@ export function transformInvoiceData(
   const issueDate = calculateIssueDate(invoice.billing_month);
   
   // 计算各项金额
-  const previousBalance = invoice.previous_balance || 0;
-  const payment = paymentAmount;
-  const remainingBalance = previousBalance - payment;
-  const ccMembershipFee = invoice.membership_amount || 0;
-  const materialDelivery = invoice.material_amount || 0;
-  const materialShipping = 0; // 需要从订单数据中计算
-  const unitPrice = 0; // 需要计算
-  const other = invoice.other_expenses_amount || 0;
-  const headquartersDeduction = 0; // 本部发分
+  const previousBalance = invoice.previous_balance || 0; // a 前月ご請求額
+  const payment = paymentAmount; // b ご入金額
+  const remainingBalance = previousBalance - payment; // ① ご入金後残額 = a - b
+  const ccMembershipFee = invoice.membership_amount || 0; // ② チャイルドクラブ会費
+  const materialDelivery = invoice.material_amount || 0; // ③ 教材お買い上げ
+  const materialShipping = 0; // 教材発送費用
+  const unitPrice = 0; // 単価×口数
+  const other = invoice.other_expenses_amount || 0; // ④ その他
+  const materialReturn = 0; // ⑤ 教材販売割戻し
+  const adjustment = 0; // ⑥ 調整・ご返金
+  const nonTaxable = 0; // ⑦ 非課税分
+  const headquartersDeduction = 0; // 本部発分
   const bankTransferDeduction = 0; // 口座振替分
   
-  // 差引き合計額 = ① - ② + ③ + ④ + ⑤ - ⑥ - ⑦
-  const subtotal = previousBalance - payment + ccMembershipFee + materialDelivery + other - headquartersDeduction - bankTransferDeduction;
+  // 差引き合計額 ⑧ = ① + ② + ③ + ④ + ⑦ - ⑤ - ⑥
+  const subtotal = remainingBalance + ccMembershipFee + materialDelivery + other + nonTaxable - materialReturn - adjustment;
   
-  // 消費税額 = (③ + ④ - ⑥) × 10%
-  const taxAmount = Math.floor((ccMembershipFee + materialDelivery - headquartersDeduction) * 0.1);
+  // 消費税額 ⑨ = (② + ③ + ④ - ⑤) × 10%
+  const taxAmount = Math.floor((ccMembershipFee + materialDelivery + other - materialReturn) * 0.1);
   
+  // ご請求額 = ⑧ + ⑨
   const totalAmount = subtotal + taxAmount;
 
   // 转换CC会员明细
@@ -155,6 +159,9 @@ export function transformInvoiceData(
       materialShipping,
       unitPrice,
       other,
+      materialReturn,
+      adjustment,
+      nonTaxable,
       headquartersDeduction,
       bankTransferDeduction,
       subtotal,

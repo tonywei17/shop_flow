@@ -6,10 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Loader2, Zap, FileCheck, Send, CircleDollarSign, Trash2, AlertTriangle, Eye } from "lucide-react";
+import { Download, FileText, Loader2, Zap, FileCheck, Send, CircleDollarSign, Trash2, AlertTriangle, Eye, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { HighlightText } from "@/components/ui/highlight-text";
 import { Label } from "@/components/ui/label";
-import { MonthPicker, getCurrentMonth, formatMonthDisplay } from "@/components/billing/month-picker";
+import { MonthPicker, getPreviousMonth, formatMonthDisplay } from "@/components/billing/month-picker";
 import { ClientSortableTableHead, useClientSort } from "@/components/ui/client-sortable-table-head";
 import {
   Dialog,
@@ -59,11 +60,12 @@ function formatCurrency(amount: number): string {
 }
 
 export function InvoicesClient() {
-  const [selectedMonth, setSelectedMonth] = React.useState<string>(getCurrentMonth());
+  const [selectedMonth, setSelectedMonth] = React.useState<string>(getPreviousMonth());
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [loading, setLoading] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
   const [invoices, setInvoices] = React.useState<Invoice[]>([]);
+  const [searchTerm, setSearchTerm] = React.useState("");
   const [generateDialogOpen, setGenerateDialogOpen] = React.useState(false);
   const [generateResult, setGenerateResult] = React.useState<{
     success: boolean;
@@ -205,8 +207,20 @@ export function InvoicesClient() {
     return { count: invoices.length, amount: totalAmount, draft, confirmed, sent, paid };
   }, [invoices]);
 
+  // Filter invoices based on search term
+  const filteredInvoices = React.useMemo(() => {
+    if (!searchTerm.trim()) return invoices;
+    const term = searchTerm.toLowerCase().trim();
+    return invoices.filter((inv) => {
+      const invoiceNumber = inv.invoice_number?.toLowerCase() || "";
+      const departmentName = inv.departments?.name?.toLowerCase() || "";
+      const storeCode = inv.departments?.store_code?.toLowerCase() || "";
+      return invoiceNumber.includes(term) || departmentName.includes(term) || storeCode.includes(term);
+    });
+  }, [invoices, searchTerm]);
+
   // Sorting
-  const { sortConfig, handleSort, sortedData: sortedInvoices } = useClientSort(invoices, "invoice_number", "asc");
+  const { sortConfig, handleSort, sortedData: sortedInvoices } = useClientSort(filteredInvoices, "invoice_number", "asc");
 
   // Selection handlers
   const isAllSelected = sortedInvoices.length > 0 && sortedInvoices.every((inv) => selectedIds.has(inv.id));
@@ -459,7 +473,7 @@ export function InvoicesClient() {
       {/* Main Table Card */}
       <Card className="rounded-xl border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-foreground">
+          <div className="flex flex-col gap-3 px-6 py-3 text-sm text-foreground lg:flex-row lg:items-center lg:justify-between">
             <label htmlFor="invoices-select-all" className="flex items-center gap-3">
               <Checkbox
                 id="invoices-select-all"
@@ -469,7 +483,27 @@ export function InvoicesClient() {
               />
               <span>全て選択</span>
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-1 flex-wrap items-center gap-3 lg:justify-end">
+              {/* Search Input */}
+              <div className="relative w-full min-w-[260px] max-w-[360px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="請求書番号・支局名で検索"
+                  className="pl-9 pr-9"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
               {selectedIds.size > 0 && (
                 <Button
                   variant="outline"
@@ -563,10 +597,10 @@ export function InvoicesClient() {
                         />
                       </TableCell>
                       <TableCell className="font-mono text-xs text-muted-foreground">
-                        {invoice.invoice_number}
+                        <HighlightText text={invoice.invoice_number} searchTerm={searchTerm} />
                       </TableCell>
                       <TableCell className="text-foreground">
-                        {invoice.departments?.name || "-"}
+                        <HighlightText text={invoice.departments?.name || "-"} searchTerm={searchTerm} />
                       </TableCell>
                       <TableCell className="font-medium">
                         {formatCurrency(invoice.total_amount)}
@@ -608,7 +642,7 @@ export function InvoicesClient() {
 
           {/* Footer */}
           <div className="border-t border-border px-6 py-3 text-sm text-muted-foreground">
-            全 {invoices.length} 件
+            全 {invoices.length} 件{searchTerm && ` (検索結果: ${filteredInvoices.length} 件)`}
             {selectedIds.size > 0 && ` (${selectedIds.size} 件選択中)`}
           </div>
         </CardContent>

@@ -107,6 +107,9 @@ export async function POST(request: NextRequest) {
             material_amount: invoice.material_amount || 0,
             membership_amount: invoice.membership_amount || 0,
             other_expenses_amount: invoice.other_expenses_amount || 0,
+            adjustment_amount: invoice.adjustment_amount || 0,
+            non_taxable_amount: invoice.non_taxable_amount || 0,
+            material_return_amount: invoice.material_return_amount || 0,
             subtotal: invoice.subtotal || 0,
             tax_amount: invoice.tax_amount || 0,
             total_amount: invoice.total_amount || 0,
@@ -119,11 +122,14 @@ export async function POST(request: NextRequest) {
             },
           },
           invoiceNo,
-          (ccMembers || []).map((m: { class_name: string; total_count: number; unit_price: number; total_amount: number }) => ({
+          (ccMembers || []).map((m: { class_name: string; classroom_code?: string; total_count: number; unit_price: number; total_amount: number; is_aigran?: boolean; is_bank_transfer?: boolean }) => ({
             class_name: m.class_name,
+            classroom_code: m.classroom_code || "",
             total_count: m.total_count,
             unit_price: m.unit_price || 480,
             total_amount: m.total_amount,
+            is_aigran: m.is_aigran || false,
+            is_bank_transfer: m.is_bank_transfer || false,
           })),
           [], // materials - 暂时为空
           (expenses || []).map((e: { item_name: string; amount: number }) => ({

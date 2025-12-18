@@ -601,12 +601,17 @@ export function CcFeesClient() {
                                 {classroom.classroom_name || "-"}
                               </TableCell>
                               <TableCell className="text-xs text-muted-foreground">
-                                {classroom.is_aigran && (
-                                  <Badge variant="outline" className="text-xs">アイグラン</Badge>
-                                )}
-                                {classroom.is_bank_transfer && (
-                                  <Badge variant="outline" className="text-xs text-green-600">振替済</Badge>
-                                )}
+                                <div className="flex flex-wrap gap-1">
+                                  {classroom.classroom_code?.endsWith("000") && (
+                                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">支局</Badge>
+                                  )}
+                                  {classroom.is_aigran && (
+                                    <Badge variant="outline" className="text-xs">アイグラン</Badge>
+                                  )}
+                                  {classroom.is_bank_transfer && (
+                                    <Badge variant="outline" className="text-xs text-green-600 border-green-300">口座振替</Badge>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <span className="text-muted-foreground">{classroom.total_count}</span>

@@ -50,16 +50,11 @@ const mockData: InvoicePDFData = {
   },
   details: {
     ccMembers: [
-      { className: "ベビークラス", count: 10, unitPrice: 550, amount: 5500, deliveryDate: "", invoiceAmount: 5500, deductionAmount: 0 },
-      { className: "1歳児クラス", count: 15, unitPrice: 550, amount: 8250, deliveryDate: "", invoiceAmount: 8250, deductionAmount: 0 },
-      { className: "2歳児クラス", count: 20, unitPrice: 550, amount: 11000, deliveryDate: "", invoiceAmount: 11000, deductionAmount: 0 },
-      { className: "3歳児クラス", count: 25, unitPrice: 550, amount: 13750, deliveryDate: "", invoiceAmount: 13750, deductionAmount: 0 },
-      { className: "4歳児クラス", count: 18, unitPrice: 550, amount: 9900, deliveryDate: "", invoiceAmount: 9900, deductionAmount: 0 },
-      { className: "5歳児クラス", count: 12, unitPrice: 550, amount: 6600, deliveryDate: "", invoiceAmount: 6600, deductionAmount: 0 },
+      { className: "ベビークラス", classroomCode: "1110001", count: 10, unitPrice: 550, amount: 5500, deliveryDate: "001", invoiceAmount: 5500, deductionAmount: 0, isAigran: false, rebateAmount: 0, isBankTransfer: false },
+      { className: "1歳児クラス", classroomCode: "1110002", count: 15, unitPrice: 550, amount: 8250, deliveryDate: "002", invoiceAmount: 8250, deductionAmount: 0, isAigran: false, rebateAmount: 0, isBankTransfer: false },
     ],
     materials: [
-      { date: "2025-11-01", slipNumber: "001", productName: "リトミック教材セット", quantity: 5, unitPrice: 3000, amount: 15000, deliveryDate: "", invoiceAmount: 15000, deductionAmount: 0 },
-      { date: "2025-11-05", slipNumber: "002", productName: "音楽CD", quantity: 10, unitPrice: 1500, amount: 15000, deliveryDate: "", invoiceAmount: 15000, deductionAmount: 0 },
+      { date: "2025-11-01", slipNumber: "001", productName: "リトミック教材セット", quantity: 5, unitPrice: 3000, amount: 15000, deliveryTo: "00", invoiceAmount: 15000, deductionAmount: 0 },
     ],
     otherExpenses: [
       { description: "イベント参加費", amount: 2400 },

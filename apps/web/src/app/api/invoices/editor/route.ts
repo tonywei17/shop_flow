@@ -42,10 +42,10 @@ const mockData: InvoicePDFData = {
   },
   details: {
     ccMembers: [
-      { className: "ベビークラス", count: 10, unitPrice: 550, amount: 5500, deliveryDate: "", invoiceAmount: 5500, deductionAmount: 0 },
+      { className: "ベビークラス", classroomCode: "1110001", count: 10, unitPrice: 550, amount: 5500, deliveryDate: "001", invoiceAmount: 5500, deductionAmount: 0, isAigran: false, rebateAmount: 0, isBankTransfer: false },
     ],
     materials: [
-      { date: "2025-11-01", slipNumber: "001", productName: "リトミック教材セット", quantity: 5, unitPrice: 3000, amount: 15000, deliveryDate: "", invoiceAmount: 15000, deductionAmount: 0 },
+      { date: "2025-11-01", slipNumber: "001", productName: "リトミック教材セット", quantity: 5, unitPrice: 3000, amount: 15000, deliveryTo: "00", invoiceAmount: 15000, deductionAmount: 0 },
     ],
     otherExpenses: [
       { description: "イベント参加費", amount: 2400 },

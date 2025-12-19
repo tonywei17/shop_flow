@@ -12,6 +12,7 @@ import { useStoreSettings, calculateShippingFee } from "@/lib/store-settings-con
 import { formatPrice } from "@/lib/utils";
 import type { StorefrontUser } from "@/lib/auth/types";
 import { Loader2, CreditCard, Package, MapPin, AlertCircle } from "lucide-react";
+import { AddressInput, type AddressData } from "@/components/ui/address-input";
 
 type CheckoutContentProps = {
   user: StorefrontUser | null;
@@ -41,14 +42,14 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
   const isBelowMinimum = minimumOrderAmount > 0 && cart.subtotal < minimumOrderAmount;
 
   // Shipping address form state
-  const [address, setAddress] = React.useState({
-    recipientName: user?.displayName ?? "",
+  const [recipientName, setRecipientName] = React.useState(user?.displayName ?? "");
+  const [phone, setPhone] = React.useState("");
+  const [address, setAddress] = React.useState<AddressData>({
     postalCode: "",
     prefecture: "",
     city: "",
     addressLine1: "",
     addressLine2: "",
-    phone: "",
   });
 
   // Show maintenance mode message
@@ -90,7 +91,11 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: cart.items,
-          shippingAddress: address,
+          shippingAddress: {
+            recipientName,
+            phone,
+            ...address,
+          },
           subtotal: cart.subtotal,
           taxAmount: cart.taxAmount,
           shippingFee: shippingFee,
@@ -133,10 +138,8 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
                   <Label htmlFor="recipientName">お名前 *</Label>
                   <Input
                     id="recipientName"
-                    value={address.recipientName}
-                    onChange={(e) =>
-                      setAddress((prev) => ({ ...prev, recipientName: e.target.value }))
-                    }
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
                     required
                   />
                 </div>
@@ -145,79 +148,19 @@ export function CheckoutContent({ user }: CheckoutContentProps): React.ReactElem
                   <Input
                     id="phone"
                     type="tel"
-                    value={address.phone}
-                    onChange={(e) =>
-                      setAddress((prev) => ({ ...prev, phone: e.target.value }))
-                    }
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="090-1234-5678"
                   />
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="postalCode">郵便番号 *</Label>
-                  <Input
-                    id="postalCode"
-                    value={address.postalCode}
-                    onChange={(e) =>
-                      setAddress((prev) => ({ ...prev, postalCode: e.target.value }))
-                    }
-                    placeholder="123-4567"
-                    required
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="prefecture">都道府県 *</Label>
-                  <Input
-                    id="prefecture"
-                    value={address.prefecture}
-                    onChange={(e) =>
-                      setAddress((prev) => ({ ...prev, prefecture: e.target.value }))
-                    }
-                    placeholder="東京都"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="city">市区町村 *</Label>
-                <Input
-                  id="city"
-                  value={address.city}
-                  onChange={(e) =>
-                    setAddress((prev) => ({ ...prev, city: e.target.value }))
-                  }
-                  placeholder="渋谷区"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="addressLine1">番地・建物名 *</Label>
-                <Input
-                  id="addressLine1"
-                  value={address.addressLine1}
-                  onChange={(e) =>
-                    setAddress((prev) => ({ ...prev, addressLine1: e.target.value }))
-                  }
-                  placeholder="1-2-3 ○○ビル 101号室"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="addressLine2">備考</Label>
-                <Input
-                  id="addressLine2"
-                  value={address.addressLine2}
-                  onChange={(e) =>
-                    setAddress((prev) => ({ ...prev, addressLine2: e.target.value }))
-                  }
-                  placeholder="配送時の注意事項など"
-                />
-              </div>
+              <AddressInput
+                value={address}
+                onChange={setAddress}
+                required
+                idPrefix="checkout"
+              />
             </CardContent>
           </Card>
 

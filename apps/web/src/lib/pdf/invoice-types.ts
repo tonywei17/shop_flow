@@ -11,6 +11,11 @@ export interface InvoicePDFData {
   recipient: {
     postalCode: string;
     address: string;
+    // 细分地址字段（用于换行显示）
+    prefecture?: string;
+    city?: string;
+    addressLine1?: string;
+    addressLine2?: string;
     name: string;
     storeCode: string;
     managerName?: string; // 責任者名（XX様方）

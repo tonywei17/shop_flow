@@ -1,6 +1,6 @@
 # 生产环境部署指南
 
-> **最后更新**: 2025-12-18
+> **最后更新**: 2025-12-19
 
 ## 概述
 
@@ -61,11 +61,19 @@ ssh root@100.112.168.22
 cd /root/shop_flow
 ```
 
-### 3. 获取最新代码
+### 3. 获取最新代码并构建
+
+> 本次更新（2025-12-19）：发票打印样式与分页调整（明细表最大高度 730px，行高随内容估算），请务必重新构建 web。
 
 ```bash
-git fetch origin
-git reset --hard origin/main
+# 获取最新代码
+git pull origin main
+
+# 安装依赖
+pnpm install --frozen-lockfile
+
+# 构建 web
+pnpm build --filter web
 ```
 
 ### 4. 构建 Docker 镜像

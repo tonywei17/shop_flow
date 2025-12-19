@@ -118,7 +118,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
     
     .page {
       width: 210mm;
-      min-height: 297mm;
+      height: 297mm;
       padding: 48px 64px;
       margin: 20px auto;
       background: #fff;
@@ -128,6 +128,16 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
       outline: 2px dashed #ccc;
       outline-offset: -2px;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    
+    .page-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
     
     /* A4尺寸标注 - 仅屏幕显示 */
@@ -156,16 +166,29 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
     @media print {
       body {
         background: #fff;
+        margin: 0;
+        padding: 0;
       }
       .page {
+        width: 210mm;
+        height: 297mm;
         margin: 0;
+        padding: 48px 64px;
         outline: none;
         box-shadow: none;
+        border-radius: 0;
+        page-break-after: always;
+        overflow: hidden;
       }
       .page::before,
       .page::after {
         display: none;
       }
+    }
+    
+    @page {
+      size: A4;
+      margin: 0;
     }
     
     /* ===== Header Section ===== */
@@ -184,14 +207,18 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
       gap: 4px;
       transform: translate(8px, 8px);
       font-family: 'Noto Serif JP', serif;
+      max-width: 280px;
     }
     
     .recipient-address {
       font-size: 14px;
       font-weight: 500;
       color: #111;
-      line-height: 1.4;
-      white-space: nowrap;
+      line-height: 1.5;
+    }
+    
+    .recipient-address-line {
+      display: block;
     }
     
     .recipient-name {
@@ -207,7 +234,6 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
       font-weight: 500;
       color: #111;
       text-align: right;
-      white-space: nowrap;
     }
     
     .sender {
@@ -273,6 +299,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
       color: #111;
       position: relative;
       z-index: 2;
+      white-space: nowrap;
     }
     
     .sender-seal {
@@ -619,25 +646,19 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
       background: #00AC4B;
       width: 100%;
     }
-    
-    @media print {
-      .page {
-        margin: 0;
-        padding: 48px 64px;
-        box-shadow: none;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="page">
+    <div class="page-content">
     <!-- Header -->
     <div class="header">
       <div class="recipient">
         <div class="recipient-address">
-          〒${data.recipient.postalCode || "530-0001"}<br>
-          ${data.recipient.address || ""}<br>
-          ${data.recipient.managerName ? `${data.recipient.managerName.split(/\s+/)[0]}様方` : ""}
+          <span class="recipient-address-line">〒${data.recipient.postalCode || "530-0001"}</span>
+          <span class="recipient-address-line">${data.recipient.prefecture || ""}${data.recipient.city || ""}${data.recipient.addressLine1 || ""}</span>
+          ${data.recipient.addressLine2 ? `<span class="recipient-address-line">${data.recipient.addressLine2}</span>` : ""}
+          ${data.recipient.managerName ? `<span class="recipient-address-line">${data.recipient.managerName.split(/\s+/)[0]}様方</span>` : ""}
         </div>
         <div class="recipient-name">
           ${data.recipient.name}様
@@ -869,6 +890,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
         ${BANK_INFO.bankName}　${BANK_INFO.branchName}　（${BANK_INFO.accountType}）　${BANK_INFO.accountNumber}　　${BANK_INFO.accountHolder}
       </div>
     </div>
+    </div>
     
     <!-- Footer Bar -->
     <div class="footer-bar"></div>
@@ -887,12 +909,22 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
   const materialRebate = Math.floor(materialTotal * 0.1);
   const otherTotal = data.details.otherExpenses.reduce((sum: number, o: OtherExpenseDetail) => sum + o.amount, 0);
 
-  // 动态分页：控制单页最大行数（含小计行等）
-  // 行高固定28px后，每页约能容纳26行
-  const maxRowsPerPage = 26;
+  // 动态分页：使用最大表格高度控制分页
+  // 表格最大高度730px，确保底部绿色横条能显示
+  const maxTableHeight = 730;
+  const defaultRowHeight = 28;
   const pages: string[] = [];
   let currentRows: string[] = [];
-  let rowCount = 0;
+  let currentHeight = 0;
+
+  // 估算行高：根据内容长度判断是否会换行
+  const estimateRowHeight = (content: string): number => {
+    // 品名列宽度约150px，每个字符约7px，超过21个字符可能换行
+    if (content && content.length > 21) {
+      return defaultRowHeight * 2; // 换行时高度翻倍
+    }
+    return defaultRowHeight;
+  };
 
   const pushPage = () => {
     const pageHtml = `
@@ -956,19 +988,19 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     `;
     pages.push(pageHtml);
     currentRows = [];
-    rowCount = 0;
+    currentHeight = 0;
   };
 
-  const ensureSpace = (needed: number) => {
-    if (rowCount + needed > maxRowsPerPage) {
+  const ensureSpace = (neededHeight: number) => {
+    if (currentHeight + neededHeight > maxTableHeight) {
       pushPage();
     }
   };
 
-  const addRow = (rowHtml: string, rows = 1, countInPagination = true) => {
+  const addRow = (rowHtml: string, rowHeight = defaultRowHeight, countInPagination = true) => {
     if (countInPagination) {
-      ensureSpace(rows);
-      rowCount += rows;
+      ensureSpace(rowHeight);
+      currentHeight += rowHeight;
     }
     currentRows.push(rowHtml);
   };
@@ -1058,19 +1090,19 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
   addSectionHeader("＊チャイルドクラブ会費＊", "#FFFCF3");
   // アイグラン教室の割戻し総額を計算
   const aigranRebateTotal = data.details.ccMembers.reduce((sum: number, m: CCMemberDetail) => sum + (m.rebateAmount || 0), 0);
-  data.details.ccMembers.forEach((m) => {
+  // 0人教室をフィルタリング（PDFには表示しない）
+  const nonZeroCcMembers = data.details.ccMembers.filter((m) => m.count > 0);
+  nonZeroCcMembers.forEach((m) => {
     // アイグラン教室の場合は割戻し額を表示
     const rebateDisplay = m.isAigran && m.rebateAmount > 0 ? formatCurrency(m.rebateAmount) : "";
     // 納入先は店番の後三位（例：1110002 → 002）
     const deliveryCode = m.deliveryDate || "";
-    // 0人教室の場合はcc-zero-memberクラスを追加（デフォルトで非表示）
-    const isZeroMember = m.count === 0;
-    const zeroMemberClass = isZeroMember ? " cc-zero-member" : "";
     // 口座振替教室の場合は教室名に(口座振替)を追加
     const classNameDisplay = m.isBankTransfer ? `${m.className}(口座振替)` : m.className;
-    // 0人教室は分页計算に含めない（デフォルトで非表示のため）
+    // 估算行高：根据教室名长度判断是否会换行
+    const rowHeight = estimateRowHeight(classNameDisplay);
     addRow(`
-      <tr class="detail-row${zeroMemberClass}">
+      <tr class="detail-row">
         <td class="cell center"></td>
         <td class="cell center"></td>
         <td class="cell">${classNameDisplay}</td>
@@ -1082,7 +1114,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
         <td class="cell right">${formatCurrency(m.amount)}</td>
         <td class="cell right">${rebateDisplay}</td>
       </tr>
-    `, 1, !isZeroMember);
+    `, rowHeight);
   });
   // CC会費の小計：ご請求額 = 納入額（割戻し額は別計算）
   addSubtotalRow(
@@ -1099,6 +1131,8 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
   // 请求额只计算支局购买的订单，教室购买的不计算请求额但计算返现
   addSectionHeader("＊教材お取引＊", "#F2FBF6");
   data.details.materials.forEach((material: MaterialDetail) => {
+    // 估算行高：根据商品名长度判断是否会换行
+    const rowHeight = estimateRowHeight(material.productName);
     addRow(`
       <tr class="detail-row">
         <td class="cell center">${material.date}</td>
@@ -1112,7 +1146,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
         <td class="cell right">${material.invoiceAmount > 0 ? formatCurrency(material.invoiceAmount) : ""}</td>
         <td class="cell right">${formatCurrency(material.deductionAmount)}</td>
       </tr>
-    `);
+    `, rowHeight);
   });
   // 计算教材总额：纳入额是所有订单的总额，请求额只计算支局购买的
   const materialInvoiceTotal = data.details.materials.reduce((sum: number, m: MaterialDetail) => sum + m.invoiceAmount, 0);
@@ -1130,6 +1164,8 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
   // Other Section
   addSectionHeader("＊その他お取引＊", "#FAF6FF");
   data.details.otherExpenses.forEach((item: OtherExpenseDetail) => {
+    // 估算行高：根据描述长度判断是否会换行
+    const rowHeight = estimateRowHeight(item.description);
     addRow(`
       <tr class="detail-row">
         <td class="cell center"></td>
@@ -1143,7 +1179,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
         <td class="cell right">${formatCurrency(item.amount)}</td>
         <td class="cell right"></td>
       </tr>
-    `);
+    `, rowHeight);
   });
   addSubtotalRow(
     {
@@ -1160,11 +1196,12 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
 
   // 填充空白行至当前页末
   const fillRemainingRows = () => {
-    const remaining = maxRowsPerPage - rowCount;
-    if (remaining > 0) {
-      for (let i = 0; i < remaining; i++) {
+    const remainingHeight = maxTableHeight - currentHeight;
+    const remainingRows = Math.floor(remainingHeight / defaultRowHeight);
+    if (remainingRows > 0) {
+      for (let i = 0; i < remainingRows; i++) {
         currentRows.push(`
-          <tr class="detail-row filler-row" style="height: 28px;">
+          <tr class="detail-row filler-row" style="height: ${defaultRowHeight}px;">
             <td class="cell center"></td>
             <td class="cell center"></td>
             <td class="cell"></td>
@@ -1178,7 +1215,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
           </tr>
         `);
       }
-      rowCount = maxRowsPerPage;
+      currentHeight = maxTableHeight;
     }
   };
 
@@ -1210,7 +1247,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     
     .detail-page {
       width: 210mm;
-      min-height: 297mm;
+      height: 297mm;
       padding: 40px 50px;
       margin: 0 auto;
       background: #fff;
@@ -1222,6 +1259,22 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
       position: relative;
       display: flex;
       flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
+      page-break-after: always;
+    }
+    
+    @media print {
+      .detail-page {
+        margin: 0;
+        outline: none;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .detail-page::before,
+      .detail-page::after {
+        display: none;
+      }
     }
     /* 安全边距线 - 仅屏幕显示（明细页） */
     .detail-page::after {
@@ -1420,7 +1473,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
       height: 8px;
       background: #00AC4B;
       width: 100%;
-      margin-top: auto;
+      margin-top: 8px;
     }
     
     .page-break { page-break-before: always; }

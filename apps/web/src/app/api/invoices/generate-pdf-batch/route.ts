@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
           name,
           store_code,
           postal_code,
-          address
+          prefecture,
+          city,
+          address_line1,
+          address_line2,
+          manager_name
         )
       `)
       .eq("is_current", true);
@@ -71,7 +75,11 @@ export async function POST(request: NextRequest) {
           name?: string; 
           store_code?: string;
           postal_code?: string;
-          address?: string;
+          prefecture?: string;
+          city?: string;
+          address_line1?: string;
+          address_line2?: string;
+          manager_name?: string;
         } | null;
 
         const invoiceNo = generateInvoiceNo(
@@ -118,7 +126,13 @@ export async function POST(request: NextRequest) {
               name: dept?.name || "",
               store_code: dept?.store_code || "",
               postal_code: dept?.postal_code,
-              address: dept?.address,
+              address: [dept?.prefecture, dept?.city, dept?.address_line1, dept?.address_line2].filter(Boolean).join(""),
+              // 细分地址字段
+              prefecture: dept?.prefecture || "",
+              city: dept?.city || "",
+              address_line1: dept?.address_line1 || "",
+              address_line2: dept?.address_line2 || "",
+              manager_name: dept?.manager_name || "",
             },
           },
           invoiceNo,

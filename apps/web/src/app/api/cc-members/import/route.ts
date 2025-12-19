@@ -136,8 +136,9 @@ async function processChildCountFile(
     // Check if this is a branch row (ends with 000)
     const isBranchRow = classroomCode.endsWith("000");
     
-    // Check if this is an Aigran classroom (ends with 777)
-    const isAigran = classroomCode.endsWith("777");
+    // Check if this is an Aigran classroom (ends with 777 or 778)
+    // 777: ㈱アイグラン, 778: ㈱アイグラン あい福祉会
+    const isAigran = classroomCode.endsWith("777") || classroomCode.endsWith("778");
     
     batchData.push({
       import_id: importId,

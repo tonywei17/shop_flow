@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash2, Mail, FileText, CreditCard, Loader2 } from "lucide-react";
+import { AddressInput, type AddressData } from "@/components/ui/address-input";
 import { toast } from "sonner";
 
 type Product = {
@@ -91,14 +92,14 @@ export function CreateOrderDialog({ products, onOrderCreated }: CreateOrderDialo
   const [customerEmail, setCustomerEmail] = React.useState("");
   const [customerName, setCustomerName] = React.useState("");
   const [orderItems, setOrderItems] = React.useState<OrderItem[]>([]);
-  const [shippingAddress, setShippingAddress] = React.useState({
-    recipientName: "",
+  const [recipientName, setRecipientName] = React.useState("");
+  const [recipientPhone, setRecipientPhone] = React.useState("");
+  const [shippingAddress, setShippingAddress] = React.useState<AddressData>({
     postalCode: "",
     prefecture: "",
     city: "",
     addressLine1: "",
     addressLine2: "",
-    phone: "",
   });
   const [notes, setNotes] = React.useState("");
 
@@ -177,7 +178,7 @@ export function CreateOrderDialog({ products, onOrderCreated }: CreateOrderDialo
       return;
     }
 
-    if (!shippingAddress.recipientName || !shippingAddress.postalCode || !shippingAddress.prefecture || !shippingAddress.city || !shippingAddress.addressLine1) {
+    if (!recipientName || !shippingAddress.postalCode || !shippingAddress.prefecture || !shippingAddress.city || !shippingAddress.addressLine1) {
       toast.error("配送先住所を入力してください");
       return;
     }
@@ -194,7 +195,11 @@ export function CreateOrderDialog({ products, onOrderCreated }: CreateOrderDialo
           customer_email: customerEmail,
           customer_name: customerName,
           order_items: orderItems,
-          shipping_address: shippingAddress,
+          shipping_address: {
+            recipientName,
+            phone: recipientPhone,
+            ...shippingAddress,
+          },
           subtotal,
           tax_amount: taxAmount,
           shipping_fee: shippingFee,
@@ -219,14 +224,14 @@ export function CreateOrderDialog({ products, onOrderCreated }: CreateOrderDialo
       setOrderItems([]);
       setCustomerEmail("");
       setCustomerName("");
+      setRecipientName("");
+      setRecipientPhone("");
       setShippingAddress({
-        recipientName: "",
         postalCode: "",
         prefecture: "",
         city: "",
         addressLine1: "",
         addressLine2: "",
-        phone: "",
       });
       setNotes("");
       setOpen(false);
@@ -414,8 +419,8 @@ export function CreateOrderDialog({ products, onOrderCreated }: CreateOrderDialo
                 <Label htmlFor="recipientName">宛名 <span className="text-destructive">*</span></Label>
                 <Input
                   id="recipientName"
-                  value={shippingAddress.recipientName}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, recipientName: e.target.value })}
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
                   placeholder="山田 太郎"
                 />
               </div>
@@ -423,61 +428,18 @@ export function CreateOrderDialog({ products, onOrderCreated }: CreateOrderDialo
                 <Label htmlFor="phone">電話番号</Label>
                 <Input
                   id="phone"
-                  value={shippingAddress.phone}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+                  value={recipientPhone}
+                  onChange={(e) => setRecipientPhone(e.target.value)}
                   placeholder="03-1234-5678"
                 />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">郵便番号 <span className="text-destructive">*</span></Label>
-                <Input
-                  id="postalCode"
-                  value={shippingAddress.postalCode}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                  placeholder="100-0001"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="prefecture">都道府県 <span className="text-destructive">*</span></Label>
-                <Input
-                  id="prefecture"
-                  value={shippingAddress.prefecture}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, prefecture: e.target.value })}
-                  placeholder="東京都"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">市区町村 <span className="text-destructive">*</span></Label>
-                <Input
-                  id="city"
-                  value={shippingAddress.city}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                  placeholder="千代田区"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="addressLine1">住所1 <span className="text-destructive">*</span></Label>
-                <Input
-                  id="addressLine1"
-                  value={shippingAddress.addressLine1}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, addressLine1: e.target.value })}
-                  placeholder="丸の内1-1-1"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="addressLine2">住所2（建物名など）</Label>
-                <Input
-                  id="addressLine2"
-                  value={shippingAddress.addressLine2}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, addressLine2: e.target.value })}
-                  placeholder="サンプルビル 3F"
-                />
-              </div>
-            </div>
+            <AddressInput
+              value={shippingAddress}
+              onChange={setShippingAddress}
+              required
+              idPrefix="order"
+            />
           </div>
 
           {/* Notes */}

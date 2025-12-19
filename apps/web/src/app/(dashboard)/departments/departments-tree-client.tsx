@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { AddressInput, type AddressData } from "@/components/ui/address-input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -240,11 +241,13 @@ const createInitialFormState = () => ({
   parentId: null as string | null,
   managerName: "",
   phonePrimary: "",
-  postalCode: "",
-  prefecture: "",
-  city: "",
-  addressLine1: "",
-  addressLine2: "",
+  address: {
+    postalCode: "",
+    prefecture: "",
+    city: "",
+    addressLine1: "",
+    addressLine2: "",
+  } as AddressData,
   status: "有効",
   isIndependent: false,
   allowProxyBilling: false,
@@ -298,11 +301,13 @@ export function DepartmentsTreeClient({
       parentId: dept.parent_id,
       managerName: dept.manager_name ?? "",
       phonePrimary: dept.phone_primary ?? "",
-      postalCode: dept.postal_code ?? "",
-      prefecture: dept.prefecture ?? "",
-      city: dept.city ?? "",
-      addressLine1: dept.address_line1 ?? "",
-      addressLine2: dept.address_line2 ?? "",
+      address: {
+        postalCode: dept.postal_code ?? "",
+        prefecture: dept.prefecture ?? "",
+        city: dept.city ?? "",
+        addressLine1: dept.address_line1 ?? "",
+        addressLine2: dept.address_line2 ?? "",
+      },
       status: dept.status ?? "有効",
       isIndependent: dept.is_independent,
       allowProxyBilling: dept.allow_proxy_billing,
@@ -332,11 +337,11 @@ export function DepartmentsTreeClient({
         parent_id: formState.parentId,
         manager_name: formState.managerName.trim() || null,
         phone_primary: formState.phonePrimary.trim() || null,
-        postal_code: formState.postalCode.trim() || null,
-        prefecture: formState.prefecture.trim() || null,
-        city: formState.city.trim() || null,
-        address_line1: formState.addressLine1.trim() || null,
-        address_line2: formState.addressLine2.trim() || null,
+        postal_code: formState.address.postalCode.trim() || null,
+        prefecture: formState.address.prefecture.trim() || null,
+        city: formState.address.city.trim() || null,
+        address_line1: formState.address.addressLine1.trim() || null,
+        address_line2: formState.address.addressLine2.trim() || null,
         status: formState.status,
         is_independent: formState.isIndependent,
         allow_proxy_billing: formState.allowProxyBilling,
@@ -1187,55 +1192,12 @@ export function DepartmentsTreeClient({
             {/* 所在地情報 */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-foreground border-b pb-2">所在地</h3>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="form-postal" className="text-xs">郵便番号</Label>
-                  <Input
-                    id="form-postal"
-                    value={formState.postalCode}
-                    onChange={(e) => setFormState((prev) => ({ ...prev, postalCode: e.target.value }))}
-                    placeholder="例: 100-0001"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="form-prefecture" className="text-xs">都道府県</Label>
-                    <Input
-                      id="form-prefecture"
-                      value={formState.prefecture}
-                      onChange={(e) => setFormState((prev) => ({ ...prev, prefecture: e.target.value }))}
-                      placeholder="例: 東京都"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="form-city" className="text-xs">市区町村</Label>
-                    <Input
-                      id="form-city"
-                      value={formState.city}
-                      onChange={(e) => setFormState((prev) => ({ ...prev, city: e.target.value }))}
-                      placeholder="例: 千代田区"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="form-address1" className="text-xs">住所1</Label>
-                  <Input
-                    id="form-address1"
-                    value={formState.addressLine1}
-                    onChange={(e) => setFormState((prev) => ({ ...prev, addressLine1: e.target.value }))}
-                    placeholder="例: 丸の内1-1-1"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="form-address2" className="text-xs">住所2</Label>
-                  <Input
-                    id="form-address2"
-                    value={formState.addressLine2}
-                    onChange={(e) => setFormState((prev) => ({ ...prev, addressLine2: e.target.value }))}
-                    placeholder="例: ○○ビル 3F"
-                  />
-                </div>
-              </div>
+              <AddressInput
+                value={formState.address}
+                onChange={(address) => setFormState((prev) => ({ ...prev, address }))}
+                labelSize="xs"
+                idPrefix="form"
+              />
             </div>
 
             {/* 設定 */}

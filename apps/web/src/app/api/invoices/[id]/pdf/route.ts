@@ -189,6 +189,11 @@ export async function GET(
           store_code: department?.store_code || "",
           postal_code: department?.postal_code,
           address: department?.address,
+          // 细分地址字段
+          prefecture: deptData?.prefecture || "",
+          city: deptData?.city || "",
+          address_line1: deptData?.address_line1 || "",
+          address_line2: deptData?.address_line2 || "",
           manager_name: department?.manager_name || "",
         },
       },

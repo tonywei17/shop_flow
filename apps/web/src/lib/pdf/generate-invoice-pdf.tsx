@@ -29,6 +29,11 @@ interface InvoiceData {
     store_code: string;
     postal_code?: string;
     address?: string;
+    // 细分地址字段
+    prefecture?: string;
+    city?: string;
+    address_line1?: string;
+    address_line2?: string;
     manager_name?: string; // 責任者名
   };
 }
@@ -196,6 +201,11 @@ export function transformInvoiceData(
     recipient: {
       postalCode: invoice.department.postal_code || "",
       address: invoice.department.address || "",
+      // 细分地址字段（用于换行显示）
+      prefecture: invoice.department.prefecture || "",
+      city: invoice.department.city || "",
+      addressLine1: invoice.department.address_line1 || "",
+      addressLine2: invoice.department.address_line2 || "",
       name: invoice.department.name,
       storeCode: invoice.department.store_code,
       managerName: invoice.department.manager_name || "",

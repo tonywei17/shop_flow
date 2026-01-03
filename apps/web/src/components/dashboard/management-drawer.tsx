@@ -38,17 +38,17 @@ export function ManagementDrawer({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className={`w-full border-l bg-card sm:w-[420px] sm:max-w-none lg:w-[25vw] lg:max-w-[25vw] ${widthClassName ?? ""}`}
+        className={`flex flex-col h-full w-full border-l bg-card sm:w-[420px] sm:max-w-none lg:w-[25vw] lg:max-w-[25vw] p-0 ${widthClassName ?? ""}`}
       >
-        <SheetHeader className="border-b px-6 py-4">
+        <SheetHeader className="border-b px-6 py-4 shrink-0">
           <SheetTitle className="text-lg font-bold text-foreground">{title}</SheetTitle>
         </SheetHeader>
-        <form className="flex h-full flex-1 flex-col gap-6" onSubmit={onSubmit}>
+        <form className="flex flex-col flex-1 min-h-0" onSubmit={onSubmit}>
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">{children}</div>
           {footer ? (
-            footer
+            <div className="shrink-0">{footer}</div>
           ) : (
-            <SheetFooter className="mt-auto flex-row gap-3 border-t border-border px-6 pt-4">
+            <SheetFooter className="shrink-0 mt-auto flex flex-row gap-3 border-t border-border px-6 py-4 bg-card">
               <Button
                 type="button"
                 variant="outline"

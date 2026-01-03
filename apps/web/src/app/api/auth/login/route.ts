@@ -41,16 +41,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (password !== adminPassword) {
-    return NextResponse.json({ error: "アカウントまたはパスワードが正しくありません" }, { status: 401 });
-  }
-
   const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null;
   const userAgent = req.headers.get("user-agent") || null;
 
   // Check if this is the env super admin first (takes priority)
   const envAdminId = process.env.ADMIN_LOGIN_ID;
   if (envAdminId && account === envAdminId) {
+    if (password !== adminPassword) {
+      return NextResponse.json({ error: "アカウントまたはパスワードが正しくありません" }, { status: 401 });
+    }
     // Log successful super admin login
     await createAuditLog({
       action: "login_success",

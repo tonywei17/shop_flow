@@ -360,7 +360,7 @@ USING (
 
 ```bash
 # Supabase
-SUPABASE_URL=https://supabase.nexus-tech.cloud
+SUPABASE_URL=https://supabase.yohaku.cloud
 SUPABASE_ANON_KEY=xxx
 SUPABASE_SERVICE_ROLE_KEY=xxx
 

@@ -293,7 +293,7 @@
   - Sidebar 支持内部菜单区域垂直滚动，底部 CTA 区域固定，新增「学習プラットフォームへ」「オンラインストアへ」按钮。
   - 替换管理端 Logo 为 `/apps/web/public/eu_logo.png` 资源。
 - **Supabase 迁移**：
-  - 将本地/项目 Supabase 配置整体迁移至自建实例 `https://supabase.nexus-tech.cloud`。
+  - 将本地/项目 Supabase 配置整体迁移至自建实例 `https://eurhythmics.yohaku.cloud`。
   - 更新根目录与 apps 层 `.env.local` 中的 `SUPABASE_URL`、`SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`，以及 `apps/storefront/.env.local` 中的 `NEXT_PUBLIC_SUPABASE_*`。
   - 新建《MY_SUPABASE_COMPLETE_GUIDE.md》文档，统一记录自建 Supabase 的连接信息与 MCP 使用指南。
 - **MCP 集成**：

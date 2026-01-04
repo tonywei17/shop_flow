@@ -1,38 +1,42 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
-import { getRoles, createRoleService, updateRoleService, deleteRoleService } from "@/lib/services/org";
+import {
+  getRoles,
+  createRoleService,
+  updateRoleService,
+  deleteRoleService,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+} from "@/lib/services/org";
 import { roleCreateSchema } from "@/lib/validation/roles";
+import {
+  successResponse,
+  validationErrorResponse,
+  withErrorHandler,
+  errorResponse,
+} from "@/lib/api-utils";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const { page, limit, offset } = parsePaginationParams(searchParams, {
-    defaultLimit: 20,
-    maxLimit: 100,
-  });
-  const search = searchParams.get("q")?.trim() || undefined;
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
+    const search = searchParams.get("q")?.trim() || undefined;
 
-  try {
     const { roles, count } = await getRoles({ limit, offset, search });
-    return NextResponse.json({ roles, count, page, limit });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return successResponse(roles, { page, limit, total: count });
+  });
 }
 
 export async function POST(req: NextRequest) {
-  try {
+  return withErrorHandler(async () => {
     const rawBody = await req.json().catch(() => ({}));
     const parsed = roleCreateSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid role payload",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 },
-      );
+      return validationErrorResponse(parsed.error);
     }
 
     const data = parsed.data;
@@ -53,7 +57,7 @@ export async function POST(req: NextRequest) {
     const defaultPriceType = data.default_price_type ?? "retail";
 
     if (!name || !code) {
-      return NextResponse.json({ error: "Missing name or code" }, { status: 400 });
+      return errorResponse("Missing name or code", 400);
     }
 
     const numericRoleId =
@@ -65,10 +69,10 @@ export async function POST(req: NextRequest) {
 
     if (mode === "edit") {
       if (!id) {
-        return NextResponse.json({ error: "Missing id for edit mode" }, { status: 400 });
+        return errorResponse("Missing id for edit mode", 400);
       }
 
-      const updated = await updateRoleService(id, {
+      const roleInput: UpdateRoleInput = {
         role_id: numericRoleId,
         name,
         code,
@@ -81,12 +85,14 @@ export async function POST(req: NextRequest) {
         badge_color: badgeColor,
         can_access_storefront: canAccessStorefront,
         default_price_type: defaultPriceType as any,
-      });
+      };
 
-      return NextResponse.json({ role: updated, mode: "edit" }, { status: 200 });
+      const updated = await updateRoleService(id, roleInput);
+
+      return { role: updated, mode: "edit" };
     }
 
-    const created = await createRoleService({
+    const roleInput: CreateRoleInput = {
       role_id: numericRoleId,
       name,
       code,
@@ -99,28 +105,24 @@ export async function POST(req: NextRequest) {
       badge_color: badgeColor,
       can_access_storefront: canAccessStorefront,
       default_price_type: defaultPriceType as any,
-    });
+    };
 
-    return NextResponse.json({ role: created, mode: "create" }, { status: 201 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    const created = await createRoleService(roleInput);
+
+    return { role: created, mode: "create" };
+  });
 }
 
 export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id")?.trim();
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id")?.trim();
 
-  if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  }
+    if (!id) {
+      return errorResponse("Missing id", 400);
+    }
 
-  try {
     await deleteRoleService(id);
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { ok: true };
+  });
 }

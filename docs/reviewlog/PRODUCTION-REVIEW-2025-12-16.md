@@ -30,7 +30,7 @@
 ### 3つのメインアプリケーション
 
 #### 1. **管理後台 (Dashboard) - apps/web**
-- **URL**: https://eurhythmics.nexus-tech.cloud
+- **URL**: https://eurhythmics.yohaku.cloud
 - **ポート**: 3009 (本番)
 - **機能**: 24+ 管理モジュール
   - 商品管理 (4段階価格体系)
@@ -43,7 +43,7 @@
   - マスタデータ管理
 
 #### 2. **オンラインストア (Storefront) - apps/storefront**
-- **URL**: https://eurhythmics-shop.nexus-tech.cloud
+- **URL**: https://eurhythmics-shop.yohaku.cloud
 - **ポート**: 3001 (本番)
 - **機能**:
   - 商品一覧・検索
@@ -55,7 +55,7 @@
   - ロールベース価格表示
 
 #### 3. **学習プラットフォーム (Learning) - apps/learning**
-- **URL**: https://e-learning.nexus-tech.cloud
+- **URL**: https://e-learning.yohaku.cloud
 - **ポート**: 3002 (本番)
 - **機能**:
   - ホームページ (AI共学テーマ)
@@ -121,9 +121,9 @@ da7a74d fix(build): downgrade pnpm to 9.15.0 and update docs
 ### サービス状態
 | サービス | URL | ポート | 状態 |
 |---------|-----|--------|------|
-| 管理後台 (web) | https://eurhythmics.nexus-tech.cloud | 3009 | ✅ 運行中 |
-| ストアフロント | https://eurhythmics-shop.nexus-tech.cloud | 3001 | ✅ 運行中 |
-| Learning | https://e-learning.nexus-tech.cloud | 3002 | ✅ 運行中 |
+| 管理後台 (web) | https://eurhythmics.yohaku.cloud | 3009 | ✅ 運行中 |
+| ストアフロント | https://eurhythmics-shop.yohaku.cloud | 3001 | ✅ 運行中 |
+| Learning | https://e-learning.yohaku.cloud | 3002 | ✅ 運行中 |
 | PostgreSQL | 内部のみ | 5432 | ✅ 運行中 |
 | Redis | 内部のみ | 6379 | ✅ 運行中 |
 
@@ -220,9 +220,9 @@ docker logs shop_flow-learning --tail 50
 ### ヘルスチェック
 ```bash
 # HTTP ステータスコード確認
-curl -s -o /dev/null -w '%{http_code}' https://eurhythmics.nexus-tech.cloud/
-curl -s -o /dev/null -w '%{http_code}' https://eurhythmics-shop.nexus-tech.cloud/
-curl -s -o /dev/null -w '%{http_code}' https://e-learning.nexus-tech.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://eurhythmics.yohaku.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://eurhythmics-shop.yohaku.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://e-learning.yohaku.cloud/
 ```
 
 ### リソース使用量確認
@@ -263,7 +263,7 @@ docker exec shop_flow-postgres pg_isready -U shop_flow
 ### 証明書エラー
 ```bash
 docker logs traefik --tail 50
-dig eurhythmics.nexus-tech.cloud
+dig eurhythmics.yohaku.cloud
 ```
 
 ---

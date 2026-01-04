@@ -125,9 +125,9 @@
 
 | 服务 | URL |
 |------|-----|
-| 管理端 (web) | https://eurhythmics.nexus-tech.cloud |
-| 商店前端 (storefront) | https://eurhythmics-shop.nexus-tech.cloud |
-| 学習プラットフォーム (learning) | https://e-learning.nexus-tech.cloud |
+| 管理端 (web) | https://eurhythmics.yohaku.cloud |
+| 商店前端 (storefront) | https://eurhythmics-shop.yohaku.cloud |
+| 学習プラットフォーム (learning) | https://e-learning.yohaku.cloud |
 
 ---
 

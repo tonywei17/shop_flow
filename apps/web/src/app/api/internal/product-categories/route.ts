@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
 import {
   listProductCategories,
@@ -7,39 +7,36 @@ import {
   deleteProductCategory,
 } from "@enterprise/db";
 import { productCategoryUpsertSchema } from "@/lib/validation/master-data";
+import {
+  successResponse,
+  validationErrorResponse,
+  withErrorHandler,
+  errorResponse,
+} from "@/lib/api-utils";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const { page, limit, offset } = parsePaginationParams(searchParams, {
-    defaultLimit: 50,
-    maxLimit: 500,
-  });
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultLimit: 50,
+      maxLimit: 500,
+    });
 
-  const search = searchParams.get("q")?.trim() || undefined;
-  const status = searchParams.get("status")?.trim() || undefined;
+    const search = searchParams.get("q")?.trim() || undefined;
+    const status = searchParams.get("status")?.trim() || undefined;
 
-  try {
     const { items, count } = await listProductCategories({ limit, offset, search, status });
-    return NextResponse.json({ productCategories: items, count, page, limit });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return successResponse(items, { page, limit, total: count });
+  });
 }
 
 export async function POST(req: NextRequest) {
-  try {
+  return withErrorHandler(async () => {
     const rawBody = await req.json().catch(() => ({}));
     const parsed = productCategoryUpsertSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid product category payload",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 },
-      );
+      return validationErrorResponse(parsed.error);
     }
 
     const data = parsed.data;
@@ -51,63 +48,52 @@ export async function POST(req: NextRequest) {
     const status = (data.status ?? "有効").trim() || "有効";
 
     if (!code || !name) {
-      return NextResponse.json({ error: "Missing code or name" }, { status: 400 });
+      return errorResponse("Missing code or name", 400);
     }
 
     if (mode === "edit") {
       if (!id) {
-        return NextResponse.json({ error: "Missing id for edit mode" }, { status: 400 });
+        return errorResponse("Missing id for edit mode", 400);
       }
 
       const item = await updateProductCategory(id, { code, name, status });
-      return NextResponse.json({ item, mode: "edit" }, { status: 200 });
+      return { item, mode: "edit" };
     }
 
     const item = await createProductCategory({ code, name, status });
-    return NextResponse.json({ item, mode: "create" }, { status: 201 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { item, mode: "create" };
+  });
 }
 
 export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id")?.trim();
-  let ids: string[] = [];
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id")?.trim();
+    let ids: string[] = [];
 
-  try {
-    const body = (await req.json().catch(() => null)) as { ids?: unknown } | null;
-    if (Array.isArray(body?.ids)) {
-      ids = (body.ids as unknown[])
-        .map((value) => (typeof value === "string" ? value.trim() : ""))
-        .filter((value) => value.length > 0);
-    }
-  } catch {
-    // ignore body parse errors and fall back to query param path
-  }
-
-  if (ids.length) {
     try {
+      const body = (await req.json().catch(() => null)) as { ids?: unknown } | null;
+      if (Array.isArray(body?.ids)) {
+        ids = (body.ids as unknown[])
+          .map((value) => (typeof value === "string" ? value.trim() : ""))
+          .filter((value) => value.length > 0);
+      }
+    } catch {
+      // ignore body parse errors and fall back to query param path
+    }
+
+    if (ids.length) {
       for (const targetId of ids) {
         await deleteProductCategory(targetId);
       }
-      return NextResponse.json({ ok: true, deleted: ids.length }, { status: 200 });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      return NextResponse.json({ error: message }, { status: 500 });
+      return { ok: true, deleted: ids.length };
     }
-  }
 
-  if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  }
+    if (!id) {
+      return errorResponse("Missing id", 400);
+    }
 
-  try {
     await deleteProductCategory(id);
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { ok: true };
+  });
 }

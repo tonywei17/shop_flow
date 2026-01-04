@@ -2,7 +2,7 @@
 
 > 创建时间: 2025-11-19  
 > VPS IP: 69.62.81.149  
-> 域名: https://supabase.nexus-tech.cloud
+> 域名: https://supabase.yohaku.cloud
 
 ---
 
@@ -24,10 +24,10 @@
 
 | 服务 | URL | 说明 |
 |------|-----|------|
-| **Studio管理界面** | https://supabase.nexus-tech.cloud | Web管理控制台 |
-| **REST API** | https://supabase.nexus-tech.cloud/rest/v1/ | 数据库REST接口 |
-| **Auth API** | https://supabase.nexus-tech.cloud/auth/v1/ | 认证接口 |
-| **Storage API** | https://supabase.nexus-tech.cloud/storage/v1/ | 文件存储接口 |
+| **Studio管理界面** | https://supabase.yohaku.cloud | Web管理控制台 |
+| **REST API** | https://supabase.yohaku.cloud/rest/v1/ | 数据库REST接口 |
+| **Auth API** | https://supabase.yohaku.cloud/auth/v1/ | 认证接口 |
+| **Storage API** | https://supabase.yohaku.cloud/storage/v1/ | 文件存储接口 |
 | **Realtime** | wss://supabase.nexus-tech.cloud/realtime/v1/ | WebSocket实时通信 |
 
 ### 💻 VPS配置
@@ -57,7 +57,7 @@
 ### 🔐 Studio管理界面登录
 
 ```
-URL: https://supabase.nexus-tech.cloud
+URL: https://supabase.yohaku.cloud
 用户名: admin
 密码: SupabaseAdmina161e9d7
 ```
@@ -104,7 +104,7 @@ psql -h 69.62.81.149 -p 5432 -U postgres -d postgres
 ### 🌐 通过API连接（推荐）
 
 ```bash
-SUPABASE_URL="https://supabase.nexus-tech.cloud"
+SUPABASE_URL="https://supabase.yohaku.cloud"
 SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
@@ -124,7 +124,7 @@ npm install @supabase/supabase-js
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  'https://supabase.nexus-tech.cloud',
+  'https://supabase.yohaku.cloud',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE'
 )
 
@@ -158,7 +158,7 @@ pip install supabase
 ```python
 from supabase import create_client, Client
 
-url = "https://supabase.nexus-tech.cloud"
+url = "https://supabase.yohaku.cloud"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE"
 
 supabase: Client = create_client(url, key)
@@ -177,12 +177,12 @@ response = supabase.table('your_table').insert({
 
 ```bash
 # 查询数据
-curl -X GET 'https://supabase.nexus-tech.cloud/rest/v1/your_table' \
+curl -X GET 'https://supabase.yohaku.cloud/rest/v1/your_table' \
   -H "apikey: YOUR-ANON-KEY" \
   -H "Authorization: Bearer YOUR-ANON-KEY"
 
 # 插入数据
-curl -X POST 'https://supabase.nexus-tech.cloud/rest/v1/your_table' \
+curl -X POST 'https://supabase.yohaku.cloud/rest/v1/your_table' \
   -H "apikey: YOUR-ANON-KEY" \
   -H "Authorization: Bearer YOUR-ANON-KEY" \
   -H "Content-Type: application/json" \
@@ -193,7 +193,7 @@ curl -X POST 'https://supabase.nexus-tech.cloud/rest/v1/your_table' \
 
 创建 `.env` 文件：
 ```bash
-SUPABASE_URL=https://supabase.nexus-tech.cloud
+SUPABASE_URL=https://supabase.yohaku.cloud
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE
 SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q
 ```
@@ -257,7 +257,7 @@ docker images | grep mcp/supabase
         "mcp/supabase"
       ],
       "env": {
-        "SUPABASE_URL": "https://supabase.nexus-tech.cloud",
+        "SUPABASE_URL": "https://supabase.yohaku.cloud",
         "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q"
       }
     }
@@ -449,7 +449,7 @@ netstat -tuln | grep -E "3001|8000|5432"
 **解决**:
 确保请求包含正确的headers：
 ```bash
-curl -X GET 'https://supabase.nexus-tech.cloud/rest/v1/your_table' \
+curl -X GET 'https://supabase.yohaku.cloud/rest/v1/your_table' \
   -H "apikey: YOUR-ANON-KEY" \
   -H "Authorization: Bearer YOUR-ANON-KEY"
 ```
@@ -467,7 +467,7 @@ curl -X GET 'https://supabase.nexus-tech.cloud/rest/v1/your_table' \
 3. 手动测试MCP：
    ```bash
    docker run --rm -i \
-     -e SUPABASE_URL="https://supabase.nexus-tech.cloud" \
+     -e SUPABASE_URL="https://supabase.yohaku.cloud" \
      -e SUPABASE_SERVICE_KEY="your-service-key" \
      mcp/supabase
    ```
@@ -532,7 +532,7 @@ cd /root/supabase/docker && docker compose ps
 cd /root/supabase/docker && docker compose restart
 
 # 查看API响应
-curl https://supabase.nexus-tech.cloud/rest/v1/ -H "apikey: YOUR-KEY"
+curl https://supabase.yohaku.cloud/rest/v1/ -H "apikey: YOUR-KEY"
 ```
 
 ---

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
 import { hashPassword } from "@enterprise/auth";
 import {
@@ -6,42 +6,48 @@ import {
   createAdminAccountService,
   updateAdminAccountService,
   deleteAdminAccountService,
+  type UpdateAdminAccountInput,
+  type CreateAdminAccountInput,
 } from "@/lib/services/org";
 import { accountUpsertSchema } from "@/lib/validation/accounts";
+import {
+  successResponse,
+  validationErrorResponse,
+  serverErrorResponse,
+  withErrorHandler,
+  errorResponse,
+} from "@/lib/api-utils";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const { page, limit, offset } = parsePaginationParams(searchParams, {
-    defaultLimit: 20,
-    maxLimit: 100,
-  });
-  const scope = searchParams.get("scope")?.trim() || undefined;
-  const status = searchParams.get("status")?.trim() || undefined;
-  const search = searchParams.get("q")?.trim() || undefined;
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
+    const scope = searchParams.get("scope")?.trim() || undefined;
+    const status = searchParams.get("status")?.trim() || undefined;
+    const search = searchParams.get("q")?.trim() || undefined;
 
-  try {
     // 应用数据权限过滤
-    const { accounts, count } = await getAdminAccountsWithScope({ limit, offset, search, scope, status });
-    return NextResponse.json({ accounts, count, page, limit });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    const { accounts, count } = await getAdminAccountsWithScope({
+      limit,
+      offset,
+      search,
+      scope,
+      status,
+    });
+    return successResponse(accounts, { page, limit, total: count });
+  });
 }
 
 export async function POST(req: NextRequest) {
-  try {
+  return withErrorHandler(async () => {
     const rawBody = await req.json().catch(() => ({}));
     const parsed = accountUpsertSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid account payload",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 },
-      );
+      return validationErrorResponse(parsed.error);
     }
 
     const data = parsed.data;
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest) {
     const accountScope = accountScopeRaw || "admin_portal";
 
     if (!accountId || !displayName) {
-      return NextResponse.json({ error: "Missing account_id or display_name" }, { status: 400 });
+      return errorResponse("Missing account_id or display_name", 400);
     }
 
     let passwordHash: string | null = null;
@@ -76,10 +82,10 @@ export async function POST(req: NextRequest) {
 
     if (mode === "edit") {
       if (!id) {
-        return NextResponse.json({ error: "Missing id for edit mode" }, { status: 400 });
+        return errorResponse("Missing id for edit mode", 400);
       }
 
-      const updatePayload: Record<string, unknown> = {
+      const updatePayload: UpdateAdminAccountInput = {
         display_name: displayName,
         email: email || null,
         phone: phone || null,
@@ -95,12 +101,12 @@ export async function POST(req: NextRequest) {
         updatePayload.password_hash = passwordHash;
       }
 
-      await updateAdminAccountService(id, updatePayload as any);
+      await updateAdminAccountService(id, updatePayload);
 
-      return NextResponse.json({ ok: true, mode: "edit" }, { status: 200 });
+      return { ok: true, mode: "edit" };
     }
 
-    const createPayload: Record<string, unknown> = {
+    const createPayload: CreateAdminAccountInput = {
       account_id: accountId,
       display_name: displayName,
       email: email || null,
@@ -117,28 +123,22 @@ export async function POST(req: NextRequest) {
       createPayload.password_hash = passwordHash;
     }
 
-    const { id: newId } = await createAdminAccountService(createPayload as any);
+    const { id: newId } = await createAdminAccountService(createPayload);
 
-    return NextResponse.json({ ok: true, mode: "create", id: newId }, { status: 201 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { ok: true, mode: "create", id: newId };
+  });
 }
 
 export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id")?.trim();
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id")?.trim();
 
-  if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  }
+    if (!id) {
+      return errorResponse("Missing id", 400);
+    }
 
-  try {
     await deleteAdminAccountService(id);
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { ok: true };
+  });
 }

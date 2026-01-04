@@ -165,9 +165,9 @@
 
 | 服务 | URL | 状态 |
 |------|-----|------|
-| 管理后台 | https://eurhythmics.nexus-tech.cloud | ✅ 运行中 |
-| 在线商店 | https://eurhythmics-shop.nexus-tech.cloud | ✅ 运行中 |
-| 学习平台 | https://e-learning.nexus-tech.cloud | ✅ 运行中 |
+| 管理后台 | https://eurhythmics.yohaku.cloud | ✅ 运行中 |
+| 在线商店 | https://eurhythmics-shop.yohaku.cloud | ✅ 运行中 |
+| 学习平台 | https://e-learning.yohaku.cloud | ✅ 运行中 |
 
 ---
 

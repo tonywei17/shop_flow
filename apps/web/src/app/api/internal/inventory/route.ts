@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
 import {
   listInventory,
@@ -6,6 +6,12 @@ import {
   type InventoryStatus,
 } from "@enterprise/db";
 import { z } from "zod";
+import {
+  successResponse,
+  validationErrorResponse,
+  withErrorHandler,
+  errorResponse,
+} from "@/lib/api-utils";
 
 export const runtime = "nodejs";
 
@@ -19,18 +25,18 @@ const adjustSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const { page, limit, offset } = parsePaginationParams(searchParams, {
-    defaultLimit: 20,
-    maxLimit: 100,
-  });
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
 
-  const search = searchParams.get("q")?.trim() || undefined;
-  const category_id = searchParams.get("category") || undefined;
-  const rawStatus = (searchParams.get("status") || "all") as InventoryStatus;
-  const status: InventoryStatus = statusValues.includes(rawStatus) ? rawStatus : "all";
+    const search = searchParams.get("q")?.trim() || undefined;
+    const category_id = searchParams.get("category") || undefined;
+    const rawStatus = (searchParams.get("status") || "all") as InventoryStatus;
+    const status: InventoryStatus = statusValues.includes(rawStatus) ? rawStatus : "all";
 
-  try {
     const { items, count } = await listInventory({
       search,
       category_id,
@@ -39,26 +45,17 @@ export async function GET(req: NextRequest) {
       offset,
     });
 
-    return NextResponse.json({ items, count, page, limit });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return successResponse(items, { page, limit, total: count });
+  });
 }
 
 export async function POST(req: NextRequest) {
-  try {
+  return withErrorHandler(async () => {
     const rawBody = await req.json().catch(() => ({}));
     const parsed = adjustSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid inventory adjustment payload",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 },
-      );
+      return validationErrorResponse(parsed.error);
     }
 
     const data = parsed.data;
@@ -72,9 +69,6 @@ export async function POST(req: NextRequest) {
       userId: undefined,
     });
 
-    return NextResponse.json({ adjustment }, { status: 200 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { adjustment };
+  });
 }

@@ -57,7 +57,7 @@ Shop Flow 是一个面向教育培训机构的综合管理平台，整合了：
 - ストアフロント
   - `products` 一覧カードで `primary_image_url` を表示（`next/image`、溢れ防止の relative + overflow-hidden）。
   - `products/[id]` でメイン画像＋サムネイルグリッドを表示（複数枚対応）。
-  - `next.config.ts` に `supabase-api.nexus-tech.cloud` を remotePatterns で許可。
+  - `next.config.ts` に `supabase-api.yohaku.cloud` を remotePatterns で許可。
 - 環境/運用
   - `.env.local` を全アプリで統一（Supabase/MEDUSA/Admin）。dev サーバーは 3000(web)/3001(storefront)/3002(learning)。
 - **批量导入**：CSV 导入账号数据

@@ -85,7 +85,7 @@
 
 - [ ] DNS 設定が正しいか確認
   ```bash
-  ssh root@100.112.168.22 "dig eurhythmics.nexus-tech.cloud"
+  ssh root@100.112.168.22 "dig eurhythmics.yohaku.cloud"
   ```
 
 ---
@@ -144,21 +144,21 @@ docker ps --filter 'name=shop_flow' --format 'table {{.Names}}\t{{.Status}}\t{{.
 ### ヘルスチェック
 ```bash
 # 管理後台
-curl -s -o /dev/null -w '%{http_code}' https://eurhythmics.nexus-tech.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://eurhythmics.yohaku.cloud/
 ```
 - [ ] HTTP ステータス: 200 (期待値)
 - [ ] 記録時刻: _____
 
 ```bash
 # ストアフロント
-curl -s -o /dev/null -w '%{http_code}' https://eurhythmics-shop.nexus-tech.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://eurhythmics-shop.yohaku.cloud/
 ```
 - [ ] HTTP ステータス: 200 (期待値)
 - [ ] 記録時刻: _____
 
 ```bash
 # Learning プラットフォーム
-curl -s -o /dev/null -w '%{http_code}' https://e-learning.nexus-tech.cloud/
+curl -s -o /dev/null -w '%{http_code}' https://e-learning.yohaku.cloud/
 ```
 - [ ] HTTP ステータス: 200 (期待値)
 - [ ] 記録時刻: _____
@@ -201,7 +201,7 @@ docker exec shop_flow-postgres pg_isready -U shop_flow
 ## 🌐 機能テスト
 
 ### 管理後台 (Dashboard)
-1. [ ] https://eurhythmics.nexus-tech.cloud にアクセス
+1. [ ] https://eurhythmics.yohaku.cloud にアクセス
 2. [ ] ログインページが表示される
 3. [ ] 管理者アカウントでログイン成功
 4. [ ] ダッシュボードが表示される
@@ -211,7 +211,7 @@ docker exec shop_flow-postgres pg_isready -U shop_flow
 8. [ ] ロール管理ページにアクセス可能
 
 ### ストアフロント (Storefront)
-1. [ ] https://eurhythmics-shop.nexus-tech.cloud にアクセス
+1. [ ] https://eurhythmics-shop.yohaku.cloud にアクセス
 2. [ ] ホームページが表示される
 3. [ ] 商品一覧が表示される
 4. [ ] 商品検索が機能する
@@ -220,7 +220,7 @@ docker exec shop_flow-postgres pg_isready -U shop_flow
 7. [ ] チェックアウトフローが正常
 
 ### Learning プラットフォーム
-1. [ ] https://e-learning.nexus-tech.cloud にアクセス
+1. [ ] https://e-learning.yohaku.cloud にアクセス
 2. [ ] ホームページが表示される
 3. [ ] ログインページが表示される
 4. [ ] ソーシャルログインボタンが表示される
@@ -234,13 +234,13 @@ docker exec shop_flow-postgres pg_isready -U shop_flow
 
 ### ページロード時間
 ```bash
-curl -w "@curl-format.txt" -o /dev/null -s https://eurhythmics.nexus-tech.cloud/
+curl -w "@curl-format.txt" -o /dev/null -s https://eurhythmics.yohaku.cloud/
 ```
 - [ ] Total time: _____ 秒 (目標: < 3秒)
 
 ### API レスポンス時間
 ```bash
-curl -w "%{time_total}\n" -o /dev/null -s https://eurhythmics.nexus-tech.cloud/api/auth/me
+curl -w "%{time_total}\n" -o /dev/null -s https://eurhythmics.yohaku.cloud/api/auth/me
 ```
 - [ ] Response time: _____ 秒 (目標: < 1秒)
 
@@ -250,17 +250,17 @@ curl -w "%{time_total}\n" -o /dev/null -s https://eurhythmics.nexus-tech.cloud/a
 
 - [ ] HTTPS が有効か確認
   ```bash
-  curl -I https://eurhythmics.nexus-tech.cloud | grep -i "strict-transport-security"
+  curl -I https://eurhythmics.yohaku.cloud | grep -i "strict-transport-security"
   ```
 
 - [ ] SSL 証明書が有効か確認
   ```bash
-  openssl s_client -connect eurhythmics.nexus-tech.cloud:443 -servername eurhythmics.nexus-tech.cloud < /dev/null | grep -A 2 "Verify return code"
+  openssl s_client -connect eurhythmics.yohaku.cloud:443 -servername eurhythmics.yohaku.cloud < /dev/null | grep -A 2 "Verify return code"
   ```
 
 - [ ] セキュリティヘッダーが設定されているか確認
   ```bash
-  curl -I https://eurhythmics.nexus-tech.cloud | grep -E "X-Frame-Options|X-Content-Type-Options|Content-Security-Policy"
+  curl -I https://eurhythmics.yohaku.cloud | grep -E "X-Frame-Options|X-Content-Type-Options|Content-Security-Policy"
   ```
 
 ---

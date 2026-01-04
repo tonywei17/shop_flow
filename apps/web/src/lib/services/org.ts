@@ -28,6 +28,15 @@ import {
   type UpdateRoleInput,
   type DataScopeContext,
 } from "@enterprise/db";
+
+export type {
+  CreateAdminAccountInput,
+  UpdateAdminAccountInput,
+  CreateDepartmentInput,
+  UpdateDepartmentInput,
+  CreateRoleInput,
+  UpdateRoleInput,
+};
 import { getCurrentUserDataScopeContext } from "@/lib/auth/data-scope-context";
 
 export type { DataScopeContext };

@@ -1,7 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
 import { listProducts, createProduct, updateProduct, deleteProduct } from "@enterprise/db";
 import { z } from "zod";
+import {
+  successResponse,
+  validationErrorResponse,
+  serverErrorResponse,
+  withErrorHandler,
+  errorResponse,
+} from "@/lib/api-utils";
 
 // 商品创建/更新验证 schema
 const productUpsertSchema = z.object({
@@ -35,19 +42,25 @@ const productPartialUpdateSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const { page, limit, offset } = parsePaginationParams(searchParams, {
-    defaultLimit: 20,
-    maxLimit: 100,
-  });
-  const search = searchParams.get("q")?.trim() || undefined;
-  const category_id = searchParams.get("category") || undefined;
-  const is_active_param = searchParams.get("status");
-  const is_active = is_active_param === "active" ? true : is_active_param === "inactive" ? false : undefined;
-  const sortKey = searchParams.get("sort") || undefined;
-  const sortOrder = searchParams.get("order") === "desc" ? "desc" : searchParams.get("order") === "asc" ? "asc" : undefined;
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
+    const search = searchParams.get("q")?.trim() || undefined;
+    const category_id = searchParams.get("category") || undefined;
+    const is_active_param = searchParams.get("status");
+    const is_active =
+      is_active_param === "active" ? true : is_active_param === "inactive" ? false : undefined;
+    const sortKey = searchParams.get("sort") || undefined;
+    const sortOrder =
+      searchParams.get("order") === "desc"
+        ? "desc"
+        : searchParams.get("order") === "asc"
+          ? "asc"
+          : undefined;
 
-  try {
     const { products, count } = await listProducts({
       limit,
       offset,
@@ -57,15 +70,13 @@ export async function GET(req: NextRequest) {
       sortKey,
       sortOrder,
     });
-    return NextResponse.json({ products, count, page, limit });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+
+    return successResponse(products, { page, limit, total: count });
+  });
 }
 
 export async function POST(req: NextRequest) {
-  try {
+  return withErrorHandler(async () => {
     const rawBody = await req.json().catch(() => ({}));
 
     // 先尝试部分更新（只更新 is_active）
@@ -73,20 +84,14 @@ export async function POST(req: NextRequest) {
     if (partialParsed.success && partialParsed.data.is_active !== undefined) {
       const { id, is_active } = partialParsed.data;
       const updated = await updateProduct(id, { is_active });
-      return NextResponse.json({ product: updated, mode: "edit" }, { status: 200 });
+      return { product: updated, mode: "edit" };
     }
 
     // 完整的创建/更新
     const parsed = productUpsertSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid product payload",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 },
-      );
+      return validationErrorResponse(parsed.error);
     }
 
     const data = parsed.data;
@@ -95,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     if (mode === "edit") {
       if (!id) {
-        return NextResponse.json({ error: "Missing id for edit mode" }, { status: 400 });
+        return errorResponse("Missing id for edit mode", 400);
       }
 
       const updated = await updateProduct(id, {
@@ -119,7 +124,7 @@ export async function POST(req: NextRequest) {
         display_order: data.display_order,
       });
 
-      return NextResponse.json({ product: updated, mode: "edit" }, { status: 200 });
+      return { product: updated, mode: "edit" };
     }
 
     const created = await createProduct({
@@ -143,26 +148,20 @@ export async function POST(req: NextRequest) {
       display_order: data.display_order,
     });
 
-    return NextResponse.json({ product: created, mode: "create" }, { status: 201 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { product: created, mode: "create" };
+  });
 }
 
 export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id")?.trim();
+  return withErrorHandler(async () => {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id")?.trim();
 
-  if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  }
+    if (!id) {
+      return errorResponse("Missing id", 400);
+    }
 
-  try {
     await deleteProduct(id);
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return { ok: true };
+  });
 }

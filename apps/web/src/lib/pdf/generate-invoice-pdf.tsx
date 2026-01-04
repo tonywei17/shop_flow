@@ -252,9 +252,9 @@ export async function generateInvoicePDFBuffer(data: InvoicePDFData): Promise<Bu
 }
 
 // 生成PDF Buffer (使用Puppeteer - 更精确的布局)
-export async function generateInvoicePDFBufferPuppeteer(data: InvoicePDFData): Promise<Buffer> {
+export async function generateInvoicePDFBufferPuppeteer(data: InvoicePDFData, showZero = false): Promise<Buffer> {
   const { generateInvoicePDFFromHTML } = await import("./generate-pdf-puppeteer");
-  return generateInvoicePDFFromHTML(data);
+  return generateInvoicePDFFromHTML(data, showZero);
 }
 
 // 批量生成PDF

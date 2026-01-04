@@ -901,7 +901,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
 }
 
 // 生成请求明细书HTML
-export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: number): string {
+export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = false): string {
   const period = formatPeriod(data.billingMonth);
   
   // 教材费行
@@ -969,14 +969,14 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
           <tr>
             <th class="col-date">日付</th>
             <th class="col-slip">伝票番号</th>
-            <th class="col-name">品名または摘要</th>
+            <th class="col-name">品名或者摘要</th>
             <th class="col-code">品番</th>
             <th class="col-qty">数量</th>
             <th class="col-price">単価</th>
-            <th class="col-amount">納入額</th>
+            <th class="col-amount">納入额</th>
             <th class="col-dest">納入先</th>
-            <th class="col-invoice">ご請求額</th>
-            <th class="col-rebate">割戻し額(-)</th>
+            <th class="col-invoice">ご請求额</th>
+            <th class="col-rebate">割戻し额(-)</th>
           </tr>
         </thead>
         <tbody>
@@ -1011,7 +1011,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     <tr class="balance-row">
       <td class="cell center"></td>
       <td class="cell center"></td>
-      <td class="cell">前月ご請求額</td>
+      <td class="cell">前月ご請求额</td>
       <td class="cell center"></td>
       <td class="cell center"></td>
       <td class="cell right"></td>
@@ -1025,7 +1025,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     <tr class="balance-row">
       <td class="cell center"></td>
       <td class="cell center"></td>
-      <td class="cell">ご入金額</td>
+      <td class="cell">ご入金额</td>
       <td class="cell center"></td>
       <td class="cell center"></td>
       <td class="cell right"></td>
@@ -1050,7 +1050,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
     </tr>
   `);
 
-  // CC Section
+    // CC Section
   const ccMemberTotal = data.details.ccMembers.reduce((sum: number, m: CCMemberDetail) => sum + m.amount, 0);
   const ccMemberCount = data.details.ccMembers.reduce((sum: number, m: CCMemberDetail) => sum + m.count, 0);
 
@@ -1090,19 +1090,25 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
   addSectionHeader("＊チャイルドクラブ会費＊", "#FFFCF3");
   // アイグラン教室の割戻し総額を計算
   const aigranRebateTotal = data.details.ccMembers.reduce((sum: number, m: CCMemberDetail) => sum + (m.rebateAmount || 0), 0);
-  // 0人教室をフィルタリング（PDFには表示しない）
-  const nonZeroCcMembers = data.details.ccMembers.filter((m) => m.count > 0);
-  nonZeroCcMembers.forEach((m) => {
+  
+  // 0人教室をフィルタリング（根据 showZero 参数控制）
+  const ccMembersToDisplay = showZero ? data.details.ccMembers : data.details.ccMembers.filter((m) => m.count > 0);
+  
+  ccMembersToDisplay.forEach((m) => {
     // アイグラン教室の場合は割戻し額を表示
     const rebateDisplay = m.isAigran && m.rebateAmount > 0 ? formatCurrency(m.rebateAmount) : "";
     // 納入先は店番の後三位（例：1110002 → 002）
     const deliveryCode = m.deliveryDate || "";
     // 口座振替教室の場合は教室名に(口座振替)を追加
     const classNameDisplay = m.isBankTransfer ? `${m.className}(口座振替)` : m.className;
+    
+    // 0人教室の場合は専用のクラスを追加
+    const zeroMemberClass = m.count === 0 ? "cc-zero-member" : "";
+    
     // 估算行高：根据教室名长度判断是否会换行
     const rowHeight = estimateRowHeight(classNameDisplay);
     addRow(`
-      <tr class="detail-row">
+      <tr class="detail-row ${zeroMemberClass}">
         <td class="cell center"></td>
         <td class="cell center"></td>
         <td class="cell">${classNameDisplay}</td>
@@ -1249,7 +1255,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
       width: 210mm;
       height: 297mm;
       padding: 40px 50px;
-      margin: 0 auto;
+      margin: 20px auto;
       background: #fff;
       box-shadow: 0 4px 8px rgba(0, 172, 77, 0.03), 0 4px 12px rgba(0, 172, 77, 0.01);
       border-radius: 8px;
@@ -1496,24 +1502,78 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, pageNumber: 
 `;
 }
 
+// 提取HTML中的body内容
+function extractBodyContent(html: string): string {
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  return bodyMatch ? bodyMatch[1] : html;
+}
+
+// 提取HTML中的style内容
+function extractStyleContent(html: string): string {
+  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  return styleMatch ? styleMatch[1] : "";
+}
+
 // 生成完整的请求书HTML（主页 + 明细页）
-export function generateFullInvoiceHTML(data: InvoicePDFData): string {
+export function generateFullInvoiceHTML(data: InvoicePDFData, showZero = false, isPreview = false): string {
   const mainPageContent = generateInvoiceMainPageHTML(data);
-  const detailPageContent = generateInvoiceDetailPageHTML(data, 2);
-
-  const extractBodyContent = (html: string): string => {
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    return bodyMatch ? bodyMatch[1] : html;
-  };
-
-  const extractStyleContent = (html: string): string => {
-    const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-    return styleMatch ? styleMatch[1] : "";
-  };
-
   const mainStyle = extractStyleContent(mainPageContent);
-  const detailStyle = extractStyleContent(detailPageContent);
   const mainBody = extractBodyContent(mainPageContent);
+
+  if (isPreview) {
+    // 性能优化：预览模式下同时预渲染两个版本
+    const detailWithZero = generateInvoiceDetailPageHTML(data, true);
+    const detailWithoutZero = generateInvoiceDetailPageHTML(data, false);
+
+    const detailStyle = extractStyleContent(detailWithZero);
+    const bodyWithZero = extractBodyContent(detailWithZero);
+    const bodyWithoutZero = extractBodyContent(detailWithoutZero);
+
+    return `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>請求書 - ${data.invoiceNo}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap');
+    
+    @page { size: A4; margin: 0; }
+    .page-break { page-break-before: always; }
+    
+    ${mainStyle}
+    ${detailStyle}
+
+    /* 预览控制样式 */
+    .preview-container { display: none; }
+    .preview-active { display: block; }
+
+    @media print {
+      .preview-container { display: none !important; }
+      .preview-active { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+  ${mainBody}
+  <div class="page-break"></div>
+  
+  <div id="container-with-zero" class="preview-container ${showZero ? 'preview-active' : ''}">
+    ${bodyWithZero}
+  </div>
+  
+  <div id="container-without-zero" class="preview-container ${!showZero ? 'preview-active' : ''}">
+    ${bodyWithoutZero}
+  </div>
+</body>
+</html>
+`;
+  }
+
+  // 非预览模式（导出PDF）保持原样以减少文件大小
+  const detailPageContent = generateInvoiceDetailPageHTML(data, showZero);
+  const detailStyle = extractStyleContent(detailPageContent);
   const detailBody = extractBodyContent(detailPageContent);
 
   return `
@@ -1522,7 +1582,7 @@ export function generateFullInvoiceHTML(data: InvoicePDFData): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>請求書 - ${data.invoiceNo}</title>
+  <title>請求书 - ${data.invoiceNo}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap');
     

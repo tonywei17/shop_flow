@@ -3,8 +3,8 @@ import { InvoicePDFData } from "./invoice-types";
 import { generateFullInvoiceHTML } from "./invoice-html-template";
 
 // 使用Puppeteer将HTML转换为PDF
-export async function generateInvoicePDFFromHTML(data: InvoicePDFData): Promise<Buffer> {
-  const html = generateFullInvoiceHTML(data);
+export async function generateInvoicePDFFromHTML(data: InvoicePDFData, showZero = false): Promise<Buffer> {
+  const html = generateFullInvoiceHTML(data, showZero);
   
   const browser = await puppeteer.launch({
     headless: true,

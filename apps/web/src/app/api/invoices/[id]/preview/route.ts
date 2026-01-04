@@ -12,6 +12,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const showZero = searchParams.get("showZero") === "true";
     const supabase = getSupabaseAdmin();
 
     // 获取请求书数据（包含责任者名称）
@@ -329,8 +331,8 @@ export async function GET(
       invoice.previous_balance || 0
     );
 
-    // 生成HTML
-    const htmlContent = generateFullInvoiceHTML(pdfData);
+    // 生成HTML (isPreview = true)
+    const htmlContent = generateFullInvoiceHTML(pdfData, showZero, true);
     
     // 注入工具栏到HTML中
     const toolbarHTML = `
@@ -453,14 +455,6 @@ export async function GET(
       
       .preview-toggle-switch.active::after {
         transform: translateX(20px);
-      }
-      
-      .cc-zero-member {
-        display: none;
-      }
-      
-      .show-zero-members .cc-zero-member {
-        display: table-row;
       }
       
       body {
@@ -749,7 +743,7 @@ export async function GET(
       <div class="preview-toolbar-right">
         <div class="preview-toggle">
           <span>0人教室を表示</span>
-          <div class="preview-toggle-switch" id="zeroMemberToggle" onclick="toggleZeroMembers()"></div>
+          <div class="preview-toggle-switch ${showZero ? 'active' : ''}" id="zeroMemberToggle" onclick="toggleZeroMembers()"></div>
         </div>
         <button class="preview-btn preview-btn-secondary" onclick="checkDuplicates()" id="checkDuplicatesBtn">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -780,9 +774,29 @@ export async function GET(
     <script>
       function toggleZeroMembers() {
         const toggle = document.getElementById('zeroMemberToggle');
-        const body = document.body;
-        toggle.classList.toggle('active');
-        body.classList.toggle('show-zero-members');
+        const withZero = document.getElementById('container-with-zero');
+        const withoutZero = document.getElementById('container-without-zero');
+        const pdfLink = document.querySelector('a[href*="/api/invoices/"][href$="/pdf"]');
+        
+        const isActive = toggle.classList.toggle('active');
+        
+        if (isActive) {
+          withZero.classList.add('preview-active');
+          withoutZero.classList.remove('preview-active');
+          if (pdfLink) {
+            const url = new URL(pdfLink.href, window.location.origin);
+            url.searchParams.set('showZero', 'true');
+            pdfLink.href = url.pathname + url.search;
+          }
+        } else {
+          withZero.classList.remove('preview-active');
+          withoutZero.classList.add('preview-active');
+          if (pdfLink) {
+            const url = new URL(pdfLink.href, window.location.origin);
+            url.searchParams.set('showZero', 'false');
+            pdfLink.href = url.pathname + url.search;
+          }
+        }
       }
       
       async function checkDuplicates() {

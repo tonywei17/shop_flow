@@ -64,7 +64,7 @@ const mockData: InvoicePDFData = {
 
 export async function GET() {
   try {
-    const html = generateFullInvoiceHTML(mockData);
+    const html = generateFullInvoiceHTML(mockData, false, true);
     
     return new NextResponse(html, {
       headers: {

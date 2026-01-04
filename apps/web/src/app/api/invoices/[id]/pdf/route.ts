@@ -12,6 +12,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const showZero = searchParams.get("showZero") === "true";
     const supabase = getSupabaseAdmin();
 
     // 获取请求书数据（包含责任者名称）
@@ -227,7 +229,7 @@ export async function GET(
     );
 
     // 生成PDF (使用Puppeteer)
-    const pdfBuffer = await generateInvoicePDFBufferPuppeteer(pdfData);
+    const pdfBuffer = await generateInvoicePDFBufferPuppeteer(pdfData, showZero);
 
     // 返回PDF文件 - 使用inline以便在浏览器中预览
     return new NextResponse(new Uint8Array(pdfBuffer), {

@@ -189,6 +189,9 @@ React 组件 (Client Component)
     └─── 写入操作 ───► API Route Handler
                              │
                              ▼
+                       withErrorHandler (@/lib/api-utils)
+                             │
+                             ▼
                        Validation (Zod)
                              │
                              ▼
@@ -352,7 +355,7 @@ USING (
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  Supabase (自建实例)                         │
-│              supabase.nexus-tech.cloud                      │
+│              https://supabase.yohaku.cloud                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 

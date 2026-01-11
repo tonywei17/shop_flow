@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Header } from "@/components/header";
-import { createMedusaClient } from "@enterprise/domain-commerce";
+// import { createMedusaClient } from "@enterprise/domain-commerce"; // Temporarily disabled - Medusa integration removed
 
 type OrderRow = {
   id: string;
@@ -16,11 +16,12 @@ type OrderRow = {
 };
 
 async function fetchOrders(): Promise<{ orders: OrderRow[]; error?: string }> {
-  const client = createMedusaClient();
+  // Temporarily disabled - Medusa integration removed
+  // const client = createMedusaClient();
 
   try {
-    const data: any = await client.listOrders({ limit: 50, order: "created_at:desc" });
-    const rawOrders: any[] = Array.isArray(data?.orders) ? data.orders : [];
+    // TODO: Implement order fetching from Supabase or other data source
+    const rawOrders: any[] = [];
 
     const orders: OrderRow[] = rawOrders
       .map((o) => {

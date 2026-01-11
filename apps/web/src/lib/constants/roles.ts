@@ -2,7 +2,7 @@
  * 角色管理相关常量
  */
 
-import type { DataScopeType } from "@/lib/validation/roles";
+import type { DataScopeType } from "@enterprise/domain-org";
 import type { PriceType } from "@enterprise/db";
 import { navSections } from "@/components/dashboard/nav-items";
 

@@ -34,3 +34,25 @@ export {
   transformExpenseDetails,
   transformInvoiceData,
 } from "./calculator";
+
+// Generator functions and types
+export type {
+  InvoiceGenerationResult,
+  Department,
+  InvoiceGenerationOptions,
+  InvoiceItem,
+  InvoiceItemType,
+} from "./generator";
+
+export {
+  generateInvoiceNumber,
+  calculateDueDate,
+  calculatePreviousBalance,
+  calculateMaterialAmount,
+  calculateMembershipAmount,
+  calculateOtherExpenses,
+  calculateTaxAmount,
+  createInvoiceItems,
+  generateInvoiceForDepartment,
+  generateInvoicesBatch,
+} from "./generator";

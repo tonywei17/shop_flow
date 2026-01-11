@@ -496,6 +496,9 @@ importers:
       '@enterprise/config':
         specifier: workspace:*
         version: link:../config
+      '@supabase/supabase-js':
+        specifier: ^2.39.0
+        version: 2.90.1
     devDependencies:
       typescript:
         specifier: ^5.4.0

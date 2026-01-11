@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { parsePaginationParams } from "@/lib/pagination";
 import { getDepartmentsWithScope, deleteDepartmentService, updateDepartmentProxyBillingService, updateDepartmentCommissionRateService, createDepartmentService, updateDepartmentService } from "@/lib/services/org";
-import { departmentUpsertSchema } from "@/lib/validation/departments";
+import { departmentUpsertSchema } from "@enterprise/domain-org";
 import {
   successResponse,
   validationErrorResponse,
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const parsed = departmentUpsertSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return validationErrorResponse(parsed.error);
+      return validationErrorResponse(parsed.error as any);
     }
 
     const data = parsed.data;

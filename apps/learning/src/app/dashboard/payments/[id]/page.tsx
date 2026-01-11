@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Header } from "@/components/header";
-import { createMedusaClient } from "@enterprise/domain-commerce";
+// import { createMedusaClient } from "@enterprise/domain-commerce"; // Temporarily disabled - Medusa integration removed
 
 type OrderDetail = {
   id: string;
@@ -30,11 +30,12 @@ type OrderDetail = {
 };
 
 async function fetchOrder(id: string): Promise<{ order?: OrderDetail; error?: string }> {
-  const client = createMedusaClient();
+  // Temporarily disabled - Medusa integration removed
+  // const client = createMedusaClient();
 
   try {
-    const data: any = await client.retrieveOrder(id);
-    const raw = data?.order ?? data;
+    // TODO: Implement order fetching from Supabase or other data source
+    const raw: any = null;
 
     if (!raw || typeof raw !== "object") {
       return { error: "注文が見つかりませんでした。" };

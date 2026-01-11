@@ -3,7 +3,7 @@
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RoleRecord, PriceType } from "@enterprise/db";
-import type { DataScopeType } from "@/lib/validation/roles";
+import type { DataScopeType } from "@enterprise/domain-org";
 import { getStatusBadge, getScopeBadge } from "@/lib/constants/status-badges";
 import {
   PRICE_TYPE_OPTIONS,

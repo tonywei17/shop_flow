@@ -10,7 +10,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@enterprise/config": "workspace:*"
+    "@enterprise/config": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0"

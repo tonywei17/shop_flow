@@ -9,7 +9,7 @@ import {
   type UpdateAdminAccountInput,
   type CreateAdminAccountInput,
 } from "@/lib/services/org";
-import { accountUpsertSchema } from "@/lib/validation/accounts";
+import { accountUpsertSchema } from "@enterprise/domain-org";
 import {
   successResponse,
   validationErrorResponse,
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     const parsed = accountUpsertSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return validationErrorResponse(parsed.error);
+      return validationErrorResponse(parsed.error as any);
     }
 
     const data = parsed.data;

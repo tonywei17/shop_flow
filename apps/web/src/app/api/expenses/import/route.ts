@@ -1,87 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@enterprise/db";
 import * as XLSX from "xlsx";
-
-type ExpenseRow = {
-  store_code: string;
-  store_name: string;
-  expense_date: string;
-  account_item_code: string;
-  description: string;
-  expense_type: string;
-  amount: number;
-  reviewer_account_id?: string;
-};
-
-// Column name mapping (Japanese to internal)
-const COLUMN_MAP: Record<string, keyof ExpenseRow> = {
-  "店番": "store_code",
-  "店名": "store_name",
-  "費用発生日": "expense_date",
-  "勘定項目": "account_item_code",
-  "項目名": "description",
-  "費用タイプ": "expense_type",
-  "請求金額": "amount",
-  "審査者アカウントID": "reviewer_account_id",
-};
-
-function parseAmount(value: string | number): number {
-  if (typeof value === "number") return value;
-  // Remove tabs, spaces, and currency symbols
-  const cleaned = String(value).replace(/[\t\s¥,]/g, "");
-  return parseFloat(cleaned) || 0;
-}
-
-function parseDate(value: string | number | Date): string {
-  if (!value) return "";
-  
-  // If it's already a date string in YYYY-MM-DD format
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value;
-  }
-  
-  // If it's an Excel serial date number
-  if (typeof value === "number") {
-    const date = XLSX.SSF.parse_date_code(value);
-    return `${date.y}-${String(date.m).padStart(2, "0")}-${String(date.d).padStart(2, "0")}`;
-  }
-  
-  // Try to parse as date string
-  const date = new Date(value);
-  if (!isNaN(date.getTime())) {
-    return date.toISOString().split("T")[0];
-  }
-  
-  return String(value);
-}
-
-function mapRowToExpense(row: Record<string, unknown>, headers: string[]): ExpenseRow | null {
-  const expense: Partial<ExpenseRow> = {};
-  
-  headers.forEach((header, index) => {
-    const internalKey = COLUMN_MAP[header];
-    if (internalKey) {
-      const value = row[header] ?? row[index];
-      if (value !== undefined && value !== null && value !== "") {
-        if (internalKey === "amount") {
-          expense[internalKey] = parseAmount(value as string | number);
-        } else if (internalKey === "expense_date") {
-          expense[internalKey] = parseDate(value as string | number | Date);
-        } else {
-          expense[internalKey] = String(value).trim();
-        }
-      }
-    }
-  });
-  
-  // Validate required fields
-  if (!expense.store_code || !expense.store_name || !expense.expense_date || 
-      !expense.account_item_code || !expense.description || expense.amount === undefined) {
-    return null;
-  }
-  
-  return expense as ExpenseRow;
-}
+import {
+  mapRowToExpense,
+  convertExpensesToRecords,
+  insertExpensesInBatches,
+  createImportBatch,
+  updateImportBatch,
+  type ExpenseRow,
+} from "@enterprise/domain-settlement";
 
 export async function POST(request: NextRequest) {
   try {
@@ -125,49 +52,32 @@ export async function POST(request: NextRequest) {
     const dataRows = rawData.slice(1);
 
     const supabase = getSupabaseAdmin();
+    const fileType = isCSV ? "csv" : "xlsx";
 
-    // Create import batch record
-    const { data: batch, error: batchError } = await supabase
-      .from("expense_import_batches")
-      .insert({
-        file_name: file.name,
-        file_type: isCSV ? "csv" : "xlsx",
-        total_records: dataRows.length,
-        status: "processing",
-      })
-      .select()
-      .single();
+    // Use domain package to create import batch
+    const batch = await createImportBatch(
+      supabase,
+      file.name,
+      fileType,
+      dataRows.length
+    );
 
-    if (batchError) {
-      console.error("Failed to create import batch:", batchError);
-      return NextResponse.json({ error: "インポートバッチの作成に失敗しました" }, { status: 500 });
+    if (!batch) {
+      return NextResponse.json(
+        { error: "インポートバッチの作成に失敗しました" },
+        { status: 500 }
+      );
     }
 
     const batchId = batch.id;
     const errors: string[] = [];
-    let successCount = 0;
+    const validExpenses: ExpenseRow[] = [];
     let failedCount = 0;
-
-    // Prepare all valid expenses for batch insert
-    const expensesToInsert: Array<{
-      store_code: string;
-      store_name: string;
-      expense_date: string;
-      account_item_code: string;
-      description: string;
-      expense_type: string;
-      amount: number;
-      import_source: string;
-      import_batch_id: string;
-      invoice_month: string;
-      review_status: string;
-      reviewer_account_id: string | null;
-    }> = [];
 
     // Process each row and collect valid expenses
     for (let i = 0; i < dataRows.length; i++) {
       const row = dataRows[i] as unknown[];
-      if (!row || row.length === 0 || row.every(cell => !cell)) {
+      if (!row || row.length === 0 || row.every((cell) => !cell)) {
         continue; // Skip empty rows
       }
 
@@ -178,62 +88,44 @@ export async function POST(request: NextRequest) {
         rowObj[idx] = row[idx];
       });
 
-      const expense = mapRowToExpense(rowObj, headers);
-      
+      const expense = mapRowToExpense(rowObj, headers, XLSX.SSF.parse_date_code);
+
       if (!expense) {
         failedCount++;
         errors.push(`行 ${i + 2}: 必須フィールドが不足しています`);
         continue;
       }
 
-      // Calculate invoice_month
-      const expenseDate = new Date(expense.expense_date);
-      const invoiceMonth = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, "0")}`;
-
-      expensesToInsert.push({
-        store_code: expense.store_code,
-        store_name: expense.store_name,
-        expense_date: expense.expense_date,
-        account_item_code: expense.account_item_code,
-        description: expense.description,
-        expense_type: expense.expense_type || "課税分",
-        amount: expense.amount,
-        import_source: isCSV ? "csv" : "xlsx",
-        import_batch_id: batchId,
-        invoice_month: invoiceMonth,
-        review_status: autoApprove ? "approved" : "pending",
-        reviewer_account_id: expense.reviewer_account_id || null,
-      });
+      validExpenses.push(expense);
     }
 
-    // Batch insert all expenses at once (in chunks of 100 to avoid payload limits)
-    const CHUNK_SIZE = 100;
-    for (let i = 0; i < expensesToInsert.length; i += CHUNK_SIZE) {
-      const chunk = expensesToInsert.slice(i, i + CHUNK_SIZE);
-      const { error: insertError } = await supabase
-        .from("expenses")
-        .insert(chunk);
+    // Use domain package to convert and insert expenses
+    const expenseRecords = convertExpensesToRecords(
+      validExpenses,
+      batchId,
+      fileType,
+      { autoApprove }
+    );
 
-      if (insertError) {
-        // If batch insert fails, count all as failed
-        failedCount += chunk.length;
-        errors.push(`バッチ ${Math.floor(i / CHUNK_SIZE) + 1}: ${insertError.message}`);
-      } else {
-        successCount += chunk.length;
-      }
-    }
+    const insertResult = await insertExpensesInBatches(
+      supabase,
+      expenseRecords
+    );
 
-    // Update batch status
-    await supabase
-      .from("expense_import_batches")
-      .update({
-        success_records: successCount,
-        failed_records: failedCount,
-        status: failedCount === dataRows.length ? "failed" : "completed",
-        error_log: errors.length > 0 ? errors : null,
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", batchId);
+    // Update counts and errors
+    const successCount = insertResult.successCount;
+    failedCount += insertResult.failedCount;
+    errors.push(...insertResult.errors);
+
+    // Use domain package to update batch status
+    await updateImportBatch(
+      supabase,
+      batchId,
+      successCount,
+      failedCount,
+      dataRows.length,
+      errors
+    );
 
     return NextResponse.json({
       success: true,

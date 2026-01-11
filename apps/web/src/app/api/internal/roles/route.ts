@@ -8,7 +8,7 @@ import {
   type CreateRoleInput,
   type UpdateRoleInput,
 } from "@/lib/services/org";
-import { roleCreateSchema } from "@/lib/validation/roles";
+import { roleCreateSchema } from "@enterprise/domain-org";
 import {
   successResponse,
   validationErrorResponse,
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const parsed = roleCreateSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return validationErrorResponse(parsed.error);
+      return validationErrorResponse(parsed.error as any);
     }
 
     const data = parsed.data;

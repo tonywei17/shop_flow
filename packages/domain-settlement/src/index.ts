@@ -12,3 +12,6 @@ export type SettlementId = string;
 
 // Invoice module
 export * from "./invoice";
+
+// Expense module
+export * from "./expense";

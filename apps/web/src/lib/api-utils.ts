@@ -54,7 +54,7 @@ export function errorResponse(
 /**
  * 统一 Zod 校验错误响应
  */
-export function validationErrorResponse(error: ZodError) {
+export function validationErrorResponse(error: ZodError<any>) {
   return errorResponse("Validation failed", 400, error.flatten());
 }
 

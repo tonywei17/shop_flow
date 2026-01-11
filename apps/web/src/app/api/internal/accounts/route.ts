@@ -75,6 +75,11 @@ export async function POST(req: NextRequest) {
       return errorResponse("Missing account_id or display_name", 400);
     }
 
+    // SECURITY: For new accounts, password is required
+    if (mode === "create" && !password) {
+      return errorResponse("パスワードは新規アカウント作成時に必須です", 400);
+    }
+
     let passwordHash: string | null = null;
     if (password) {
       passwordHash = await hashPassword(password);
@@ -106,8 +111,11 @@ export async function POST(req: NextRequest) {
       return { ok: true, mode: "edit" };
     }
 
+    // SECURITY: Password is required for new accounts (checked above)
+    // passwordHash is guaranteed to be set here
     const createPayload: CreateAdminAccountInput = {
       account_id: accountId,
+      password_hash: passwordHash!,
       display_name: displayName,
       email: email || null,
       phone: phone || null,
@@ -118,10 +126,6 @@ export async function POST(req: NextRequest) {
       role_code: roleCode || null,
       account_scope: accountScope,
     };
-
-    if (passwordHash) {
-      createPayload.password_hash = passwordHash;
-    }
 
     const { id: newId } = await createAdminAccountService(createPayload);
 

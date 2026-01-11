@@ -93,12 +93,25 @@ export async function getCurrentUserDataScopeContext(): Promise<DataScopeContext
     };
   }
 
-  // 如果没有角色，默认为全数据权限（超级管理员）
+  // SECURITY: If user has no role, restrict to self_only access by default
+  // Only the env super admin (checked above) should have "all" access without a role
   if (!user.roleId) {
+    // Check if this is a special case (super admin via role_code)
+    if (user.roleCode === "super_admin" || user.roleCode === "admin") {
+      return {
+        departmentId: user.departmentId,
+        roleId: null,
+        dataScopeType: "all",
+        allowedDepartmentIds: [],
+      };
+    }
+
+    // Default to minimum permissions for users without roles
+    console.warn(`[SECURITY] User ${user.accountId} has no role. Restricting to self_only access.`);
     return {
       departmentId: user.departmentId,
       roleId: null,
-      dataScopeType: "all",
+      dataScopeType: "self_only",
       allowedDepartmentIds: [],
     };
   }
@@ -107,10 +120,12 @@ export async function getCurrentUserDataScopeContext(): Promise<DataScopeContext
   const roleScope = await getDataScopeFromRole(user.roleId);
 
   if (!roleScope) {
+    // SECURITY: If role exists but has no scope config, restrict to self_only
+    console.warn(`[SECURITY] Role ${user.roleId} has no data scope configuration. Restricting to self_only access.`);
     return {
       departmentId: user.departmentId,
       roleId: user.roleId,
-      dataScopeType: "all",
+      dataScopeType: "self_only",
       allowedDepartmentIds: [],
     };
   }

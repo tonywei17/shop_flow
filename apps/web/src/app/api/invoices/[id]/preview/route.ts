@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "@enterprise/db";
 import {
   transformInvoiceData,
   generateInvoiceNo,
-} from "@/lib/pdf/generate-invoice-pdf";
+} from "@/lib/pdf";
 import { generateFullInvoiceHTML } from "@/lib/pdf/invoice-html-template";
 
 export async function GET(

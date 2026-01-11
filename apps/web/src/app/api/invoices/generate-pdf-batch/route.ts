@@ -5,7 +5,7 @@ import {
   generateInvoicePDFBuffer,
   transformInvoiceData,
   generateInvoiceNo,
-} from "@/lib/pdf/generate-invoice-pdf";
+} from "@/lib/pdf";
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,0 +1,51 @@
+{
+  "$schema": "../tenant-config.schema.json",
+  "id": "eurhythmics",
+  "name": "リトミック研究センター",
+  "description": "Eurhythmics Research Center configuration",
+
+  "modules": ["billing", "commerce", "learning", "system"],
+
+  "organization": {
+    "name": "特定非営利活動法人\nリトミック研究センター",
+    "postalCode": "〒151-0051",
+    "address": "東京都渋谷区千駄ヶ谷1丁目30番8号\nダヴィンチ千駄ヶ谷1階5号室",
+    "phone": "03-5411-3815",
+    "fax": "03-5411-3816",
+    "registrationNumber": "T6011005001316"
+  },
+
+  "bankInfo": {
+    "bankName": "三井住友銀行",
+    "branchName": "渋谷駅前支店",
+    "accountType": "普通",
+    "accountNumber": "0380624",
+    "accountHolder": "特定非営利活動法人リトミック研究センター"
+  },
+
+  "businessRules": {
+    "invoiceRules": {
+      "ccFee": {
+        "defaultUnitPrice": 480,
+        "aigranUnitPrice": 480,
+        "aigranRebatePerPerson": 600
+      },
+      "material": {
+        "branchRebateEnabled": false,
+        "classroomRebateEnabled": true
+      },
+      "taxRate": 0.1
+    }
+  },
+
+  "features": {
+    "aiAssistant": true,
+    "pdfExport": true,
+    "csvExport": true
+  },
+
+  "metadata": {
+    "region": "japan",
+    "timezone": "Asia/Tokyo"
+  }
+}

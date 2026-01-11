@@ -1,0 +1,57 @@
+{
+  "$schema": "./tenant-config.schema.json",
+  "id": "default",
+  "name": "Default Configuration",
+  "description": "Default configuration for Shop Flow",
+
+  "modules": ["billing", "commerce", "learning", "system"],
+
+  "organization": {
+    "name": "特定非営利活動法人\nリトミック研究センター",
+    "postalCode": "〒151-0051",
+    "address": "東京都渋谷区千駄ヶ谷1丁目30番8号\nダヴィンチ千駄ヶ谷1階5号室",
+    "phone": "03-5411-3815",
+    "fax": "03-5411-3816",
+    "registrationNumber": "T6011005001316"
+  },
+
+  "bankInfo": {
+    "bankName": "三井住友銀行",
+    "branchName": "渋谷駅前支店",
+    "accountType": "普通",
+    "accountNumber": "0380624",
+    "accountHolder": "特定非営利活動法人リトミック研究センター"
+  },
+
+  "ui": {
+    "primaryColor": "#2563eb",
+    "accentColor": "#0ea5e9"
+  },
+
+  "businessRules": {
+    "priceLevels": [
+      { "id": "headquarters", "code": "headquarters", "label": "本部価格", "priority": 1 },
+      { "id": "branch", "code": "branch", "label": "支局価格", "priority": 2 },
+      { "id": "classroom", "code": "classroom", "label": "教室価格", "priority": 3 },
+      { "id": "general", "code": "general", "label": "一般価格", "priority": 4 }
+    ],
+    "invoiceRules": {
+      "ccFee": {
+        "defaultUnitPrice": 480,
+        "aigranUnitPrice": 480,
+        "aigranRebatePerPerson": 600
+      },
+      "material": {
+        "branchRebateEnabled": false,
+        "classroomRebateEnabled": true
+      },
+      "taxRate": 0.1
+    }
+  },
+
+  "features": {
+    "aiAssistant": true,
+    "pdfExport": true,
+    "csvExport": true
+  }
+}

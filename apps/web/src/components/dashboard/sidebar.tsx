@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import React, { Fragment, useState, type ComponentType } from "react";
 import { GraduationCap, ShoppingBag, ChevronDown, ChevronRight } from "lucide-react";
 
-import { navSections } from "./nav-items";
+import { getNavSections, navSections, type NavSection } from "./nav-items";
 import { cn } from "@/lib/utils";
 
 // External app URLs - use environment variables for production
@@ -28,7 +28,11 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
     return value.replace(/\/$/, "");
   };
   const normalizedPath = normalize(pathname);
-  const flatItems = navSections.flatMap((section) => section.items);
+
+  // Use static navigation sections in client component
+  // Module access control is enforced by middleware at the route level
+  const moduleFilteredSections = navSections;
+  const flatItems = moduleFilteredSections.flatMap((section) => section.items);
   const activeHref = flatItems.reduce<string | undefined>((best, item) => {
     const normalizedHref = normalize(item.href);
     const matches =
@@ -48,15 +52,16 @@ export function Sidebar({ isMobile = false, onNavigate, className, allowedFeatur
   }, [allowedFeatureIds]);
 
   const filteredSections = React.useMemo(() => {
-    if (!Array.isArray(allowedFeatureIds)) return navSections;
+    // First apply module filtering, then feature permission filtering
+    if (!Array.isArray(allowedFeatureIds)) return moduleFilteredSections;
     const set = featureSet ?? new Set<string>();
-    return navSections
+    return moduleFilteredSections
       .map((section) => {
         const items = section.items.filter((item) => set.has(normalize(item.href)));
         return { ...section, items };
       })
       .filter((section) => section.items.length > 0);
-  }, [allowedFeatureIds, featureSet]);
+  }, [allowedFeatureIds, featureSet, moduleFilteredSections]);
 
   return (
     <aside

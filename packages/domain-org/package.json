@@ -9,6 +9,9 @@
     "dev": "tsc -w -p tsconfig.json",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
   "devDependencies": {
     "typescript": "^5.4.0"
   }

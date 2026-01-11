@@ -4,7 +4,7 @@ import {
   generateInvoicePDFBufferPuppeteer,
   transformInvoiceData,
   generateInvoiceNo,
-} from "@/lib/pdf/generate-invoice-pdf";
+} from "@/lib/pdf";
 
 export async function GET(
   request: NextRequest,

@@ -13,3 +13,12 @@ docs/platforms/Google/*.json
 .env.local
 .env.production
 docs/data/eurhythmics_2025-12-17_13-59-40_mysql_data_ThWd7.sql
+
+# TypeScript compiled files in packages (keep .d.ts for types)
+packages/*/src/*.js
+
+# IDE
+.vscode/
+
+# Temporary data files
+docs/data/*.pdf

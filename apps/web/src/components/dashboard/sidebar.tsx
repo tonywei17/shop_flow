@@ -9,9 +9,11 @@ import { GraduationCap, ShoppingBag, ChevronDown, ChevronRight } from "lucide-re
 import { getNavSections, navSections, type NavSection } from "./nav-items";
 import { cn } from "@/lib/utils";
 
-// External app URLs - use environment variables for production
-const LEARNING_PLATFORM_URL = process.env.NEXT_PUBLIC_LEARNING_URL || "http://localhost:3002";
-const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
+// External app URLs - use environment variables for production, fallback to production URLs
+const LEARNING_PLATFORM_URL = process.env.NEXT_PUBLIC_LEARNING_URL ||
+  (process.env.NODE_ENV === 'production' ? "https://e-learning.yohaku.cloud" : "http://localhost:3002");
+const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ||
+  (process.env.NODE_ENV === 'production' ? "https://eurhythmics-shop.yohaku.cloud" : "http://localhost:3001");
 
 type SidebarProps = {
   isMobile?: boolean;

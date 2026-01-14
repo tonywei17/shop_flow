@@ -1,0 +1,50 @@
+{
+  "name": "@enterprise/invoice-pdf",
+  "version": "1.0.0",
+  "description": "Standalone invoice PDF generation library with configurable business rules",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -w -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "puppeteer": "^24.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "puppeteer": ">=22.0.0"
+  },
+  "peerDependenciesMeta": {
+    "puppeteer": {
+      "optional": false
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "invoice",
+    "pdf",
+    "puppeteer",
+    "japanese",
+    "billing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/invoice-pdf"
+  }
+}

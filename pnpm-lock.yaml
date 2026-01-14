@@ -510,6 +510,19 @@ importers:
         specifier: ^5.4.0
         version: 5.9.3
 
+  packages/invoice-pdf:
+    dependencies:
+      puppeteer:
+        specifier: ^24.0.0
+        version: 24.34.0(typescript@5.9.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.28
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
   packages/reports:
     devDependencies:
       typescript:

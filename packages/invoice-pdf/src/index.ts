@@ -60,7 +60,9 @@
 // =============================================================================
 
 export {
+  // Configuration functions
   configure,
+  configureRhythmic,
   getConfig,
   resetConfig,
   getTaxRate,
@@ -69,9 +71,20 @@ export {
   getOrganization,
   getBankInfo,
   getAssets,
+
+  // Asset loading utilities
+  loadImageAsBase64,
+  loadAssetsFromDirectory,
+
+  // Default configurations
   DEFAULT_ORGANIZATION,
   DEFAULT_BANK_INFO,
   DEFAULT_CONFIG,
+
+  // Preset for リトミック研究センター
+  RHYTHMIC_ORGANIZATION,
+  RHYTHMIC_BANK_INFO,
+  RHYTHMIC_CONFIG,
 } from "./config";
 
 // =============================================================================

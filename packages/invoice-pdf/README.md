@@ -10,6 +10,7 @@ A standalone, configurable invoice PDF generation library for Japanese business 
 - Support for custom logos and seals
 - Batch PDF generation with efficient browser reuse
 - TypeScript support with full type definitions
+- **Preset configuration for リトミック研究センター**
 
 ## Installation
 
@@ -21,43 +22,27 @@ pnpm add @enterprise/invoice-pdf puppeteer
 yarn add @enterprise/invoice-pdf puppeteer
 ```
 
-## Quick Start
+## Quick Start (リトミック研究センター)
+
+For the same company (リトミック研究センター), use the one-line setup:
 
 ```typescript
-import {
-  configure,
-  generateInvoicePDF,
-  createInvoicePDFData,
-} from '@enterprise/invoice-pdf';
-import fs from 'fs';
+import { configureRhythmic, generateInvoicePDF, createInvoicePDFData } from '@enterprise/invoice-pdf';
+import path from 'path';
 
-// 1. Configure once at application startup
-configure({
-  taxRate: 0.1,
-  organization: {
-    name: "株式会社サンプル",
-    postalCode: "100-0001",
-    address: "東京都千代田区丸の内1-1-1",
-    phone: "03-1234-5678",
-    fax: "03-1234-5679",
-    registrationNumber: "T1234567890123",
-  },
-  bankInfo: {
-    bankName: "三井住友銀行",
-    branchName: "丸の内支店",
-    accountType: "普通",
-    accountNumber: "1234567",
-    accountHolder: "カ）サンプル",
-  },
-});
+// One-line setup with preset configuration
+// Point to the assets directory containing logo.jpg and seal.jpg
+configureRhythmic(path.join(__dirname, '../assets'));
 
-// 2. Create invoice data
+// Create invoice data and generate PDF
 const invoiceData = createInvoicePDFData({
   invoiceNo: "0001",
   billingMonth: "2025-01",
   recipient: {
     postalCode: "530-0001",
-    address: "大阪府大阪市北区梅田1-1-1",
+    prefecture: "大阪府",
+    city: "大阪市北区",
+    addressLine1: "梅田1-1-1",
     name: "田中太郎",
     storeCode: "1110000",
   },
@@ -80,60 +65,92 @@ const invoiceData = createInvoicePDFData({
     totalAmount: 16280,
   },
   details: {
-    ccMembers: [
-      {
-        className: "リトミック教室A",
-        classroomCode: "1110001",
-        count: 10,
-        unitPrice: 480,
-        amount: 4800,
-        deliveryDate: "001",
-        invoiceAmount: 4800,
-        deductionAmount: 0,
-        isAigran: false,
-        rebateAmount: 0,
-        isBankTransfer: false,
-      },
-    ],
+    ccMembers: [],
     materials: [],
     otherExpenses: [],
   },
 });
 
-// 3. Generate PDF
 const pdfBuffer = await generateInvoicePDF(invoiceData);
-fs.writeFileSync('invoice.pdf', pdfBuffer);
 ```
 
-## Configuration
+## Directory Structure
 
-### Full Configuration Options
+```
+your-project/
+├── assets/
+│   ├── logo.jpg    # Company logo (36x45px recommended)
+│   └── seal.jpg    # Company seal (90x90px recommended)
+├── src/
+│   └── your-code.ts
+└── package.json
+```
+
+Copy the `assets` folder from this package to your project to use the original logo and seal images.
+
+## Preset Configuration
+
+### リトミック研究センター Preset
+
+The package includes preset configuration for リトミック研究センター:
 
 ```typescript
-import { configure } from '@enterprise/invoice-pdf';
+import {
+  RHYTHMIC_ORGANIZATION,
+  RHYTHMIC_BANK_INFO,
+  RHYTHMIC_CONFIG,
+} from '@enterprise/invoice-pdf';
+
+// Organization Info
+console.log(RHYTHMIC_ORGANIZATION);
+// {
+//   name: "特定非営利活動法人\nリトミック研究センター",
+//   postalCode: "〒151-0051",
+//   address: "東京都渋谷区千駄ヶ谷1丁目30番8号\nダヴィンチ千駄ヶ谷1階5号室",
+//   phone: "03-5411-3815",
+//   fax: "03-5411-3816",
+//   registrationNumber: "T6011005001316",
+// }
+
+// Bank Info
+console.log(RHYTHMIC_BANK_INFO);
+// {
+//   bankName: "三井住友銀行",
+//   branchName: "渋谷駅前支店",
+//   accountType: "普通",
+//   accountNumber: "0380624",
+//   accountHolder: "特定非営利活動法人リトミック研究センター",
+// }
+```
+
+## Custom Configuration
+
+For other companies, use the full configuration:
+
+```typescript
+import { configure, loadAssetsFromDirectory } from '@enterprise/invoice-pdf';
 
 configure({
-  // Tax rate (10% = 0.1)
   taxRate: 0.1,
 
   // CC (Child Club) fee configuration
   ccFee: {
-    defaultUnitPrice: 480,      // Default price per member
-    aigranUnitPrice: 480,       // Price for Aigran classrooms
-    aigranRebatePerPerson: 600, // Rebate per person for Aigran
+    defaultUnitPrice: 480,
+    aigranUnitPrice: 480,
+    aigranRebatePerPerson: 600,
   },
 
   // Material sales configuration
   material: {
-    branchRebateEnabled: false,    // Rebate for branch purchases
-    classroomRebateEnabled: true,  // Rebate for classroom purchases
+    branchRebateEnabled: false,
+    classroomRebateEnabled: true,
   },
 
   // Organization (sender) information
   organization: {
-    name: "株式会社サンプル",
+    name: "Your Company Name",
     postalCode: "100-0001",
-    address: "東京都千代田区丸の内1-1-1",
+    address: "Your Address",
     phone: "03-1234-5678",
     fax: "03-1234-5679",
     registrationNumber: "T1234567890123",
@@ -141,19 +158,15 @@ configure({
 
   // Bank account for payment
   bankInfo: {
-    bankName: "三井住友銀行",
-    branchName: "丸の内支店",
+    bankName: "Your Bank",
+    branchName: "Branch Name",
     accountType: "普通",
     accountNumber: "1234567",
-    accountHolder: "カ）サンプル",
+    accountHolder: "Account Holder",
   },
 
-  // Assets (Base64 data URLs or file paths)
-  assets: {
-    logo: "data:image/png;base64,...",
-    seal: "data:image/png;base64,...",
-    font: "data:font/ttf;base64,...",
-  },
+  // Assets
+  assets: loadAssetsFromDirectory('./assets'),
 });
 ```
 
@@ -161,17 +174,25 @@ configure({
 
 ### Configuration
 
+#### `configureRhythmic(assetsDir?: string): void`
+
+Quick setup for リトミック研究センター. Loads preset configuration and assets.
+
+```typescript
+configureRhythmic('./assets');
+```
+
 #### `configure(config: InvoiceConfig): void`
 
-Configure the invoice generator with custom settings. Should be called once at application startup.
+Full configuration for custom settings.
 
-#### `getConfig(): InvoiceConfig`
+#### `loadAssetsFromDirectory(directory: string): Assets`
 
-Get the current configuration.
+Load logo.jpg and seal.jpg from a directory as Base64 data URLs.
 
-#### `resetConfig(): void`
+#### `loadImageAsBase64(filePath: string): string`
 
-Reset configuration to defaults.
+Load a single image file as Base64 data URL.
 
 ### PDF Generation
 
@@ -182,24 +203,12 @@ Generate a single invoice PDF.
 ```typescript
 const pdf = await generateInvoicePDF(invoiceData, {
   showZero: false,  // Show zero-count items
-  puppeteerOptions: {
-    headless: true,
-    args: ['--no-sandbox'],
-  },
 });
 ```
 
-#### `generateMultipleInvoicePDFs(dataList: InvoicePDFData[], options?: PDFGenerationOptions): Promise<Map<string, Buffer>>`
+#### `generateMultipleInvoicePDFs(dataList: InvoicePDFData[], options?): Promise<Map<string, Buffer>>`
 
 Generate multiple PDFs efficiently using a shared browser instance.
-
-```typescript
-const pdfs = await generateMultipleInvoicePDFs([invoice1, invoice2, invoice3]);
-
-for (const [invoiceNo, pdfBuffer] of pdfs) {
-  fs.writeFileSync(`invoice-${invoiceNo}.pdf`, pdfBuffer);
-}
-```
 
 #### `InvoicePDFGenerator` class
 
@@ -225,30 +234,11 @@ try {
 
 Transform database records into invoice PDF data structure.
 
-```typescript
-const invoiceData = transformInvoiceData(
-  invoiceRecord,    // Invoice header from database
-  "0001",           // Invoice number
-  ccMembers,        // CC member records
-  materials,        // Material order records
-  expenses,         // Expense records
-  0,                // Payment amount
-);
-```
-
-#### `createInvoicePDFData(data: Partial<InvoicePDFData>): InvoicePDFData`
+#### `createInvoicePDFData(data): InvoicePDFData`
 
 Create invoice data from pre-calculated values.
 
-### HTML Preview
-
-#### `generateInvoiceHTML(data: InvoicePDFData, showZero?: boolean): string`
-
-Generate HTML preview for browser display.
-
 ## Type Definitions
-
-All types are fully exported and documented:
 
 ```typescript
 import type {
@@ -257,9 +247,28 @@ import type {
   CCMemberDetail,
   MaterialDetail,
   OtherExpenseDetail,
-  // ... and more
+  OrganizationInfo,
+  BankInfo,
 } from '@enterprise/invoice-pdf';
 ```
+
+## Business Rules
+
+### CC Membership Fee Calculation
+
+- Default unit price: ¥480 per member
+- Aigran classroom rebate: ¥600 per person
+
+### Material Sales Calculation
+
+- Branch purchases: Counted as invoice amount
+- Classroom purchases: Margin calculated as rebate (retail price - classroom price)
+
+### Tax Calculation
+
+- Tax rate: 10%
+- Formula: `⑨ = (② + ③ + ④ - ⑤) × 10%`
+- Total: `⑧ + ⑨`
 
 ## License
 

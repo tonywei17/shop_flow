@@ -9,11 +9,38 @@
 import type { InvoiceConfig, OrganizationInfo, BankInfo } from "./types";
 
 // =============================================================================
-// Default Configuration Values
+// Preset Configuration for リトミック研究センター
 // =============================================================================
 
 /**
- * Default organization information
+ * Organization information for リトミック研究センター
+ */
+export const RHYTHMIC_ORGANIZATION: OrganizationInfo = {
+  name: "特定非営利活動法人\nリトミック研究センター",
+  postalCode: "〒151-0051",
+  address: "東京都渋谷区千駄ヶ谷1丁目30番8号\nダヴィンチ千駄ヶ谷1階5号室",
+  phone: "03-5411-3815",
+  fax: "03-5411-3816",
+  registrationNumber: "T6011005001316",
+};
+
+/**
+ * Bank information for リトミック研究センター
+ */
+export const RHYTHMIC_BANK_INFO: BankInfo = {
+  bankName: "三井住友銀行",
+  branchName: "渋谷駅前支店",
+  accountType: "普通",
+  accountNumber: "0380624",
+  accountHolder: "特定非営利活動法人リトミック研究センター",
+};
+
+// =============================================================================
+// Default Configuration Values (Generic placeholders)
+// =============================================================================
+
+/**
+ * Default organization information (placeholder)
  */
 export const DEFAULT_ORGANIZATION: OrganizationInfo = {
   name: "Your Company Name",
@@ -25,7 +52,7 @@ export const DEFAULT_ORGANIZATION: OrganizationInfo = {
 };
 
 /**
- * Default bank information
+ * Default bank information (placeholder)
  */
 export const DEFAULT_BANK_INFO: BankInfo = {
   bankName: "Bank Name",
@@ -54,6 +81,25 @@ export const DEFAULT_CONFIG: Required<InvoiceConfig> = {
   assets: {},
 };
 
+/**
+ * Preset configuration for リトミック研究センター
+ * Use this as a starting point for the same company
+ */
+export const RHYTHMIC_CONFIG: InvoiceConfig = {
+  taxRate: 0.1,
+  ccFee: {
+    defaultUnitPrice: 480,
+    aigranUnitPrice: 480,
+    aigranRebatePerPerson: 600,
+  },
+  material: {
+    branchRebateEnabled: false,
+    classroomRebateEnabled: true,
+  },
+  organization: RHYTHMIC_ORGANIZATION,
+  bankInfo: RHYTHMIC_BANK_INFO,
+};
+
 // =============================================================================
 // Configuration State
 // =============================================================================
@@ -72,28 +118,39 @@ let currentConfig: Required<InvoiceConfig> = { ...DEFAULT_CONFIG };
  *
  * @example
  * ```typescript
- * import { configure } from '@enterprise/invoice-pdf';
+ * import { configure, RHYTHMIC_CONFIG, loadAssetsFromDirectory } from '@enterprise/invoice-pdf';
  *
+ * // For リトミック研究センター (same company)
  * configure({
- *   taxRate: 0.1,
- *   organization: {
- *     name: "株式会社サンプル",
- *     postalCode: "100-0001",
- *     address: "東京都千代田区...",
- *     phone: "03-1234-5678",
- *   },
- *   bankInfo: {
- *     bankName: "三井住友銀行",
- *     branchName: "渋谷支店",
- *     accountType: "普通",
- *     accountNumber: "1234567",
- *     accountHolder: "カ）サンプル",
- *   },
+ *   ...RHYTHMIC_CONFIG,
+ *   assets: loadAssetsFromDirectory('./assets'),
  * });
  * ```
  */
 export function configure(config: InvoiceConfig): void {
   currentConfig = deepMerge(DEFAULT_CONFIG, config) as Required<InvoiceConfig>;
+}
+
+/**
+ * Quick setup for リトミック研究センター
+ * Loads preset configuration and assets from the specified directory.
+ *
+ * @param assetsDir - Directory containing logo.jpg and seal.jpg
+ *
+ * @example
+ * ```typescript
+ * import { configureRhythmic } from '@enterprise/invoice-pdf';
+ *
+ * // One-line setup for リトミック研究センター
+ * configureRhythmic('./assets');
+ * ```
+ */
+export function configureRhythmic(assetsDir?: string): void {
+  const assets = assetsDir ? loadAssetsFromDirectory(assetsDir) : {};
+  configure({
+    ...RHYTHMIC_CONFIG,
+    assets,
+  });
 }
 
 /**
@@ -150,6 +207,60 @@ export function getBankInfo(): BankInfo {
  */
 export function getAssets(): InvoiceConfig["assets"] {
   return currentConfig.assets;
+}
+
+// =============================================================================
+// Asset Loading Utilities
+// =============================================================================
+
+/**
+ * Load image file as Base64 data URL.
+ *
+ * @param filePath - Path to image file
+ * @returns Base64 data URL or empty string if file not found
+ */
+export function loadImageAsBase64(filePath: string): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("fs");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require("path");
+
+    if (!fs.existsSync(filePath)) {
+      return "";
+    }
+
+    const imageBuffer = fs.readFileSync(filePath);
+    const base64 = imageBuffer.toString("base64");
+    const ext = path.extname(filePath).toLowerCase().slice(1);
+    const mimeType = ext === "png" ? "image/png" : "image/jpeg";
+    return `data:${mimeType};base64,${base64}`;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Load assets from a directory.
+ * Expects logo.jpg and seal.jpg in the directory.
+ *
+ * @param directory - Directory containing asset files
+ * @returns Asset configuration object
+ *
+ * @example
+ * ```typescript
+ * const assets = loadAssetsFromDirectory('./assets');
+ * // Returns { logo: 'data:image/jpeg;base64,...', seal: 'data:image/jpeg;base64,...' }
+ * ```
+ */
+export function loadAssetsFromDirectory(directory: string): NonNullable<InvoiceConfig["assets"]> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require("path");
+
+  return {
+    logo: loadImageAsBase64(path.join(directory, "logo.jpg")),
+    seal: loadImageAsBase64(path.join(directory, "seal.jpg")),
+  };
 }
 
 // =============================================================================

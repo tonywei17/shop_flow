@@ -22,3 +22,7 @@ packages/*/src/*.js
 
 # Temporary data files
 docs/data/*.pdf
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log

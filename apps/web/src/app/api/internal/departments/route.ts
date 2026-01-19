@@ -40,7 +40,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     await deleteDepartmentService(id);
-    return { ok: true };
+    return successResponse({ ok: true });
   });
 }
 
@@ -106,11 +106,11 @@ export async function POST(req: NextRequest) {
       }
 
       const department = await updateDepartmentService(id, departmentInput);
-      return { department, mode: "edit" };
+      return successResponse({ department, mode: "edit" });
     }
 
     const department = await createDepartmentService(departmentInput);
-    return { department, mode: "create" };
+    return successResponse({ department, mode: "create" });
   });
 }
 
@@ -145,6 +145,6 @@ export async function PATCH(req: NextRequest) {
       return errorResponse("No valid fields to update", 400);
     }
 
-    return { ok: true };
+    return successResponse({ ok: true });
   });
 }

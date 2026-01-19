@@ -381,8 +381,8 @@ export function DepartmentsTreeClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, allow_proxy_billing: !currentValue }),
       });
-      const data = await response.json() as { ok?: boolean; error?: string };
-      if (!response.ok || !data.ok) {
+      const data = await response.json() as { success?: boolean; data?: { ok?: boolean }; error?: string };
+      if (!response.ok || !data.success || !data.data?.ok) {
         const message = data.error || "更新に失敗しました";
         alert(message);
         return;

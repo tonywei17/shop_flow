@@ -20,9 +20,19 @@ import { getBankInfo, getAssets } from "../config";
 /**
  * Format currency amount with proper styling for negative values
  */
+function formatPhone(phone: string): string {
+  if (!phone) return '';
+  // Convert "03-5786-0095" to "03(5786)0095"
+  const parts = phone.split('-');
+  if (parts.length === 3) {
+    return `${parts[0]}(${parts[1]})${parts[2]}`;
+  }
+  return phone;
+}
+
 function formatCurrency(amount: number): string {
   if (amount < 0) {
-    return `<span class="negative-amount">(¥${Math.abs(amount).toLocaleString()})</span>`;
+    return `<span class="negative-amount">-¥${Math.abs(amount).toLocaleString()}</span>`;
   }
   return `¥${amount.toLocaleString()}`;
 }
@@ -32,8 +42,12 @@ function formatCurrency(amount: number): string {
  */
 function formatPeriod(billingMonth: string): string {
   const [year, month] = billingMonth.split("-").map(Number);
-  const endDate = new Date(year, month, 0);
-  return `${year}年${month}月1日～${year}年${month}月${endDate.getDate()}日`;
+  // Show previous month's range
+  const prevDate = new Date(year, month - 1, 0); // last day of previous month
+  const prevYear = prevDate.getFullYear();
+  const prevMonth = prevDate.getMonth() + 1;
+  const prevLastDay = prevDate.getDate();
+  return `${prevYear}年${String(prevMonth).padStart(2, "0")}月01日～${prevYear}年${String(prevMonth).padStart(2, "0")}月${String(prevLastDay).padStart(2, "0")}日`;
 }
 
 /**
@@ -61,10 +75,12 @@ function getSealBase64(): string {
  */
 export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
   const bankInfo = getBankInfo();
-  const today = new Date();
-  const issueDate = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, "0")}月${String(today.getDate()).padStart(2, "0")}日`;
+  const issueParts = (data.issueDate || "").split("-");
+  const issueDate = issueParts.length === 3
+    ? `${issueParts[0]}年${issueParts[1]}月${issueParts[2]}日`
+    : data.issueDate || "";
 
-  const otherTotal = data.details.otherExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const otherTotal = data.amounts.other || data.details.otherExpenses.reduce((sum, e) => sum + e.amount, 0);
   const ccNetAmount = data.amounts.ccMembershipFee - data.amounts.bankTransferDeduction;
 
   return `
@@ -76,7 +92,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
   <title>ご請求書 - ${data.invoiceNo}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     ${getMainPageStyles()}
   </style>
@@ -103,16 +119,17 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
 
       <div class="sender">
         <div class="sender-address">
-          ${data.sender.postalCode}<br>
+          〒${data.sender.postalCode}<br>
           ${data.sender.address.replace(/\n/g, "<br>")}
         </div>
         <div class="sender-content">
           ${getLogoBase64() ? `<img src="${getLogoBase64()}" alt="ロゴ" class="sender-logo">` : ""}
           <div class="sender-info">
+            <div class="sender-org-type">特定非営利活動法人</div>
             <div class="sender-name">
-              ${data.sender.name.replace(/\n/g, "<br>")}
+              ${data.sender.name.replace(/本部事務局/, "").replace(/\n/g, "<br>")}
             </div>
-            <div class="sender-contact">電話 ${data.sender.phone}　Fax ${data.sender.fax}</div>
+            <div class="sender-contact">電話 ${formatPhone(data.sender.phone)}　Fax ${formatPhone(data.sender.fax)}</div>
             <div class="sender-registration">登録番号「Ｔ${data.sender.registrationNumber.replace(/^T/, "")}」</div>
           </div>
           ${getSealBase64() ? `<img src="${getSealBase64()}" alt="印鑑" class="sender-seal">` : ""}
@@ -138,7 +155,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
         ご不明の点は、お手数ですが本部事務局宛ご連絡下さい。
       </div>
       <div class="invoice-no">
-        No.<span class="invoice-no-value">${data.invoiceNo.split("-").pop() || "0001"}</span>
+        No.<span class="invoice-no-value">${data.invoiceNo}</span>
       </div>
     </div>
 
@@ -158,8 +175,7 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
     <div class="subprice-section">
       <!-- Left Column -->
       <div class="price-column">
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header">
               <span class="price-card-header-text">前月ご請求額</span>
@@ -168,11 +184,10 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(data.amounts.previousBalance)}</span>
             </div>
           </div>
-          <div class="price-number">a</div>
+          <div class="price-label">a</div>
         </div>
-
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-connector">‖</div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header">
               <span class="price-card-header-text">ご入金額</span>
@@ -181,11 +196,10 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(data.amounts.payment)}</span>
             </div>
           </div>
-          <div class="price-number">b</div>
+          <div class="price-label">b</div>
         </div>
-
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-connector">‖</div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header">
               <span class="price-card-header-text">ご入金後残額</span>
@@ -194,14 +208,13 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(data.amounts.remainingBalance)}</span>
             </div>
           </div>
-          <div class="price-number">①=a-b</div>
+          <div class="price-label">①=a-b</div>
         </div>
       </div>
 
       <!-- Middle Column -->
       <div class="price-column">
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header">
               <span class="price-card-header-text">チャイルドクラブ会費</span>
@@ -210,11 +223,10 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(ccNetAmount)}</span>
             </div>
           </div>
-          <div class="price-number">②</div>
+          <div class="price-label">②</div>
         </div>
-
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-spacer"></div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header">
               <span class="price-card-header-text">教材お買い上げ</span>
@@ -223,11 +235,10 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(data.amounts.materialDelivery)}</span>
             </div>
           </div>
-          <div class="price-number">③</div>
+          <div class="price-label">③</div>
         </div>
-
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-spacer"></div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header">
               <span class="price-card-header-text">そ　の　他</span>
@@ -236,14 +247,13 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(otherTotal)}</span>
             </div>
           </div>
-          <div class="price-number">④</div>
+          <div class="price-label">④</div>
         </div>
       </div>
 
       <!-- Right Column -->
       <div class="price-column">
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header red">
               <span class="price-card-header-text">教材販売割戻し</span>
@@ -252,11 +262,10 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(data.amounts.materialReturn || 0)}</span>
             </div>
           </div>
-          <div class="price-number">⑤</div>
+          <div class="price-label">⑤</div>
         </div>
-
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-spacer"></div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header red">
               <span class="price-card-header-text">調整・ご返金</span>
@@ -265,20 +274,19 @@ export function generateInvoiceMainPageHTML(data: InvoicePDFData): string {
               <span class="price-card-value">${formatCurrency(data.amounts.adjustment || 0)}</span>
             </div>
           </div>
-          <div class="price-number">⑥</div>
+          <div class="price-label">⑥</div>
         </div>
-
-        <div class="price-item">
-          <div class="price-number"></div>
+        <div class="price-spacer"></div>
+        <div class="price-item-wrap">
           <div class="price-card">
             <div class="price-card-header gray">
               <span class="price-card-header-text">非課税分</span>
             </div>
             <div class="price-card-body gray">
-              <span class="price-card-value">¥0</span>
+              <span class="price-card-value">${formatCurrency(data.amounts.nonTaxable || 0)}</span>
             </div>
           </div>
-          <div class="price-number">⑦</div>
+          <div class="price-label">⑦</div>
         </div>
       </div>
     </div>
@@ -344,11 +352,12 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
   const materialTotal = data.details.materials.reduce((sum: number, m: MaterialDetail) => sum + m.amount, 0);
   const otherTotal = data.details.otherExpenses.reduce((sum: number, o: OtherExpenseDetail) => sum + o.amount, 0);
 
-  const maxTableHeight = 730;
+  const maxTableHeight = 800; // pagination threshold (also used for filler calculation)
   const defaultRowHeight = 28;
   const pages: string[] = [];
   let currentRows: string[] = [];
   let currentHeight = 0;
+  let pageCounter = 0;
 
   const estimateRowHeight = (content: string): number => {
     if (content && content.length > 21) {
@@ -358,6 +367,28 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
   };
 
   const pushPage = () => {
+    // Fill remaining space with empty rows so every page has same height
+    // Add at least 1 filler row, fill up to maxTableHeight
+    const fillerHeight = maxTableHeight - currentHeight;
+    const fillerCount = Math.max(1, Math.floor(fillerHeight / defaultRowHeight));
+    for (let i = 0; i < fillerCount; i++) {
+      currentRows.push(`
+        <tr class="detail-row filler-row" style="height: ${defaultRowHeight}px;">
+          <td class="cell center"></td>
+          <td class="cell center"></td>
+          <td class="cell"></td>
+          <td class="cell center"></td>
+          <td class="cell center"></td>
+          <td class="cell right"></td>
+          <td class="cell right"></td>
+          <td class="cell center"></td>
+          <td class="cell right"></td>
+          <td class="cell right"></td>
+        </tr>
+      `);
+    }
+    pageCounter++;
+    const pageNo = String(pageCounter).padStart(4, "0");
     const pageHtml = `
     <div class="detail-page">
       <!-- Header -->
@@ -374,46 +405,47 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
       <div class="detail-info">
         <div class="detail-info-row">
           <div class="detail-info-left">
-            <span class="detail-info-label">お取引コード</span>
-            <span class="detail-info-value">${data.recipient.storeCode}</span>
+            <span class="detail-info-label-sm">お取引コード</span>
+            <span class="detail-info-value-underline">${data.recipient.storeCode}</span>
           </div>
           <div class="detail-info-right">
-            <span class="detail-info-label" style="width: auto;">No.</span>
-            <span class="detail-info-value">${data.invoiceNo}</span>
+            <span class="detail-info-label-sm" style="width: auto;">No.</span>
+            <span class="detail-info-value-underline">${pageNo}</span>
           </div>
         </div>
         <div class="detail-info-row">
           <div class="detail-info-left">
-            <span class="detail-info-label">お取引名</span>
-            <span class="detail-info-value">${data.recipient.name}</span>
+            <span class="detail-info-label-sm">お取引名</span>
+            <span class="detail-info-value-underline">${data.recipient.name}</span>
           </div>
-          <div class="detail-sender">
-            <div class="detail-sender-org">${data.sender.name.split("\n")[0] || ""}</div>
-            <div class="detail-sender-name">${data.sender.name.split("\n")[1] || data.sender.name}</div>
+          <div class="detail-sender-line">
+            特定非営利活動法人 リトミック研究センター
           </div>
         </div>
       </div>
 
       <!-- Table -->
-      <table class="detail-table">
-        <thead>
-          <tr>
-            <th class="col-date">日付</th>
-            <th class="col-slip">伝票番号</th>
-            <th class="col-name">品名或者摘要</th>
-            <th class="col-code">品番</th>
-            <th class="col-qty">数量</th>
-            <th class="col-price">単価</th>
-            <th class="col-amount">納入额</th>
-            <th class="col-dest">納入先</th>
-            <th class="col-invoice">ご請求额</th>
-            <th class="col-rebate">割戻し额(-)</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${currentRows.join("\n")}
-        </tbody>
-      </table>
+      <div class="detail-table-wrapper">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th class="col-date">日付</th>
+              <th class="col-slip">伝票番号</th>
+              <th class="col-name">品名または摘要</th>
+              <th class="col-code">品番</th>
+              <th class="col-qty">数量</th>
+              <th class="col-price">単価</th>
+              <th class="col-amount">納入额</th>
+              <th class="col-dest">納入先</th>
+              <th class="col-invoice">ご請求额</th>
+              <th class="col-rebate">割戻し额(-)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${currentRows.join("\n")}
+          </tbody>
+        </table>
+      </div>
       <div class="detail-footer-bar"></div>
     </div>
     `;
@@ -441,7 +473,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
     <tr class="balance-row">
       <td class="cell center"></td>
       <td class="cell center"></td>
-      <td class="cell">前月ご請求额</td>
+      <td class="cell center">前月ご請求额</td>
       <td class="cell center"></td>
       <td class="cell center"></td>
       <td class="cell right"></td>
@@ -455,21 +487,21 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
     <tr class="balance-row">
       <td class="cell center"></td>
       <td class="cell center"></td>
-      <td class="cell">ご入金额</td>
+      <td class="cell center">ご入金额</td>
       <td class="cell center"></td>
       <td class="cell center"></td>
       <td class="cell right"></td>
       <td class="cell right"></td>
       <td class="cell center"></td>
+      <td class="cell right"></td>
       <td class="cell right">${formatCurrency(data.amounts.payment)}</td>
-      <td class="cell right"></td>
     </tr>
   `);
   addRow(`
     <tr class="balance-row">
       <td class="cell center"></td>
       <td class="cell center"></td>
-      <td class="cell">当月期初残高</td>
+      <td class="cell center">当月期初残高</td>
       <td class="cell center"></td>
       <td class="cell center"></td>
       <td class="cell right"></td>
@@ -487,7 +519,16 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
   const addSectionHeader = (text: string, bg = "#f9f9f9") => {
     addRow(`
       <tr class="section-header-row" style="background:${bg};">
-        <td class="cell center" colspan="10" style="text-align: center;">${text}</td>
+        <td class="cell center"></td>
+        <td class="cell center"></td>
+        <td class="cell center">${text}</td>
+        <td class="cell center"></td>
+        <td class="cell center"></td>
+        <td class="cell right"></td>
+        <td class="cell right"></td>
+        <td class="cell center"></td>
+        <td class="cell right"></td>
+        <td class="cell right"></td>
       </tr>
     `);
   };
@@ -505,9 +546,9 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
       <tr class="subtotal-row" style="background:${bg};">
         <td class="cell center"></td>
         <td class="cell center"></td>
-        <td class="cell">計</td>
+        <td class="cell center">計</td>
         <td class="cell center"></td>
-        <td class="cell center">${cells.qty ?? ""}</td>
+        <td class="cell right">${cells.qty ?? ""}</td>
         <td class="cell right"></td>
         <td class="cell right">${cells.amount ?? ""}</td>
         <td class="cell center"></td>
@@ -523,7 +564,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
 
   ccMembersToDisplay.forEach((m) => {
     const rebateDisplay = m.isAigran && m.rebateAmount > 0 ? formatCurrency(m.rebateAmount) : "";
-    const deliveryCode = m.deliveryDate || "";
+    const deliveryCode = m.classroomCode || m.deliveryDate || "";
     const classNameDisplay = m.isBankTransfer ? `${m.className}(口座振替)` : m.className;
     const zeroMemberClass = m.count === 0 ? "cc-zero-member" : "";
     const rowHeight = estimateRowHeight(classNameDisplay);
@@ -531,9 +572,9 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
       <tr class="detail-row ${zeroMemberClass}">
         <td class="cell center"></td>
         <td class="cell center"></td>
-        <td class="cell">${classNameDisplay}</td>
+        <td class="cell cell-name">${classNameDisplay}</td>
         <td class="cell center"></td>
-        <td class="cell center">${m.count}</td>
+        <td class="cell right">${m.count}</td>
         <td class="cell right">${formatCurrency(m.unitPrice)}</td>
         <td class="cell right">${formatCurrency(m.amount)}</td>
         <td class="cell center">${deliveryCode}</td>
@@ -560,9 +601,9 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
       <tr class="detail-row">
         <td class="cell center">${material.date}</td>
         <td class="cell center">${material.slipNumber}</td>
-        <td class="cell">${material.productName}</td>
+        <td class="cell cell-name">${material.productName}</td>
         <td class="cell center"></td>
-        <td class="cell center">${material.quantity}</td>
+        <td class="cell right">${material.quantity}</td>
         <td class="cell right">${formatCurrency(material.unitPrice)}</td>
         <td class="cell right">${formatCurrency(material.amount)}</td>
         <td class="cell center">${material.deliveryTo}</td>
@@ -587,18 +628,20 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
   addSectionHeader("＊その他お取引＊", "#FAF6FF");
   data.details.otherExpenses.forEach((item: OtherExpenseDetail) => {
     const rowHeight = estimateRowHeight(item.description);
+    const showInvoice = item.amount && item.amount !== 0;
+    const showRebate = item.deductionAmount && item.deductionAmount > 0;
     addRow(`
       <tr class="detail-row">
         <td class="cell center"></td>
         <td class="cell center"></td>
-        <td class="cell">${item.description}</td>
+        <td class="cell cell-name">${item.description}</td>
         <td class="cell center"></td>
         <td class="cell center"></td>
         <td class="cell right"></td>
-        <td class="cell right">${formatCurrency(item.amount)}</td>
-        <td class="cell center"></td>
-        <td class="cell right">${formatCurrency(item.amount)}</td>
         <td class="cell right"></td>
+        <td class="cell center"></td>
+        <td class="cell right">${showInvoice ? formatCurrency(item.amount) : ''}</td>
+        <td class="cell right">${showRebate ? formatCurrency(item.deductionAmount!) : ''}</td>
       </tr>
     `, rowHeight);
   });
@@ -614,28 +657,6 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
 
   addSectionHeader("＊以下余白＊", "#fff");
 
-  // Fill remaining rows
-  const remainingHeight = maxTableHeight - currentHeight;
-  const remainingRows = Math.floor(remainingHeight / defaultRowHeight);
-  if (remainingRows > 0) {
-    for (let i = 0; i < remainingRows; i++) {
-      currentRows.push(`
-        <tr class="detail-row filler-row" style="height: ${defaultRowHeight}px;">
-          <td class="cell center"></td>
-          <td class="cell center"></td>
-          <td class="cell"></td>
-          <td class="cell center"></td>
-          <td class="cell center"></td>
-          <td class="cell right"></td>
-          <td class="cell right"></td>
-          <td class="cell center"></td>
-          <td class="cell right"></td>
-          <td class="cell right"></td>
-        </tr>
-      `);
-    }
-  }
-
   pushPage();
 
   return `
@@ -647,7 +668,7 @@ export function generateInvoiceDetailPageHTML(data: InvoicePDFData, showZero = f
   <title>ご請求明細書 - ${data.invoiceNo}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     ${getDetailPageStyles()}
   </style>
@@ -683,7 +704,7 @@ export function generateFullInvoiceHTML(data: InvoicePDFData, showZero = false):
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>請求書 - ${data.invoiceNo}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&family=Noto+Serif+JP:wght@400;500;600;700&display=swap');
 
     @page { size: A4; margin: 0; }
     .page-break { page-break-before: always; }
@@ -728,7 +749,7 @@ function getMainPageStyles(): string {
     }
 
     body {
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: 'Noto Serif JP', serif;
       font-size: 16px;
       font-weight: 500;
       line-height: 1.5;
@@ -739,7 +760,7 @@ function getMainPageStyles(): string {
     .page {
       width: 210mm;
       height: 297mm;
-      padding: 48px 64px;
+      padding: 12mm 16mm;
       margin: 20px auto;
       background: #fff;
       border-radius: 8px;
@@ -758,6 +779,11 @@ function getMainPageStyles(): string {
     }
 
     @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
       body {
         background: #fff;
         margin: 0;
@@ -767,7 +793,7 @@ function getMainPageStyles(): string {
         width: 210mm;
         height: 297mm;
         margin: 0;
-        padding: 48px 64px;
+        padding: 12mm 16mm;
         outline: none;
         box-shadow: none;
         border-radius: 0;
@@ -828,11 +854,11 @@ function getMainPageStyles(): string {
     .sender {
       width: 320px;
       position: relative;
-      transform: translate(-30px, 20px);
+      transform: translate(-30px, 36px);
     }
 
     .sender-address {
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: 'Noto Serif JP', serif;
       font-size: 12px;
       font-weight: 500;
       color: #111;
@@ -848,7 +874,7 @@ function getMainPageStyles(): string {
     }
 
     .sender-logo {
-      width: 36px;
+      width: 45px;
       height: 45px;
       object-fit: contain;
       flex-shrink: 0;
@@ -859,8 +885,18 @@ function getMainPageStyles(): string {
       flex: 1;
     }
 
+    .sender-org-type {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: #111;
+      margin-bottom: 0;
+      position: relative;
+      z-index: 2;
+    }
+
     .sender-name {
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: 'Noto Serif JP', serif;
       font-size: 16px;
       font-weight: 700;
       color: #111;
@@ -882,7 +918,7 @@ function getMainPageStyles(): string {
     }
 
     .sender-registration {
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: 'Noto Serif JP', serif;
       font-size: 16px;
       font-weight: 700;
       color: #111;
@@ -898,7 +934,7 @@ function getMainPageStyles(): string {
       flex-shrink: 0;
       position: absolute;
       right: 0px;
-      top: -35px;
+      top: -51px;
       opacity: 0.95;
       pointer-events: none;
       z-index: 1;
@@ -908,7 +944,7 @@ function getMainPageStyles(): string {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-bottom: 36px;
+      margin-bottom: 28px;
     }
 
     .title-bar-top {
@@ -949,7 +985,7 @@ function getMainPageStyles(): string {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 36px;
+      margin-bottom: 28px;
     }
 
     .greeting-text {
@@ -957,7 +993,7 @@ function getMainPageStyles(): string {
       font-weight: 500;
       color: #000;
       line-height: 1.5;
-      padding: 0 64px;
+      padding: 0 24px;
       flex: 1;
     }
 
@@ -1031,15 +1067,23 @@ function getMainPageStyles(): string {
     .price-column {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 0;
       padding: 0;
+      align-items: flex-start;
     }
 
-    .price-item {
+    .price-item-wrap {
       display: flex;
       align-items: flex-start;
       gap: 6px;
-      width: 180px;
+    }
+
+    .price-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #000;
+      white-space: nowrap;
+      margin-top: 2px;
     }
 
     .price-number {
@@ -1053,6 +1097,19 @@ function getMainPageStyles(): string {
       justify-content: center;
       white-space: nowrap;
       margin-left: 4px;
+    }
+
+    .price-connector {
+      text-align: center;
+      font-size: 14px;
+      color: #000;
+      line-height: 1;
+      padding: 2px 0;
+      width: 160px;
+    }
+
+    .price-spacer {
+      height: 18px;
     }
 
     .price-card {
@@ -1098,7 +1155,7 @@ function getMainPageStyles(): string {
       border-radius: 0 0 12px 12px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
       padding: 4px 10px;
     }
 
@@ -1156,6 +1213,7 @@ function getMainPageStyles(): string {
       border-bottom: none;
       border-left: none;
       border-radius: 0 12px 0 0;
+      justify-content: flex-end;
     }
 
     .total-row.middle-left {
@@ -1165,6 +1223,7 @@ function getMainPageStyles(): string {
     .total-row.middle-right {
       border-bottom: none;
       border-left: none;
+      justify-content: flex-end;
     }
 
     .total-row.bottom-left {
@@ -1174,6 +1233,7 @@ function getMainPageStyles(): string {
     .total-row.bottom-right {
       border-left: none;
       border-radius: 0 0 12px 0;
+      justify-content: flex-end;
     }
 
     .total-label {
@@ -1208,7 +1268,7 @@ function getMainPageStyles(): string {
       color: #000;
       line-height: 1.4;
       white-space: nowrap;
-      text-align: center;
+      text-align: left;
     }
 
     .payment-highlight {
@@ -1227,6 +1287,7 @@ function getMainPageStyles(): string {
       height: 8px;
       background: #00AC4B;
       width: 100%;
+      margin-top: auto;
     }
   `;
 }
@@ -1236,7 +1297,7 @@ function getDetailPageStyles(): string {
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: 'Noto Serif JP', serif;
       font-size: 13px;
       line-height: 1.35;
       color: #111;
@@ -1246,7 +1307,7 @@ function getDetailPageStyles(): string {
     .detail-page {
       width: 210mm;
       height: 297mm;
-      padding: 40px 50px;
+      padding: 10mm 13mm;
       margin: 20px auto;
       background: #fff;
       box-shadow: 0 4px 8px rgba(0, 172, 77, 0.03), 0 4px 12px rgba(0, 172, 77, 0.01);
@@ -1260,8 +1321,14 @@ function getDetailPageStyles(): string {
     }
 
     @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
       .detail-page {
         margin: 0;
+        padding: 10mm 13mm;
         outline: none;
         box-shadow: none;
         border-radius: 0;
@@ -1271,8 +1338,8 @@ function getDetailPageStyles(): string {
     .detail-header {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-bottom: 36px;
+      gap: 4px;
+      margin-bottom: 12px;
     }
 
     .detail-header-top {
@@ -1284,25 +1351,25 @@ function getDetailPageStyles(): string {
 
     .detail-logo {
       width: 44px;
-      height: 54px;
+      height: 44px;
       object-fit: contain;
     }
 
     .detail-logo-placeholder {
       width: 44px;
-      height: 54px;
+      height: 44px;
     }
 
     .detail-title {
       font-family: 'M PLUS Rounded 1c', sans-serif;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 500;
       color: #111;
       letter-spacing: 10px;
     }
 
     .detail-header-bar {
-      height: 8px;
+      height: 5px;
       background: #00AC4B;
       width: 100%;
     }
@@ -1310,16 +1377,16 @@ function getDetailPageStyles(): string {
     .detail-period {
       text-align: right;
       padding: 0 20px;
-      font-size: 18px;
-      font-weight: 700;
-      color: #555;
+      font-size: 13px;
+      font-weight: 500;
+      color: #000;
     }
 
     .detail-info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      margin-bottom: 36px;
+      gap: 2px;
+      margin-bottom: 8px;
     }
 
     .detail-info-row {
@@ -1341,38 +1408,53 @@ function getDetailPageStyles(): string {
       width: 92px;
     }
 
+    .detail-info-label-sm {
+      font-size: 11px;
+      font-weight: 500;
+      color: #000;
+      width: auto;
+      margin-right: 8px;
+    }
+
     .detail-info-value {
       font-size: 14px;
       font-weight: 700;
       color: #000;
     }
 
+    .detail-info-value-underline {
+      font-size: 13px;
+      font-weight: 500;
+      color: #000;
+      border-bottom: 1px solid #000;
+      padding-bottom: 1px;
+      padding-left: 4px;
+      padding-right: 8px;
+      display: inline-block;
+    }
+
     .detail-info-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
 
-    .detail-sender {
+    .detail-sender-line {
+      font-size: 12px;
+      font-weight: 500;
+      color: #000;
       text-align: right;
     }
 
-    .detail-sender-org {
-      font-size: 13px;
-      font-weight: 500;
-      color: #555;
+    .detail-table-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
-
-    .detail-sender-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: #000;
-    }
-
     .detail-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 24px;
+      margin-bottom: 0;
       flex: 0 0 auto;
     }
 
@@ -1386,16 +1468,17 @@ function getDetailPageStyles(): string {
       white-space: nowrap;
     }
 
-    .detail-table th.col-date { width: 35px; }
-    .detail-table th.col-slip { width: 40px; }
-    .detail-table th.col-name { min-width: 200px; }
-    .detail-table th.col-code { width: 30px; }
-    .detail-table th.col-qty { width: 25px; }
-    .detail-table th.col-price { width: 45px; }
-    .detail-table th.col-amount { width: 55px; }
-    .detail-table th.col-dest { width: 30px; }
-    .detail-table th.col-invoice { width: 55px; }
-    .detail-table th.col-rebate { width: 50px; }
+    .detail-table { table-layout: fixed; }
+    .detail-table th.col-date { width: 44px; }
+    .detail-table th.col-slip { width: 52px; }
+    .detail-table th.col-name { width: auto; }
+    .detail-table th.col-code { width: 50px; }
+    .detail-table th.col-qty { width: 36px; }
+    .detail-table th.col-price { width: 64px; }
+    .detail-table th.col-amount { width: 64px; }
+    .detail-table th.col-dest { width: 34px; }
+    .detail-table th.col-invoice { width: 64px; }
+    .detail-table th.col-rebate { width: 64px; }
 
     .detail-table .cell {
       border: 1px solid #eee;
@@ -1403,8 +1486,15 @@ function getDetailPageStyles(): string {
       font-size: 11px;
       font-weight: 500;
       color: #111;
-      height: 28px;
+      min-height: 28px;
       line-height: 20px;
+      white-space: nowrap;
+    }
+
+    .detail-table .cell.cell-name {
+      white-space: normal;
+      word-break: break-all;
+      overflow-wrap: break-word;
     }
 
     .detail-table .cell.center { text-align: center; }
@@ -1447,7 +1537,7 @@ function getDetailPageStyles(): string {
       height: 8px;
       background: #00AC4B;
       width: 100%;
-      margin-top: 8px;
+      margin-top: auto;
     }
 
     .page-break { page-break-before: always; }

@@ -1,8 +1,12 @@
 /**
- * @enterprise/domain-settlement - Invoice Calculator
+ * @enterprise/domain-settlement - Invoice Calculator (AUTHORITATIVE SOURCE)
  *
  * Core business logic for invoice amount calculations.
  * All calculation rules are configurable through options or config package.
+ *
+ * NOTE: A copy of this logic exists in @enterprise/invoice-pdf/calculator.ts
+ * for standalone usage. When modifying calculations, update this file first,
+ * then sync changes to invoice-pdf.
  */
 
 import type {

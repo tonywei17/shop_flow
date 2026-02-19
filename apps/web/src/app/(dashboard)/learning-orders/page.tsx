@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link";
 import { Eye, Download } from "lucide-react";
 
-// Medusa Admin Order レスポンスのうち、必要なフィールドだけを表現した最小限の型
-type MedusaOrderDTO = {
+// Order レスポンスのうち、必要なフィールドだけを表現した最小限の型
+type OrderDTO = {
   id?: string;
   display_id?: string | number | null;
   email?: string | null;
@@ -66,8 +66,8 @@ function formatAmountYen(amount: number): string {
 }
 
 async function fetchLearningOrders(): Promise<{ orders: LearningOrderRow[]; error?: string }> {
-  // 一時的に Medusa ではなくモックデータを使用して UI を確認する
-  const mockRawOrders: MedusaOrderDTO[] = [
+  // TODO: Supabase からデータを取得する
+  const mockRawOrders: OrderDTO[] = [
     {
       id: "order_lms_1001",
       display_id: "LMS-1001",

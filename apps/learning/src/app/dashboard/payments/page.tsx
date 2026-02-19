@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Header } from "@/components/header";
-// import { createMedusaClient } from "@enterprise/domain-commerce"; // Temporarily disabled - Medusa integration removed
 
 type OrderRow = {
   id: string;
@@ -16,9 +15,6 @@ type OrderRow = {
 };
 
 async function fetchOrders(): Promise<{ orders: OrderRow[]; error?: string }> {
-  // Temporarily disabled - Medusa integration removed
-  // const client = createMedusaClient();
-
   try {
     // TODO: Implement order fetching from Supabase or other data source
     const rawOrders: any[] = [];
@@ -58,11 +54,11 @@ async function fetchOrders(): Promise<{ orders: OrderRow[]; error?: string }> {
 
     return { orders };
   } catch (error) {
-    console.error("Failed to fetch Medusa orders for learning payments", error);
+    console.error("Failed to fetch orders for learning payments", error);
     return {
       orders: [],
       error:
-        "注文システムから受注データを取得できませんでした。Medusa API または MEDUSA_BASE_URL / MEDUSA_ADMIN_TOKEN を確認してください。",
+        "注文システムから受注データを取得できませんでした。",
     };
   }
 }

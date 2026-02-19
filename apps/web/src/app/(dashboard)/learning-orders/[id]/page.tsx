@@ -64,7 +64,7 @@ function formatAmountYen(amount: number): string {
 }
 
 async function fetchLearningOrder(id: string): Promise<{ order?: LearningOrderDetail; error?: string }> {
-  // 一時的に Medusa ではなくモックデータを使用して UI を確認する
+  // TODO: Supabase からデータを取得する
   const mockOrders: LearningOrderDetail[] = [
     {
       id: "order_lms_1001",

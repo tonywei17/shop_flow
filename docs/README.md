@@ -1,6 +1,6 @@
 # Shop Flow 文档中心
 
-> 最后更新：2025-12-07
+> 最終更新：2026-02-19
 
 ## 📁 目录结构
 
@@ -15,7 +15,7 @@ docs/
 │   ├── SUPABASE-SCHEMA-STRATEGY.md # 数据库策略
 │   ├── PRODUCT-MANAGEMENT-DESIGN.md # 商品管理设计
 │   ├── STORE-SETTINGS-DESIGN.md    # 商店设置设计 ⭐ NEW
-│   └── SYSTEM_ARCHITECTURE_MEDUSA.md # [历史] Medusa 方案
+│   └── (Medusa 方案已归档至 10-archive/)
 │
 ├── deployment/               # 🚀 部署文档
 │   └── PRODUCTION-DEPLOYMENT.md    # 生产环境部署指南 ⭐ NEW
@@ -36,7 +36,8 @@ docs/
 │   └── implementation-guide.md     # 实施指南
 │
 ├── devlogs/                  # 📝 开发日志
-│   ├── DEVLOG-2025-12-07.md        # 最新日志 ⭐
+│   ├── DEVLOG-2026-02-19.md        # 最新日志 ⭐
+│   ├── DEVLOG-2025-12-07.md
 │   ├── DEVLOG-2025-12-06.md
 │   ├── DEVLOG-2025-12-05.md
 │   ├── DEVLOG-2025-12-04.md
@@ -85,7 +86,7 @@ docs/
 ### 开发参考
 1. [实施指南](guides/implementation-guide.md)
 2. [准备清单](guides/READINESS-CHECKLIST.md)
-3. [最新开发日志](devlogs/DEVLOG-2025-12-07.md)
+3. [最新开发日志](devlogs/DEVLOG-2026-02-19.md)
 
 ## 📌 文档状态说明
 
@@ -99,7 +100,8 @@ docs/
 
 | 日期 | 变更 |
 |------|------|
-| 2025-12-07 | 新增 PRODUCTION-DEPLOYMENT.md、STORE-SETTINGS-DESIGN.md；整理目录结构 |
+| 2026-02-19 | Medusa 完全削除、スケルトンパッケージ削除、API ファクトリ・認証ファクトリ追加、TS Strict 統一 |
+| 2025-12-07 | 新増 PRODUCTION-DEPLOYMENT.md、STORE-SETTINGS-DESIGN.md；整理目录结构 |
 | 2025-12-05 | 新增 PRODUCT-MANAGEMENT-DESIGN.md |
 | 2025-12-04 | 新增 SYSTEM_ARCHITECTURE.md、PRD-DETAILED.md |
 | 2025-12-03 | 角色权限系统文档更新 |

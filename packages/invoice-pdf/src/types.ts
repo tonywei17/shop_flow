@@ -264,6 +264,8 @@ export interface OtherExpenseDetail {
   description: string;
   /** Amount */
   amount: number;
+  /** Deduction/rebate amount */
+  deductionAmount?: number;
 }
 
 // =============================================================================

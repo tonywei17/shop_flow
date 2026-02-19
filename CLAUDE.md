@@ -35,8 +35,7 @@ shop_flow-v1.0/
 ├── apps/
 │   ├── web/           # 管理ダッシュボード（メインアプリ）
 │   ├── storefront/    # ECフロントエンド
-│   ├── learning/      # 学習プラットフォーム
-│   └── medusa/        # (未使用) Medusa設定
+│   └── learning/      # 学習プラットフォーム
 ├── packages/
 │   ├── config/        # モジュール・テナント設定
 │   ├── db/            # Supabase クライアント
@@ -281,4 +280,4 @@ pnpm --filter @enterprise/domain-settlement build
 
 ## 最終更新 / Last Updated
 
-2026-01-11
+2026-02-19

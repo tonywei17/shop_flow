@@ -1,7 +1,7 @@
 # Shop Flow 系统架构文档
 
-> 版本：1.0.0  
-> 更新日期：2025-12-04
+> 版本：1.1.0
+> 更新日期：2026-02-19
 
 ## 1. 系统概览
 
@@ -38,7 +38,7 @@
 │  @enterprise/domain-*  领域逻辑包                                │
 │  @enterprise/auth      认证工具                                  │
 │  @enterprise/config    配置管理                                  │
-│  @enterprise/types     类型定义                                  │
+│  @enterprise/invoice-pdf 請求書PDF生成                            │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
@@ -96,14 +96,13 @@ shop_flow/
 ├── packages/
 │   ├── db/                  # 数据库访问层
 │   ├── domain-org/          # 组织领域
-│   ├── domain-crm/          # CRM 领域
-│   ├── domain-lms/          # LMS 领域
 │   ├── domain-commerce/     # 商城领域
-│   ├── domain-settlement/   # 结算领域
-│   ├── auth/                # 认证工具
-│   ├── config/              # 配置管理
-│   ├── types/               # 共享类型
-│   └── ...
+│   ├── domain-settlement/   # 結算領域
+│   ├── domain-org/          # 組織管理領域
+│   ├── auth/                # 認証ツール（セッション検証ファクトリ）
+│   ├── config/              # 設定管理（モジュール・テナント）
+│   ├── invoice-pdf/         # 請求書PDF生成
+│   └── db/                  # データベースアクセス層
 │
 ├── src/
 │   ├── components/

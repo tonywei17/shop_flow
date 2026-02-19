@@ -1,163 +1,35 @@
 import { cookies } from "next/headers";
 import {
-  decodeSignedSession,
-  verifySessionPayload,
+  createSessionVerifier,
+  type SessionVerificationResult,
+  type VerifiedSessionPayload,
 } from "@enterprise/auth";
 
-export interface VerifiedSessionPayload {
-  admin_account_id: string;
-  login_id: string;
-  created_at: number;
-  expires_at: number;
-}
+export type { VerifiedSessionPayload, SessionVerificationResult };
 
-export interface SessionVerificationResult {
-  isValid: boolean;
-  payload: VerifiedSessionPayload | null;
-  error?: string;
-}
+const _verifyAdmin = createSessionVerifier({
+  cookieName: "admin_session",
+  secretEnvKey: "ADMIN_SESSION_SECRET",
+});
+
+const _verifyStorefront = createSessionVerifier({
+  cookieName: "storefront_session",
+  secretEnvKey: "STOREFRONT_SESSION_SECRET",
+});
 
 /**
- * Verifies admin session from cookie with HMAC signature validation
- * This should be used in all API routes that require authentication
+ * Verifies admin session from cookie with HMAC signature validation.
+ * Uses the shared factory from @enterprise/auth.
  */
 export async function verifyAdminSession(): Promise<SessionVerificationResult> {
-  const secret = process.env.ADMIN_SESSION_SECRET;
-
-  if (!secret) {
-    return {
-      isValid: false,
-      payload: null,
-      error: "Session secret not configured",
-    };
-  }
-
-  try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("admin_session");
-
-    if (!sessionCookie) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "No session cookie found",
-      };
-    }
-
-    // Decode the signed session
-    const signedSession = decodeSignedSession(sessionCookie.value);
-
-    if (!signedSession) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "Invalid session format",
-      };
-    }
-
-    // Verify HMAC signature
-    const isSignatureValid = await verifySessionPayload(signedSession, secret);
-
-    if (!isSignatureValid) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "Invalid session signature",
-      };
-    }
-
-    // Parse the payload
-    const payload = JSON.parse(signedSession.payload) as VerifiedSessionPayload;
-
-    // Check expiration
-    if (payload.expires_at && payload.expires_at < Date.now()) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "Session expired",
-      };
-    }
-
-    return {
-      isValid: true,
-      payload,
-    };
-  } catch (error) {
-    console.error("[verifyAdminSession] Error:", error);
-    return {
-      isValid: false,
-      payload: null,
-      error: "Session verification failed",
-    };
-  }
+  const cookieStore = await cookies();
+  return _verifyAdmin((name) => cookieStore.get(name)?.value);
 }
 
 /**
- * Verifies storefront session from cookie with HMAC signature validation
+ * Verifies storefront session from cookie with HMAC signature validation.
  */
 export async function verifyStorefrontSession(): Promise<SessionVerificationResult> {
-  const secret = process.env.STOREFRONT_SESSION_SECRET;
-
-  if (!secret) {
-    return {
-      isValid: false,
-      payload: null,
-      error: "Session secret not configured",
-    };
-  }
-
-  try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("storefront_session");
-
-    if (!sessionCookie) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "No session cookie found",
-      };
-    }
-
-    const signedSession = decodeSignedSession(sessionCookie.value);
-
-    if (!signedSession) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "Invalid session format",
-      };
-    }
-
-    const isSignatureValid = await verifySessionPayload(signedSession, secret);
-
-    if (!isSignatureValid) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "Invalid session signature",
-      };
-    }
-
-    const payload = JSON.parse(signedSession.payload) as VerifiedSessionPayload;
-
-    if (payload.expires_at && payload.expires_at < Date.now()) {
-      return {
-        isValid: false,
-        payload: null,
-        error: "Session expired",
-      };
-    }
-
-    return {
-      isValid: true,
-      payload,
-    };
-  } catch (error) {
-    console.error("[verifyStorefrontSession] Error:", error);
-    return {
-      isValid: false,
-      payload: null,
-      error: "Session verification failed",
-    };
-  }
+  const cookieStore = await cookies();
+  return _verifyStorefront((name) => cookieStore.get(name)?.value);
 }

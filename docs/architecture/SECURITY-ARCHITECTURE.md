@@ -177,7 +177,6 @@ await createAuditLog({
 
 Only variables prefixed with `NEXT_PUBLIC_` are exposed to the client:
 - `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_MEDUSA_BACKEND_URL`
 
 ---
 

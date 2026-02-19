@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Header } from "@/components/header";
-// import { createMedusaClient } from "@enterprise/domain-commerce"; // Temporarily disabled - Medusa integration removed
 
 type OrderDetail = {
   id: string;
@@ -30,9 +29,6 @@ type OrderDetail = {
 };
 
 async function fetchOrder(id: string): Promise<{ order?: OrderDetail; error?: string }> {
-  // Temporarily disabled - Medusa integration removed
-  // const client = createMedusaClient();
-
   try {
     // TODO: Implement order fetching from Supabase or other data source
     const raw: any = null;
@@ -103,10 +99,10 @@ async function fetchOrder(id: string): Promise<{ order?: OrderDetail; error?: st
 
     return { order };
   } catch (error) {
-    console.error("Failed to fetch Medusa order detail", error);
+    console.error("Failed to fetch order detail", error);
     return {
       error:
-        "注文の詳細を取得できませんでした。注文ID や Medusa API の設定を確認してください。",
+        "注文の詳細を取得できませんでした。",
     };
   }
 }

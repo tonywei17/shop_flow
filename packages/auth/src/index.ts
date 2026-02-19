@@ -9,3 +9,9 @@ export {
   decodeSignedSession,
   type SignedSessionPayload,
 } from "./session";
+export {
+  createSessionVerifier,
+  type SessionVerifierConfig,
+  type SessionVerificationResult,
+  type VerifiedSessionPayload,
+} from "./verify";

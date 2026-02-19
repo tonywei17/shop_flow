@@ -3,6 +3,16 @@
  *
  * Core business logic for invoice amount calculations.
  * All calculation rules are configurable through the config module.
+ *
+ * ARCHITECTURE NOTE:
+ * This file is intentionally duplicated from @enterprise/domain-settlement/calculator.ts
+ * because invoice-pdf is designed as a standalone package (no @enterprise/* dependencies).
+ *
+ * The AUTHORITATIVE source for business logic is:
+ *   packages/domain-settlement/src/invoice/calculator.ts
+ *
+ * When modifying calculation logic, update domain-settlement FIRST,
+ * then sync changes here.
  */
 
 import type {

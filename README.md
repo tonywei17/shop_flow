@@ -124,18 +124,7 @@ pnpm dev
 
 ---
 
-## 5. Medusa 集成（历史方案）
-
-仓库中仍保留了 Medusa 集成方案的代码与文档：
-
-- `docs/SYSTEM_ARCHITECTURE_MEDUSA.md` – 将 Medusa 作为电商引擎的架构说明
-- `medusa/` – 独立 Medusa 项目（目前并非默认运行路径）
-
-当前默认实现以 **Supabase 作为电商数据源** 为主，Medusa 可视为备选/历史方案。
-
----
-
-## 6. 贡献与开发约定
+## 5. 贡献与开发约定
 
 - 依赖管理：
   - 根 monorepo **统一使用 pnpm**，锁文件为 `pnpm-lock.yaml`。

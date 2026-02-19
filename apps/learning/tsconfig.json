@@ -10,7 +10,8 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "@enterprise/*": ["../../packages/*/src"]
     },
     "allowJs": true,
     "noEmit": true,
@@ -18,7 +19,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "strict": false
+    "strict": true
   },
   "include": [
     "next-env.d.ts",
